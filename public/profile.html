@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ người dùng - E-Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="./style/style.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <div class="container mx-auto max-w-4xl p-4">
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <h1 class="text-xl font-semibold text-center mb-2">E-Learning</h1>
+            <div class="flex justify-center gap-4">
+                <a href="./intro.html" class="bg-yellow-200 px-4 py-1 rounded">Trang chủ</a>
+                <a href="./home.html" class="bg-yellow-200 px-4 py-1 rounded">Lớp học</a>
+                <a href="./profile.html" class="bg-yellow-200 px-4 py-1 rounded">Hồ sơ</a>
+                <a href="./index.html" class="bg-green-400 text-white px-4 py-1 rounded">Đăng xuất</a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <!-- Profile Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <img src="./images/user.png" alt="Avatar" class="w-16 h-16 rounded-full border-4 border-blue-100">
+                    <div class="ml-4">
+                        <h2 id="userName" class="text-2xl font-bold text-gray-800"></h2>
+                        <p class="text-gray-600">Học viên</p>
+                    </div>
+                </div>
+                <button onclick="window.location.href='edit-profile.html'" class="bg-blue-500 hover:bg-blue-600 text-white px-2.5 py-2.5 rounded text-sm transition-colors w-24">
+                    <i class="fas fa-edit mr-1"></i>Chỉnh sửa
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Personal Information -->
+                <div class="bg-white rounded-lg">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-user-circle mr-2 text-blue-500"></i>Thông tin cá nhân
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex border-b border-gray-100 pb-2">
+                            <span class="font-medium w-28 text-gray-500">Email:</span>
+                            <span id="userEmail" class="text-gray-700"></span>
+                        </div>
+                        <div class="flex border-b border-gray-100 pb-2">
+                            <span class="font-medium w-28 text-gray-500">Số điện thoại:</span>
+                            <span id="userPhone" class="text-gray-700"></span>
+                        </div>
+                        <div class="flex border-b border-gray-100 pb-2">
+                            <span class="font-medium w-28 text-gray-500">Ngày sinh:</span>
+                            <span id="userDOB" class="text-gray-700"></span>
+                        </div>
+                        <div class="flex border-b border-gray-100 pb-2">
+                            <span class="font-medium w-28 text-gray-500">Giới tính:</span>
+                            <span id="userGender" class="text-gray-700"></span>
+                        </div>
+                        <div class="flex">
+                            <span class="font-medium w-28 text-gray-500">Địa chỉ:</span>
+                            <span id="userAddress" class="text-gray-700"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classes Attended -->
+                <div class="md:col-span-2">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-graduation-cap mr-2 text-blue-500"></i>Các lớp học đã tham gia
+                    </h3>
+                    <div id="enrolledCourses" class="space-y-4">
+                        <!-- Course items will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./js/profile.js" defer></script>
+</body>
+</html>
+

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Học tập Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-roboto">
+    <!-- Navbar -->
+    <nav class="bg-blue-500 p-4 text-white flex justify-between items-center">
+        <h1 class="text-2xl font-bold">E-Learning</h1>
+        <div>
+            <a href="#" class="px-4">Trang chủ</a>
+            <a href="#" class="px-4">Khóa học</a>
+            <a href="#" class="px-4">Hồ sơ</a>
+            <a href="#" class="px-4">Đăng xuất</a>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container mx-auto p-6">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">Khóa học của bạn</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Khóa học 1 -->
+            <div class="bg-white shadow-md rounded-lg p-4">
+                <h3 class="text-xl font-semibold text-gray-700">Lập trình Web</h3>
+                <p class="text-gray-600">Học cách xây dựng website từ cơ bản đến nâng cao.</p>
+                <button class="mt-2 bg-blue-500 text-white py-2 px-4 rounded">Bắt đầu học</button>
+            </div>
+            <!-- Khóa học 2 -->
+            <div class="bg-white shadow-md rounded-lg p-4">
+                <h3 class="text-xl font-semibold text-gray-700">Lập trình Python</h3>
+                <p class="text-gray-600">Khóa học Python từ cơ bản đến nâng cao.</p>
+                <button class="mt-2 bg-blue-500 text-white py-2 px-4 rounded">Bắt đầu học</button>
+            </div>
+            <!-- Khóa học 3 -->
+            <div class="bg-white shadow-md rounded-lg p-4">
+                <h3 class="text-xl font-semibold text-gray-700">Phát triển ứng dụng di động</h3>
+                <p class="text-gray-600">Học cách phát triển ứng dụng Android và iOS.</p>
+                <button class="mt-2 bg-blue-500 text-white py-2 px-4 rounded">Bắt đầu học</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
