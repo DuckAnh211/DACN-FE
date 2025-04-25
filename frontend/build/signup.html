@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng Ký</title>
+    <link rel="stylesheet" href="../style/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <script src="../src/signup.js"></script>
+  <body>
+    <div class="container">
+      <h1>Đăng Ký</h1>
+      <img src="../images/logo.jpg" alt="Logo" class="logo" />
+      <form id="signupForm">
+        <input type="text" id="name" name="name" placeholder="Tên đăng nhập" required />
+        <input type="email" id="email" name="email" placeholder="Email" required />
+        <input type="password" id="password" name="password" placeholder="Mật khẩu" required />
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Xác nhận mật khẩu" required />
+        <button type="submit" class="btn">Đăng Ký</button>
+      </form>
+      <p class="text-center text-gray-600 text-lg mt-5">
+        Đã có tài khoản?
+        <a href="./login.html" class="text-blue-500 hover:underline">
+          Đăng nhập ngay
+        </a>
+      </p>
+    </div>
+  </body>
+</html>

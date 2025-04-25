@@ -1,0 +1,46 @@
+{
+  "name": "loginjs2-main",
+  "version": "1.0.0",
+  "description": "Frontend đăng nhập, đăng ký với React và kết nối API backend",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start index.js",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "server": "node server.js"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.0.2",
+    "@mui/material": "^7.0.2",
+    "axios": "^1.8.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.5.0",
+    "react-scripts": "5.0.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.3"
+  },
+  "keywords": [
+    "react",
+    "login",
+    "register",
+    "frontend"
+  ],
+  "author": "",
+  "license": "ISC",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
