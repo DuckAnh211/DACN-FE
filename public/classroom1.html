@@ -166,16 +166,4 @@
         </div>
     </div>
 
-    <script>
-        function openPDFViewer(pdfUrl) {
-            document.getElementById('pdfFrame').src = pdfUrl;
-            document.getElementById('pdfModal').classList.remove('hidden');
-            document.getElementById('pdfModal').classList.add('flex');
-        }
-
-        function closePDFViewer() {
-            document.getElementById('pdfModal').classList.add('hidden');
-            document.getElementById('pdfModal').classList.remove('flex');
-            document.getElementById('pdfFrame').src = '';
-        }
-    </script>
+    <script src="./js/classroom.js"></script>
