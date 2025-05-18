@@ -8,71 +8,108 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Check if elements exist before trying to update them
+    // Elements
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const profileView = document.getElementById('profileView');
+    const profileEdit = document.getElementById('profileEdit');
+
+    // Input elements
+    const nameInput = document.getElementById('nameInput');
+    const emailInput = document.getElementById('emailInput');
+    const phoneInput = document.getElementById('phoneInput');
+    const dobInput = document.getElementById('dobInput');
+    const genderInput = document.getElementById('genderInput');
+    const addressInput = document.getElementById('addressInput');
+
+    // Display elements
     const userNameElement = document.getElementById('userName');
-    const userEmailElement = document.getElementById('userEmail');
-    const userPhoneElement = document.getElementById('userPhone');
-    const userDOBElement = document.getElementById('userDOB');
-    const userGenderElement = document.getElementById('userGender');
-    const userAddressElement = document.getElementById('userAddress');
-    
-    if (!userNameElement || !userEmailElement || !userPhoneElement || 
-        !userDOBElement || !userGenderElement || !userAddressElement) {
-        console.error('One or more HTML elements not found');
-        return;
+    const nameDisplay = document.getElementById('nameDisplay');
+    const emailDisplay = document.getElementById('emailDisplay');
+    const phoneDisplay = document.getElementById('phoneDisplay');
+    const dobDisplay = document.getElementById('dobDisplay');
+    const genderDisplay = document.getElementById('genderDisplay');
+    const addressDisplay = document.getElementById('addressDisplay');
+
+    // Fetch and display user data
+    function fetchUserData() {
+        fetch(`http://localhost:8080/v1/api/username?email=${userEmail}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update display view
+                    userNameElement.textContent = data.name || 'Không có tên';
+                    nameDisplay.textContent = data.name || 'Chưa cập nhật';
+                    emailDisplay.textContent = data.email || userEmail;
+                    phoneDisplay.textContent = data.phone || 'Chưa cập nhật';
+                    dobDisplay.textContent = data.dateOfBirth || 'Chưa cập nhật';
+                    genderDisplay.textContent = data.gender || 'Chưa cập nhật';
+                    addressDisplay.textContent = data.address || 'Chưa cập nhật';
+
+                    // Update form inputs
+                    nameInput.value = data.name || '';
+                    emailInput.value = data.email || userEmail;
+                    phoneInput.value = data.phone || '';
+                    dobInput.value = data.dateOfBirth || '';
+                    genderInput.value = data.gender || 'unknown';
+                    addressInput.value = data.address || '';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching profile:', error);
+                alert('Có lỗi xảy ra khi tải thông tin');
+            });
     }
 
-    // Fetch user profile data
-    console.log('Fetching profile data from:', `http://localhost:8080/v1/api/username?email=${userEmail}`);
-    fetch(`http://localhost:8080/v1/api/username?email=${userEmail}`)
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.json();
+    // Switch to edit mode
+    editProfileBtn.addEventListener('click', () => {
+        profileView.classList.add('hidden');
+        profileEdit.classList.remove('hidden');
+    });
+
+    // Cancel edit
+    cancelEditBtn.addEventListener('click', () => {
+        profileView.classList.remove('hidden');
+        profileEdit.classList.add('hidden');
+        fetchUserData(); // Reset form data
+    });
+
+    // Save profile changes
+    saveProfileBtn.addEventListener('click', () => {
+        const updatedData = {
+            name: nameInput.value,
+            email: emailInput.value,
+            phone: phoneInput.value,
+            dateOfBirth: dobInput.value,
+            gender: genderInput.value,
+            address: addressInput.value
+        };
+
+        fetch('http://localhost:8080/v1/api/update-user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(updatedData)
         })
+        .then(response => response.json())
         .then(data => {
-            console.log('Profile data received:', data);
-            
-            if (data.success) {
-                // Update profile information
-                userNameElement.textContent = data.name || 'Không có tên';
-                userEmailElement.textContent = data.email || userEmail;
-                userPhoneElement.textContent = data.phone || 'Chưa cập nhật';
-                userDOBElement.textContent = data.dateOfBirth || 'Chưa cập nhật';
-                userGenderElement.textContent = data.gender || 'Chưa cập nhật';
-                userAddressElement.textContent = data.address || 'Chưa cập nhật';
-                console.log('Profile updated successfully');
+            if (data.message === "Thông tin tài khoản đã được cập nhật thành công.") {
+                alert('Cập nhật thông tin thành công!');
+                profileView.classList.remove('hidden');
+                profileEdit.classList.add('hidden');
+                fetchUserData(); // Refresh displayed data
             } else {
-                console.error('API returned success: false');
-                alert('Không thể tải thông tin người dùng');
+                alert('Có lỗi xảy ra khi cập nhật thông tin');
             }
         })
         .catch(error => {
-            console.error('Error fetching profile:', error);
-            alert('Có lỗi xảy ra khi tải thông tin');
+            console.error('Error updating profile:', error);
+            alert('Có lỗi xảy ra khi cập nhật thông tin');
         });
-});
+    });
 
-/* Course element creation function - to be used later
-function createCourseElement(course) {
-    const div = document.createElement('div');
-    div.className = 'border rounded-lg p-4 hover:shadow-md transition-shadow';
-    
-    div.innerHTML = `
-        <div class="flex justify-between items-center">
-            <div>
-                <h4 class="font-semibold text-lg text-gray-800">${course.name}</h4>
-                <p class="text-sm text-gray-600">Mã lớp: ${course.code}</p>
-            </div>
-            <div class="text-right">
-                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Đang học</span>
-                <div class="mt-1 text-sm text-gray-500">Tiến độ: ${course.progress}%</div>
-            </div>
-        </div>
-        <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
-            <div class="bg-blue-600 h-2 rounded-full" style="width: ${course.progress}%"></div>
-        </div>
-    `;
-    
-    return div;
-}
-*/
+    // Initial data load
+    fetchUserData();
+});
