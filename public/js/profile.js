@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     genderDisplay.textContent = data.gender || 'Chưa cập nhật';
                     addressDisplay.textContent = data.address || 'Chưa cập nhật';
 
+                    // Lưu tên người dùng vào localStorage để sử dụng trong meeting.html
+                    localStorage.setItem('userName', data.name || 'Học viên');
+
                     // Update form inputs
                     nameInput.value = data.name || '';
                     emailInput.value = data.email || userEmail;
