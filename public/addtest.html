@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Danh sách câu hỏi</title>
+  <link rel="stylesheet" href="./style/addtest.css">
+  <script src="./js/tinymce/tinymce.min.js"></script>
+  <script src="./js/addtest.js" defer></script>
+</head>
+<body>
+  <h2>📋 DANH SÁCH CÂU HỎI</h2>
+
+  <div class="button-group">
+    <button id="openModalBtn">+ Một lựa chọn</button>
+    <!-- Thêm các nút khác nếu cần -->
+  </div>
+
+  <br>
+  <input type="text" id="searchInput" placeholder="Tìm kiếm..." />
+
+  <table>
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Mã</th>
+        <th>Câu hỏi</th>
+        <th>Lớp học</th>
+        <th>Môn học</th>
+        <th>Trạng thái</th>
+        <th>Sửa</th>
+        <th>Xóa</th>
+      </tr>
+    </thead>
+    <tbody id="question-table-body">
+      <!-- JS sẽ render ở đây -->
+    </tbody>
+  </table>
+
+  <!-- Modal -->
+  <div id="questionModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h2>Thêm câu hỏi Một lựa chọn</h2>
+
+      <label>Lớp học</label>
+      <select id="input-grade">
+        <option value="">- Lớp 10</option>
+        <option value="Lớp 11">Lớp 11</option>
+        <option value="Lớp 12">Lớp 12</option>
+      </select>
+
+      <label>Môn học</label>
+      <select id="input-subject">
+        <option value="Toán học">Toán học</option>
+        <option value="Vật lý">Vật lý</option>
+        <option value="Hóa học">Hóa học</option>
+      </select>
+
+      <label>Mã câu hỏi (*)</label>
+      <input type="text" id="input-code" />
+
+      <label>Câu hỏi (*)</label>
+      <textarea id="input-text"></textarea>
+
+      <button id="add-btn">✅ Lưu câu hỏi</button>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Video Call - Mediasoup SFU</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f9f9f9;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    video {
+      width: 45%;
+      margin: 10px;
+      border: 2px solid #333;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Video Call (Mediasoup SFU)</h1>
+  <video id="localVideo" autoplay muted playsinline></video>
+  <video id="remoteVideo" autoplay playsinline></video>
+
+<!-- Socket.IO -->
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+
+<!-- Mediasoup client UMD build -->
+<script src="https://cdn.jsdelivr.net/npm/mediasoup-client@4/lib/mediasoupClient.min.js"></script>
+
+  <script>
+    const socket = io("http://localhost:8080"); // ⚠️ Đổi lại IP nếu server deploy trên máy khác
+    let device;
+    let producerTransport;
+    let consumerTransport;
+    let producer;
+
+    const start = async () => {
+      // B1: Lấy rtpCapabilities từ server
+      socket.emit("getRtpCapabilities", {}, async (data) => {
+        const device = new mediasoupClient.Device();
+        await device.load({ routerRtpCapabilities: data.rtpCapabilities });
+
+        // B2: Tạo producer transport
+        socket.emit("createWebRtcTransport", { sender: true }, async ({ params }) => {
+          producerTransport = device.createSendTransport(params);
+
+          // Sự kiện connect transport
+          producerTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
+            socket.emit("connectTransport", {
+              transportId: producerTransport.id,
+              dtlsParameters
+            }, callback);
+          });
+
+          // Khi produce xong
+          producerTransport.on("produce", ({ kind, rtpParameters }, callback, errback) => {
+            socket.emit("produce", {
+              transportId: producerTransport.id,
+              kind,
+              rtpParameters
+            }, ({ id }) => callback({ id }));
+          });
+
+          // B3: Lấy media từ webcam
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          document.getElementById("localVideo").srcObject = stream;
+
+          const track = stream.getVideoTracks()[0];
+          producer = await producerTransport.produce({ track });
+
+          // B4: Tạo consumer transport
+          socket.emit("createWebRtcTransport", { sender: false }, async ({ params }) => {
+            consumerTransport = device.createRecvTransport(params);
+
+            consumerTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
+              socket.emit("connectTransport", {
+                transportId: consumerTransport.id,
+                dtlsParameters
+              }, callback);
+            });
+
+            // B5: Consume stream từ server
+            socket.emit("consume", {
+              rtpCapabilities: device.rtpCapabilities,
+              transportId: consumerTransport.id
+            }, async ({ params }) => {
+              if (!params) return;
+
+              const consumer = await consumerTransport.consume({
+                id: params.id,
+                producerId: params.producerId,
+                kind: params.kind,
+                rtpParameters: params.rtpParameters
+              });
+
+              const remoteStream = new MediaStream([consumer.track]);
+              document.getElementById("remoteVideo").srcObject = remoteStream;
+
+              // B6: Resume nhận stream
+              socket.emit("consumer-resume", { consumerId: consumer.id });
+            });
+          });
+        });
+      });
+    };
+
+    window.onload = start;
+  </script>
+</body>
+</html>
