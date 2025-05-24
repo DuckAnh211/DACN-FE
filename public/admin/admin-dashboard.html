@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Quản Trị - E-Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../style/style.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <div class="container mx-auto max-w-4xl p-4">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex items-center justify-center mb-4">
+                <img src="../images/logo.jpg" alt="FutureClass Logo" class="w-16 h-16 rounded-full mr-4">
+                <h1 class="text-2xl font-semibold text-gray-800">E-Learning - Admin</h1>
+            </div>
+
+            <div class="flex justify-center gap-6 flex-wrap">
+                <a href="manage-students.html" class="bg-yellow-200 hover:bg-yellow-300 px-6 py-2 rounded-lg transition-colors duration-300 flex items-center">
+                    <i class="fas fa-users mr-2"></i>
+                    Quản lý học viên
+                </a>
+                <a href="#" class="bg-yellow-200 hover:bg-yellow-300 px-6 py-2 rounded-lg transition-colors duration-300 flex items-center">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i>
+                    Quản lý giáo viên
+                </a>
+                <a href="#" class="bg-yellow-200 hover:bg-yellow-300 px-6 py-2 rounded-lg transition-colors duration-300 flex items-center">
+                    <i class="fas fa-school mr-2"></i>
+                    Quản lý lớp học
+                </a>
+                <a href="./admin-login.html" class="bg-green-400 hover:bg-green-500 text-white px-6 py-2 rounded-lg transition-colors duration-300 flex items-center">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    Đăng xuất
+                </a>
+            </div>
+        </div>
+
+        <!-- Thống kê nhanh -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Tổng số lớp</p>
+                        <h3 class="text-2xl font-semibold text-gray-800">12</h3>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-school text-blue-500"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Tổng học viên</p>
+                        <h3 id="totalStudents" class="text-2xl font-semibold text-gray-800">--</h3>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-users text-green-500"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Tổng giáo viên</p>
+                        <h3 class="text-2xl font-semibold text-gray-800">8</h3>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <i class="fas fa-chalkboard-teacher text-purple-500"></i>
+                    </div>
+                </div>
+            </div>       
+        </div>
+
+        <!-- Khu vực nội dung chính -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Nội dung quản trị</h2>
+            <p class="text-gray-600">Chọn một mục từ menu phía trên để quản lý.</p>
+        </div>
+    </div>
+
+    <script src="./admin-js/admin-dashboard.js"></script>
+</body>
+</html>
