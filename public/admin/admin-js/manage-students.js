@@ -15,7 +15,6 @@ const studentForm = document.getElementById('studentForm');
 const closeModal = document.getElementById('closeModal');
 const modalTitle = document.getElementById('modalTitle');
 
-// Hàm fetch dữ liệu học viên
 // Biến lưu trữ danh sách học viên gốc
 let allStudents = [];
 
