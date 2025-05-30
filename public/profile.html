@@ -39,9 +39,9 @@
                 </a>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Personal Information -->
-                <div class="bg-white rounded-lg max-w-md mx-auto w-full">
+                <div class="bg-white rounded-lg">
                     <div class="flex items-center justify-center mb-4">
                         <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-2">
                             <i class="fas fa-user-circle text-blue-500"></i>
@@ -114,13 +114,21 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
                 <!-- Classes Attended -->
-                <div class="md:col-span-1">
-                    <div id="enrolledCourses" class="space-y-4">
-                        <!-- Course items will be dynamically inserted here -->
+                <div class="bg-white rounded-lg">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-2">
+                            <i class="fas fa-graduation-cap text-green-500"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Lớp học đã tham gia</h3>
+                    </div>
+                    <div id="enrolledClasses" class="space-y-4 bg-gray-50 p-5 rounded-lg shadow-sm">
+                        <!-- Danh sách lớp học sẽ được thêm vào đây bởi JavaScript -->
+                        <div class="text-center py-4">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                            <p class="text-gray-500">Đang tải danh sách lớp học...</p>
+                        </div>
                     </div>
                 </div>
             </div>
