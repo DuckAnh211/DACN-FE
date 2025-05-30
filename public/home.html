@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="./style/style.css">
+    <!-- Đảm bảo script được tải sau khi DOM đã sẵn sàng -->
+    <script src="./js/home.js" defer></script>
 </head>
 <body class="bg-gray-50">
     <!-- Navigation Bar -->
@@ -28,69 +30,55 @@
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-2xl font-bold text-gray-800"><i class="fas fa-graduation-cap mr-2"></i>Các lớp học của bạn</h2>
                 <div class="flex gap-4">
-                   
-                </div>
-            </div>
-
-            <!-- Class Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Khóa học 1 -->
-                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-[300px]">
-                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-32 flex items-center justify-center">
-                        <i class="fas fa-language text-white text-5xl"></i>
-                    </div>
-                    <div class="p-6 flex flex-col justify-between h-[calc(100%-8rem)]">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold text-gray-800">Lớp Anh Văn</h3>
-                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Đang học</span>
-                        </div>                   
-                        <div class="flex justify-center items-center">                           
-                            <a href="./classroom1.html" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors w-full text-center">
-                                <i class="fas fa-door-open mr-1"></i> Vào lớp
-                            </a>
+                    <!-- Ô tìm kiếm và nút tìm kiếm -->
+                    <div class="flex">
+                        <div class="relative">
+                            <input type="text" 
+                                   id="searchInput"
+                                   placeholder="Tìm kiếm theo mã lớp..." 
+                                   class="pl-10 pr-4 py-2 border rounded-l-lg focus:outline-none focus:border-blue-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- Khóa học 2 -->
-                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-[300px]">
-                    <div class="bg-gradient-to-r from-pink-500 to-red-600 h-32 flex items-center justify-center">
-                        <i class="fas fa-calculator text-white text-5xl"></i>
-                    </div>
-                    <div class="p-6 flex flex-col justify-between h-[calc(100%-8rem)]">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold text-gray-800">Lớp Toán</h3>
-                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Đang học</span>
-                        </div>
-                     
-                        <div class="flex justify-center items-center">
-                            <a href="./classroom2.html" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors w-full text-center">
-                                <i class="fas fa-door-open mr-1"></i> Vào lớp
-                            </a>
-                        </div>
-                    </div>
-                </div>
-               <!-- Khóa học 3 -->           
-               <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-[300px]">
-                <div class="bg-gradient-to-r from-green-500 to-teal-600 h-32 flex items-center justify-center">
-                    <i class="fas fa-book text-white text-5xl"></i>
-                </div>
-                <div class="p-6 flex flex-col justify-between h-[calc(100%-8rem)]">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-gray-800">Lớp Ngữ Văn</h3>
-                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Đang học</span>
-                    </div>
-                   
-                    <div class="flex justify-center items-center">
-                        <a href="./classroom3.html" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors w-full text-center">
-                            <i class="fas fa-door-open mr-1"></i> Vào lớp
+                        <a id="searchButton" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-lg transition-colors">
+                            Tìm kiếm
                         </a>
                     </div>
                 </div>
             </div>
-            </div>
-        
 
+            <!-- Kết quả tìm kiếm lớp học -->
+            <div id="searchResultContainer" class="hidden mb-6">
+                <h3 class="text-lg font-semibold mb-4">Kết quả tìm kiếm</h3>
+                <div id="searchResultContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Thẻ lớp học kết quả tìm kiếm sẽ được thêm vào đây -->
+                </div>
+            </div>
+
+            <!-- Class Cards -->
+            <div id="classContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Các thẻ lớp học sẽ được thêm vào đây bởi JavaScript -->
+            </div>
+        </div>
+
+        <!-- Modal tham gia lớp học -->
+        <div id="joinClassModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Tham gia lớp học</h3>
+                    <form id="joinClassForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Mã lớp</label>
+                            <input type="text" id="classCodeInput" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div class="flex justify-end space-x-3 mt-5">
+                            <button type="button" id="closeJoinModal"
+                                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">Hủy</button>
+                            <button type="submit"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Tham gia</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </body>
