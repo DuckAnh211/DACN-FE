@@ -33,8 +33,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const addressDisplay = document.getElementById('addressDisplay');
 
     // Fetch and display user data
+    // Các biến và hằng số
+    const BASE_API_URL = 'http://localhost:8080/v1/api';
+    const API_ENDPOINTS = {
+        GET_USER: `${BASE_API_URL}/username`,
+        UPDATE_USER: `${BASE_API_URL}/update-user`
+    };
+    
     function fetchUserData() {
-        fetch(`http://localhost:8080/v1/api/username?email=${userEmail}`)
+        fetch(`${API_ENDPOINTS.GET_USER}?email=${userEmail}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -89,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
             address: addressInput.value
         };
 
-        fetch('http://localhost:8080/v1/api/update-user', {
+        fetch(API_ENDPOINTS.UPDATE_USER, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
