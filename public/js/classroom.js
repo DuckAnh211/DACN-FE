@@ -34,9 +34,61 @@ document.addEventListener('DOMContentLoaded', function() {
     const classCodeElement = document.getElementById('classCode');
     const classIconElement = document.getElementById('classIcon');
     const classIconTypeElement = document.getElementById('classIconType');
-    const lessonsListElement = document.getElementById('lessons-list');
+    const lessonsListElement = document.getElementById('lessonsList');
+    
+    // Lấy tham chiếu đến các tab và nội dung
+    const lessonsTab = document.getElementById('lessons-tab');
+    const assignmentsTab = document.getElementById('assignments-tab');
+    const testsTab = document.getElementById('tests-tab');
     const lessonsContent = document.getElementById('lessons-content');
     const assignmentsContent = document.getElementById('assignments-content');
+    const testsContent = document.getElementById('tests-content');
+    
+    // Xử lý sự kiện chuyển tab
+    lessonsTab.addEventListener('click', function() {
+        // Hiển thị tab bài học, ẩn các tab khác
+        lessonsContent.classList.remove('hidden');
+        assignmentsContent.classList.add('hidden');
+        testsContent.classList.add('hidden');
+        
+        // Cập nhật trạng thái active của các tab
+        lessonsTab.classList.add('border-b-2', 'border-blue-500', 'text-blue-500');
+        lessonsTab.classList.remove('text-gray-500');
+        assignmentsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+        assignmentsTab.classList.add('text-gray-500');
+        testsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+        testsTab.classList.add('text-gray-500');
+    });
+    
+    assignmentsTab.addEventListener('click', function() {
+        // Hiển thị tab bài tập, ẩn các tab khác
+        lessonsContent.classList.add('hidden');
+        assignmentsContent.classList.remove('hidden');
+        testsContent.classList.add('hidden');
+        
+        // Cập nhật trạng thái active của các tab
+        lessonsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+        lessonsTab.classList.add('text-gray-500');
+        assignmentsTab.classList.add('border-b-2', 'border-blue-500', 'text-blue-500');
+        assignmentsTab.classList.remove('text-gray-500');
+        testsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+        testsTab.classList.add('text-gray-500');
+    });
+    
+    testsTab.addEventListener('click', function() {
+        // Hiển thị tab kiểm tra, ẩn các tab khác
+        lessonsContent.classList.add('hidden');
+        assignmentsContent.classList.add('hidden');
+        testsContent.classList.remove('hidden');
+        
+        // Cập nhật trạng thái active của các tab
+        lessonsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+        lessonsTab.classList.add('text-gray-500');
+        assignmentsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+        assignmentsTab.classList.add('text-gray-500');
+        testsTab.classList.add('border-b-2', 'border-blue-500', 'text-blue-500');
+        testsTab.classList.remove('text-gray-500');
+    });
 
     // Lấy mã lớp học từ URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -143,11 +195,17 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (subject.includes('tiếng anh') || subject.includes('anh văn') || subject.includes('anh ngữ')) {
                 gradientClass = 'from-yellow-400 to-orange-500';
                 iconClass = 'fas fa-globe';
+            } else if (subject.includes('vật lý')) {
+                gradientClass = 'from-indigo-500 to-blue-600';
+                iconClass = 'fas fa-atom';
+            } else if (subject.includes('hóa học')) {
+                gradientClass = 'from-purple-500 to-pink-600';
+                iconClass = 'fas fa-flask';
             }
         }
         
         // Cập nhật biểu tượng
-        classIconTypeElement.className = iconClass + ' text-white text-5xl';
+        classIconTypeElement.className = iconClass + ' text-white text-3xl';
         
         // Cập nhật màu nền
         classIconElement.className = `bg-gradient-to-r ${gradientClass} h-32 flex items-center justify-center`;

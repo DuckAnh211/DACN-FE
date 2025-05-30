@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ Giáo viên - E-Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="./style/style.css">
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation Bar -->
+    <div class="container mx-auto max-w-4xl p-4">
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <h1 class="text-xl font-semibold text-center mb-2">E-Learning</h1>
+            <div class="flex justify-center gap-4">
+                <a href="teacher_home.html" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                    <i class="fas fa-home mr-1"></i> Trang chủ
+                </a>
+                <a href="classes_list.html" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                    <i class="fas fa-chalkboard mr-1"></i> Lớp học
+                </a>
+                <a href="profile-teacher.html" class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-user mr-1"></i> Hồ sơ
+                </a>
+                <a id="logoutBtn" class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Đăng xuất
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <!-- Profile Header -->
+            <div class="flex items-center justify-between mb-6 border-b pb-4">
+                <div class="flex items-center">
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mr-4">
+                        <i class="fas fa-user-tie text-white text-3xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h2 id="userName" class="text-2xl font-bold text-gray-800"></h2>
+                        <p class="text-gray-600">Giáo viên</p>
+                    </div>
+                </div>
+                <a id="editProfileBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors">
+                    <i class="fas fa-edit mr-1"></i>Chỉnh sửa
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Personal Information -->
+                <div class="bg-white rounded-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                            <i class="fas fa-user-circle text-blue-500"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Thông tin cá nhân</h3>
+                    </div>
+                    <!-- Profile View Mode -->
+                    <div id="profileView" class="space-y-3 bg-gray-50 p-5 rounded-lg shadow-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Họ và tên:</span>
+                            <span id="nameDisplay" class="text-gray-800 font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Email:</span>
+                            <span id="emailDisplay" class="text-gray-800 font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Số điện thoại:</span>
+                            <span id="phoneDisplay" class="text-gray-800 font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Ngày sinh:</span>
+                            <span id="dobDisplay" class="text-gray-800 font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giới tính:</span>
+                            <span id="genderDisplay" class="text-gray-800 font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Địa chỉ:</span>
+                            <span id="addressDisplay" class="text-gray-800 font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Môn giảng dạy:</span>
+                            <span id="subjectDisplay" class="text-gray-800 font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Trình độ:</span>
+                            <span id="qualificationDisplay" class="text-gray-800 font-medium"></span>
+                        </div>
+                    </div>
+
+                    <!-- Profile Edit Mode -->
+                    <div id="profileEdit" class="space-y-4 bg-gray-50 p-5 rounded-lg shadow-sm hidden">
+                        <div class="space-y-2">
+                            <label class="text-gray-600">Họ và tên:</label>
+                            <input type="text" id="nameInput" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-gray-600">Email:</label>
+                            <input type="email" id="emailInput" class="w-full px-3 py-2 border rounded-lg bg-gray-100 cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-400" readonly>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-gray-600">Số điện thoại:</label>
+                            <input type="tel" id="phoneInput" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-gray-600">Ngày sinh:</label>
+                            <input type="date" id="dobInput" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-gray-600">Giới tính:</label>
+                            <select id="genderInput" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                <option value="male">Nam</option>
+                                <option value="female">Nữ</option>
+                                <option value="unknown">Không xác định</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-gray-600">Địa chỉ:</label>
+                            <input type="text" id="addressInput" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-gray-600">Môn giảng dạy:</label>
+                            <select id="subjectInput" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                <option value="Toán">Toán</option>
+                                <option value="Vật lý">Vật lý</option>
+                                <option value="Hóa học">Hóa học</option>
+                                <option value="Sinh học">Sinh học</option>
+                                <option value="Ngữ văn">Ngữ văn</option>
+                                <option value="Lịch sử">Lịch sử</option>
+                                <option value="Địa lý">Địa lý</option>
+                                <option value="Tiếng Anh">Tiếng Anh</option>
+                                <option value="Tin học">Tin học</option>
+                                <option value="GDCD">GDCD</option>
+                                <option value="Công nghệ">Công nghệ</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-gray-600">Trình độ:</label>
+                            <select id="qualificationInput" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                <option value="Cử nhân">Cử nhân</option>
+                                <option value="Thạc sĩ">Thạc sĩ</option>
+                                <option value="Tiến sĩ">Tiến sĩ</option>
+                                <option value="Phó Giáo sư">Phó Giáo sư</option>
+                                <option value="Giáo sư">Giáo sư</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-end space-x-3 mt-4">
+                            <button id="cancelEditBtn" class="px-4 py-2 text-gray-600 hover:text-gray-800">Hủy</button>
+                            <button id="saveProfileBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-save mr-1"></i>Lưu thay đổi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teaching Information -->
+                <div class="bg-white rounded-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-2">
+                            <i class="fas fa-chalkboard-teacher text-green-500"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Lớp học đang dạy</h3>
+                    </div>
+                    <div id="teachingClasses" class="space-y-3 bg-gray-50 p-5 rounded-lg shadow-sm">
+                        <div class="text-center py-4">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                            <p class="text-gray-500">Đang tải danh sách lớp học...</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="./js/profile-teacher.js"></script>
+</body>
+</html>
