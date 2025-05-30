@@ -9,17 +9,17 @@
       max-width: 1200px;
     }
 
-  .modal-body-scrollable {
-    max-height: 400px;
-    overflow-y: auto;
-  }
+    .modal-body-scrollable {
+      max-height: 400px;
+      overflow-y: auto;
+    }
 
-  td {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 300px;
-  }
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
   </style>
 </head>
 <body>
@@ -145,7 +145,9 @@
           <!-- Hiển thị câu hỏi đã chọn -->
           <div class="form-group">
             <label>Câu hỏi đã chọn:</label>
-            <ul id="selectedQuestionsList" class="list-group list-group-flush" style="max-height: 150px; overflow-y: auto;"></ul>
+            <ul id="selectedQuestionsList" class="list-group list-group-flush" style="max-height: 150px; overflow-y: auto;">
+              <li class="list-group-item text-muted">Chưa chọn câu hỏi nào.</li>
+            </ul>
           </div>
 
           <div class="form-group">
@@ -275,28 +277,106 @@
     $('#selectQuestionsModal').modal('hide');
   });
 
-  // Submit form tạo đề thi
-  document.getElementById('examForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
+  function loadDanhSachDeThi() {
+    const tbody = document.querySelector('table tbody');
+    tbody.innerHTML = '<tr><td colspan="14">Đang tải dữ liệu...</td></tr>';
 
-    const data = {
-      tenDe: formData.get('tenDe'),
-      maDe: formData.get('maDe'),
-      lopHoc: formData.get('lopHoc'),
-      monHoc: formData.get('monHoc'),
-      thoiGian: formData.get('thoiGian'),
-      batDau: formData.get('batDau'),
-      ketThuc: formData.get('ketThuc'),
-      loaiDe: formData.get('loaiDe'),
-      trangThai: formData.get('trangThai'),
-      selectedQuestions: selectedQuestions,
-      pdfFile: formData.get('pdfFile')?.name || null
+    fetch('http://localhost:8080/v1/api/exams')
+      .then(res => res.json())
+      .then(data => {
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="14" class="text-muted">Không có đề thi nào.</td></tr>';
+          return;
+        }
+
+        data.forEach((exam, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${exam.title || ''}</td>
+            <td>${exam.code || ''}</td>
+            <td>${exam.duration || ''}</td>
+            <td>${exam.questionType || ''}</td>
+            <td>${exam.grade || ''}</td>
+            <td>${exam.subject || ''}</td>
+            <td>${exam.startTime ? new Date(exam.startTime).toLocaleString() : ''}</td>
+            <td>${exam.endTime ? new Date(exam.endTime).toLocaleString() : ''}</td>
+            <td>${exam.questionIds?.length || 0}</td>
+            <td><a href="#">Xem</a></td>
+            <td>${exam.status || ''}</td>
+            <td><button class="btn btn-sm btn-warning">Sửa</button></td>
+            <td><button class="btn btn-sm btn-danger">Xoá</button></td>
+          `;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(err => {
+        tbody.innerHTML = '<tr><td colspan="14" class="text-danger">Lỗi tải danh sách đề thi.</td></tr>';
+        console.error('Lỗi khi lấy danh sách đề thi:', err);
+      });
+  }
+
+  // Gửi form tạo đề thi
+  document.getElementById('examForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    // Lấy thông tin từ form
+    const examData = {
+      title: formData.get('tenDe'),
+      code: formData.get('maDe'),
+      grade: formData.get('lopHoc'),
+      subject: formData.get('monHoc'),
+      duration: Number(formData.get('thoiGian')),
+      startTime: formData.get('batDau') ? new Date(formData.get('batDau')).toISOString() : null,
+      endTime: formData.get('ketThuc') ? new Date(formData.get('ketThuc')).toISOString() : null,
+      questionType: formData.get('loaiDe'),
+      questionIds: selectedQuestions,
+      status: formData.get('trangThai'),
+      pdfFileName: formData.get('pdfFile') ? document.getElementById('pdfFile').files[0]?.name || null : null,
     };
 
-    console.log('Dữ liệu đề thi:', data);
-    alert('Bạn đã tạo đề thi thành công!\nKiểm tra console để xem dữ liệu.');
-    $('#addExamModal').modal('hide');
+    // Nếu loại đề là upload PDF, kiểm tra file
+    if (examData.questionType === 'upload_pdf') {
+      if (!formData.get('pdfFile') || !document.getElementById('pdfFile').files.length) {
+        alert('Bạn phải chọn file PDF để tải lên.');
+        return;
+      }
+    }
+
+    // Gửi dữ liệu lên backend
+    fetch('http://localhost:8080/v1/api/exams', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(examData)
+    })
+    .then(res => {
+      if (res.ok) {
+        alert('Tạo đề thi thành công!');
+        $('#addExamModal').modal('hide');
+        form.reset();
+        selectedQuestions = [];
+        document.getElementById('selectedQuestionsList').innerHTML = '<li class="list-group-item text-muted">Chưa chọn câu hỏi nào.</li>';
+        loadDanhSachDeThi();
+      } else {
+        return res.json().then(data => {
+          alert('Lỗi khi tạo đề thi: ' + (data.message || ''));
+        });
+      }
+    })
+    .catch(err => {
+      alert('Lỗi mạng khi tạo đề thi.');
+      console.error(err);
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDanhSachDeThi();
   });
 </script>
 
