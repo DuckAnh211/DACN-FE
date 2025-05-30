@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Trang Giáo Viên - E-Learning</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 50px auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .navbar button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ffc107;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .navbar .logout {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+      color: white;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h3 {
+      margin: 15px 0;
+    }
+
+    .card button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      background-color: white;
+      color: #2575fc;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Giáo Viên - E-Learning</h2>
+    <div class="navbar">
+      <button>Trang chủ</button>
+      <button>Lớp học</button>
+      <button>Hồ sơ</button>
+      <button class="logout">Đăng xuất</button>
+    </div>
+
+    <div class="features">
+      <div class="card" style="background: linear-gradient(to right, #ff416c, #ff4b2b);">
+        <h3>Tạo Cuộc Họp</h3>
+        <p>Thiết lập cuộc họp trực tuyến với học sinh.</p>
+        <button id="btnCreateMeeting">Tạo ngay</button>
+      </div>
+
+      <div class="card" style="background: linear-gradient(to right, #1cb5e0, #000851);">
+        <h3>Thêm Câu Hỏi</h3>
+        <p>Ngân hàng câu hỏi để sử dụng trong bài kiểm tra.</p>
+        <button id="btnAddQuestion">Thêm câu hỏi</button>
+      </div>
+
+      <div class="card" style="background: linear-gradient(to right, #00b09b, #96c93d);">
+        <h3>Tạo Bài Thi</h3>
+        <p>Soạn bài kiểm tra và bài thi tự động.</p>
+        <button id="btnCreateExam">Tạo bài thi</button>
+      </div>
+
+      <div class="card" style="background: linear-gradient(to right, #f7971e, #ffd200);">
+        <h3>Danh Sách Môn Học</h3>
+        <p>Xem các môn học bạn đang giảng dạy.</p>
+        <button id="btnViewSubjects">Xem môn học</button>
+      </div>
+
+      <div class="card" style="background: linear-gradient(to right, #4facfe, #00f2fe);">
+        <h3>Danh Sách Lớp Học</h3>
+        <p>Xem danh sách lớp và học sinh.</p>
+        <button id="btnViewClasses">Xem lớp</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("btnCreateMeeting").onclick = function () {
+      window.location.href = "create_meeting.html";
+    };
+
+    document.getElementById("btnAddQuestion").onclick = function () {
+      window.location.href = "add_question.html";
+    };
+
+    document.getElementById("btnCreateExam").onclick = function () {
+      window.location.href = "create_exam.html";
+    };
+
+    document.getElementById("btnViewSubjects").onclick = function () {
+      window.location.href = "subjects_list.html";
+    };
+
+    document.getElementById("btnViewClasses").onclick = function () {
+      window.location.href = "classes_list.html";
+    };
+  </script>
+</body>
+</html>

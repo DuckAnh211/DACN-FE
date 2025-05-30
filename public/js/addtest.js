@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080/v1/api/questions'; // Cập nhật nếu bạn chạy port khác
+const API_URL = 'http://localhost:8080/v1/api/questions'; // Đổi nếu cần
 
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("questionModal");
@@ -12,14 +12,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const tableBody = document.getElementById("question-table-body");
 
-  //Khởi tạo TinyMCE
+  // Khởi tạo TinyMCE
   tinymce.init({
     selector: '#input-text',
     menubar: false,
     height: 200
   });
 
-  //Load câu hỏi từ API
+  // Tải danh sách câu hỏi từ API
   async function fetchQuestions() {
     try {
       const response = await fetch(API_URL);
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  //Hiển thị câu hỏi trong bảng
+  // Hiển thị danh sách câu hỏi
   function renderQuestions(questions) {
     tableBody.innerHTML = "";
 
@@ -47,10 +47,30 @@ document.addEventListener("DOMContentLoaded", () => {
         <td><button class="delete-btn">🗑️</button></td>
       `;
       tableBody.appendChild(tr);
+
+      // Gán sự kiện xoá
+      const deleteBtn = tr.querySelector(".delete-btn");
+      deleteBtn.addEventListener("click", async () => {
+        if (confirm("Bạn có chắc muốn xoá câu hỏi này?")) {
+          try {
+            const response = await fetch(`${API_URL}/${q._id}`, {
+              method: "DELETE",
+            });
+
+            if (!response.ok) throw new Error("Lỗi xoá");
+
+            alert("Đã xoá câu hỏi.");
+            fetchQuestions(); // tải lại danh sách
+          } catch (err) {
+            console.error(err);
+            alert("Xoá thất bại!");
+          }
+        }
+      });
     });
   }
 
-  //Gửi dữ liệu tạo mới câu hỏi
+  // Thêm câu hỏi mới
   addBtn.addEventListener("click", async () => {
     const code = codeInput.value.trim();
     const text = tinymce.get("input-text").getContent().trim();
@@ -68,7 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, content: text, grade, subject, status }),
-
       });
 
       if (!response.ok) throw new Error("Lỗi khi thêm câu hỏi");
@@ -77,21 +96,21 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.style.display = "none";
       codeInput.value = "";
       tinymce.get("input-text").setContent("");
-      fetchQuestions(); // reload
+      fetchQuestions(); // tải lại
     } catch (err) {
       console.error(err);
       alert("Thêm thất bại!");
     }
   });
 
-  //Mở/Đóng modal
+  // Mở/Đóng modal
   openBtn.onclick = () => modal.style.display = "block";
   closeBtn.onclick = () => modal.style.display = "none";
   window.onclick = (e) => {
     if (e.target === modal) modal.style.display = "none";
   };
 
-  //Tìm kiếm đơn giản
+  // Tìm kiếm
   document.getElementById("searchInput").addEventListener("input", (e) => {
     const keyword = e.target.value.toLowerCase();
     const rows = tableBody.querySelectorAll("tr");
@@ -102,6 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  //Tải danh sách câu hỏi khi trang load
+  // Tải dữ liệu ban đầu
   fetchQuestions();
 });
