@@ -443,12 +443,3 @@ document.getElementById('joinClassForm').addEventListener('submit', function(eve
     }
 });
 
-
-
-
-
-
-
-
-
-
