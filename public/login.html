@@ -66,7 +66,12 @@
         
         <form id="loginForm">
             <input type="email" id="email" placeholder="Nhập email của bạn" required>
-            <input type="password" id="password" placeholder="Nhập mật khẩu" required>
+            <div class="mb-4">
+                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                <input type="password" id="password" name="password" 
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                       placeholder="Nhập mật khẩu" required autocomplete="current-password">
+            </div>
             <button type="submit">ĐĂNG NHẬP</button>
         </form>
         

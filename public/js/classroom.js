@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const classNameElement = document.getElementById('className');
     const teacherNameElement = document.getElementById('teacherName');
     const classCodeElement = document.getElementById('classCode');
-    const classIconElement = document.getElementById('classIcon');
+    const classIconContainerElement = document.getElementById('classIconContainer');
     const classIconTypeElement = document.getElementById('classIconType');
     const lessonsListElement = document.getElementById('lessonsList');
     
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!classCode) {
         alert('Không tìm thấy thông tin lớp học');
-        window.location.href = './home.html';
+        window.location.href = './teacher_home.html';
         return;
     }
 
@@ -179,11 +179,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cập nhật màu sắc và biểu tượng dựa trên môn học
     function updateClassStyle(classData) {
-        if (!classIconElement || !classIconTypeElement) return;
+        if (!classIconContainerElement || !classIconTypeElement) return;
         
         let iconClass = 'fas fa-language';
         let gradientClass = 'from-blue-500 to-purple-600';
         
+        // Xác định màu sắc dựa trên môn học
         if (classData.subject) {
             const subject = classData.subject.toLowerCase();
             if (subject.includes('toán')) {
@@ -204,11 +205,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Cập nhật biểu tượng
-        classIconTypeElement.className = iconClass + ' text-white text-3xl';
+        // Cập nhật icon
+        classIconTypeElement.className = `${iconClass} text-white text-2xl`;
         
         // Cập nhật màu nền
-        classIconElement.className = `bg-gradient-to-r ${gradientClass} h-32 flex items-center justify-center`;
+        classIconContainerElement.className = `w-16 h-16 rounded-full bg-gradient-to-r ${gradientClass} flex items-center justify-center mr-4`;
     }
 
     // Tải danh sách bài học

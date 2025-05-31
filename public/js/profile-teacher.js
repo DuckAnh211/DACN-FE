@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const API_ENDPOINTS = {
         GET_TEACHER_INFO: `${BASE_API_URL}/teacherinfo`,
         UPDATE_TEACHER: `${BASE_API_URL}/update-teacher`,
-        GET_TEACHING_CLASSES: `${BASE_API_URL}/teaching-classes`,
+        GET_TEACHING_CLASSES: `${BASE_API_URL}/classrooms`, // Thay đổi endpoint
         CHANGE_PASSWORD: `${BASE_API_URL}/change-password`,
         GET_TEACHER_STATS: `${BASE_API_URL}/teacher-stats`
     };
@@ -133,10 +133,43 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        fetch(`${API_ENDPOINTS.GET_TEACHING_CLASSES}?email=${userEmail}`)
+        // Lấy email giáo viên từ localStorage
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+            teachingClassesContainer.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-circle text-yellow-500 text-2xl mb-2"></i>
+                    <p class="text-gray-500">Vui lòng đăng nhập để xem danh sách lớp học.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Sử dụng API classrooms để lấy tất cả lớp học
+        fetch(`${API_ENDPOINTS.GET_TEACHING_CLASSES}`)
             .then(response => response.json())
             .then(data => {
-                if (!data.classes || data.classes.length === 0) {
+                // Kiểm tra dữ liệu trả về
+                let allClasses = Array.isArray(data) ? data : (data.data || []);
+                
+                // Lọc chỉ những lớp học mà giáo viên này dạy
+                const teachingClasses = allClasses.filter(classItem => {
+                    // Kiểm tra nếu teacher là object có thuộc tính email
+                    if (classItem.teacher && classItem.teacher.email) {
+                        return classItem.teacher.email === userEmail;
+                    }
+                    // Kiểm tra nếu teacher là string email
+                    if (typeof classItem.teacher === 'string') {
+                        return classItem.teacher === userEmail;
+                    }
+                    // Kiểm tra nếu teacherEmail tồn tại
+                    if (classItem.teacherEmail) {
+                        return classItem.teacherEmail === userEmail;
+                    }
+                    return false;
+                });
+                
+                if (teachingClasses.length === 0) {
                     teachingClassesContainer.innerHTML = `
                         <div class="text-center py-4">
                             <i class="fas fa-info-circle text-blue-500 text-2xl mb-2"></i>
@@ -148,30 +181,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 teachingClassesContainer.innerHTML = '';
                 
-                data.classes.forEach(classItem => {
+                teachingClasses.forEach(classItem => {
                     // Xác định màu sắc và biểu tượng dựa trên môn học
                     let bgColor, iconClass, textColor;
                     
-                    switch (classItem.subject) {
-                        case 'Toán':
-                            bgColor = 'bg-blue-100';
-                            iconClass = 'fas fa-calculator';
-                            textColor = 'text-blue-500';
-                            break;
-                        case 'Vật lý':
-                            bgColor = 'bg-purple-100';
-                            iconClass = 'fas fa-atom';
-                            textColor = 'text-purple-500';
-                            break;
-                        case 'Hóa học':
-                            bgColor = 'bg-green-100';
-                            iconClass = 'fas fa-flask';
-                            textColor = 'text-green-500';
-                            break;
-                        default:
-                            bgColor = 'bg-gray-100';
-                            iconClass = 'fas fa-book';
-                            textColor = 'text-gray-500';
+                    const subject = classItem.subject ? classItem.subject.toLowerCase() : '';
+                    
+                    if (subject.includes('toán')) {
+                        bgColor = 'bg-blue-100';
+                        iconClass = 'fas fa-calculator';
+                        textColor = 'text-blue-500';
+                    } else if (subject.includes('vật lý')) {
+                        bgColor = 'bg-purple-100';
+                        iconClass = 'fas fa-atom';
+                        textColor = 'text-purple-500';
+                    } else if (subject.includes('hóa học')) {
+                        bgColor = 'bg-green-100';
+                        iconClass = 'fas fa-flask';
+                        textColor = 'text-green-500';
+                    } else if (subject.includes('văn') || subject.includes('ngữ văn')) {
+                        bgColor = 'bg-yellow-100';
+                        iconClass = 'fas fa-book';
+                        textColor = 'text-yellow-600';
+                    } else if (subject.includes('anh') || subject.includes('tiếng anh')) {
+                        bgColor = 'bg-red-100';
+                        iconClass = 'fas fa-globe';
+                        textColor = 'text-red-500';
+                    } else {
+                        bgColor = 'bg-gray-100';
+                        iconClass = 'fas fa-book';
+                        textColor = 'text-gray-500';
                     }
                     
                     // Tạo phần tử hiển thị lớp học
@@ -364,3 +403,5 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchTeachingClasses();
     fetchTeacherStats();
 });
+
+
