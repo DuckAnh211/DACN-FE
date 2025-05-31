@@ -30,73 +30,83 @@ document.addEventListener('DOMContentLoaded', function() {
     // Lấy danh sách lớp học từ API
     async function fetchClasses() {
         try {
-            console.log('Đang lấy danh sách lớp học từ:', API_ENDPOINTS.GET_CLASSES);
-            const response = await fetch(API_ENDPOINTS.GET_CLASSES);
+            // Lấy email người dùng từ localStorage
+            const userEmail = localStorage.getItem('userEmail');
+            if (!userEmail) {
+                console.error('Không tìm thấy email người dùng');
+                displayJoinedClasses(); // Hiển thị thông báo chưa tham gia lớp nào
+                return;
+            }
+            
+            console.log('Đang lấy danh sách lớp học đã tham gia cho:', userEmail);
+            
+            // Sử dụng API endpoint tương tự như trong profile.js
+            const response = await fetch(`${BASE_API_URL}/enrolled-classes?email=${userEmail}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();
-            console.log('Dữ liệu nhận được:', data);
+            console.log('Dữ liệu lớp học đã tham gia:', data);
             
-            // Kiểm tra cấu trúc dữ liệu
-            if (data && Array.isArray(data.data)) {
-                allClasses = data.data;
-            } else if (Array.isArray(data)) {
-                allClasses = data;
-            } else {
-                console.error('Dữ liệu không đúng định dạng:', data);
-                allClasses = [];
-            }
-            
-            // Lấy danh sách lớp học đã tham gia từ localStorage
-            const joinedClasses = JSON.parse(localStorage.getItem('joinedClasses') || '[]');
-            
-            // Đánh dấu các lớp học đã tham gia
-            allClasses = allClasses.map(classItem => {
-                if (joinedClasses.includes(classItem.classCode)) {
+            // Xử lý dữ liệu tương tự như trong profile.js
+            if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+                // Lưu danh sách lớp học đã tham gia
+                allClasses = data.data.map(classItem => {
                     classItem.joined = true;
-                }
-                return classItem;
-            });
+                    return classItem;
+                });
+                
+                // Lưu danh sách mã lớp học vào localStorage
+                const classCodeList = allClasses.map(classItem => classItem.classCode);
+                localStorage.setItem('joinedClasses', JSON.stringify(classCodeList));
+                
+                // Lưu thông tin chi tiết của từng lớp học vào localStorage
+                allClasses.forEach(classItem => {
+                    localStorage.setItem(`class_${classItem.classCode}`, JSON.stringify(classItem));
+                });
+            } else {
+                // Không có lớp học nào
+                allClasses = [];
+                localStorage.setItem('joinedClasses', JSON.stringify([]));
+            }
             
             console.log('Danh sách lớp học đã xử lý:', allClasses);
             
-            // Hiển thị các lớp học đã tham gia (nếu có)
+            // Hiển thị các lớp học đã tham gia
             displayJoinedClasses();
         } catch (error) {
             console.error('Lỗi khi lấy danh sách lớp học:', error);
-            // Tạo dữ liệu mẫu để test
-            allClasses = [
-                {
-                    classCode: 'CS101',
-                    className: 'Nhập môn lập trình',
-                    subject: 'Tin học',
-                    teacher: { name: 'Nguyễn Văn A' }
-                },
-                {
-                    classCode: 'MATH101',
-                    className: 'Đại số tuyến tính',
-                    subject: 'Toán',
-                    teacher: { name: 'Trần Thị B' }
-                }
-            ];
             
-            // Lấy danh sách lớp học đã tham gia từ localStorage
-            const joinedClasses = JSON.parse(localStorage.getItem('joinedClasses') || '[]');
+            // Thử lấy từ localStorage nếu API lỗi
+            const joinedClassCodes = JSON.parse(localStorage.getItem('joinedClasses') || '[]');
             
-            // Đánh dấu các lớp học đã tham gia
-            allClasses = allClasses.map(classItem => {
-                if (joinedClasses.includes(classItem.classCode)) {
-                    classItem.joined = true;
-                }
-                return classItem;
-            });
+            if (joinedClassCodes.length > 0) {
+                // Lấy thông tin chi tiết của từng lớp học từ localStorage
+                allClasses = joinedClassCodes.map(code => {
+                    const cachedClass = localStorage.getItem(`class_${code}`);
+                    if (cachedClass) {
+                        const classData = JSON.parse(cachedClass);
+                        classData.joined = true;
+                        return classData;
+                    }
+                    return { 
+                        classCode: code, 
+                        className: `Lớp học ${code}`,
+                        subject: 'Chưa xác định',
+                        teacher: { name: 'Chưa phân công' },
+                        joined: true
+                    };
+                });
+            } else {
+                // Không có lớp học nào
+                allClasses = [];
+            }
             
-            console.log('Sử dụng dữ liệu mẫu:', allClasses);
+            console.log('Sử dụng dữ liệu từ localStorage:', allClasses);
             
-            // Hiển thị các lớp học đã tham gia (nếu có)
+            // Hiển thị các lớp học đã tham gia
             displayJoinedClasses();
         }
     }
@@ -113,12 +123,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (joinedClasses.length === 0) {
             classContainer.innerHTML = `
-                <div class="text-center py-8">
-                    <div class="text-gray-500 mb-4">
-                        <i class="fas fa-school text-5xl mb-3"></i>
-                        <p class="text-lg">Bạn chưa tham gia lớp học nào</p>
+                <div class="col-span-1 md:col-span-2 lg:col-span-3">
+                    <div class="text-center py-8">
+                        <div class="text-gray-500 mb-4">
+                            <i class="fas fa-school text-5xl mb-3"></i>
+                            <p class="text-lg">Bạn chưa tham gia lớp học nào</p>
+                        </div>
+                        <p class="text-sm text-gray-400">Sử dụng mã lớp để tham gia lớp học</p>
                     </div>
-                    <p class="text-sm text-gray-400">Sử dụng mã lớp để tham gia lớp học</p>
                 </div>
             `;
             return;
@@ -442,4 +454,8 @@ document.getElementById('joinClassForm').addEventListener('submit', function(eve
         enterClass(classCode);
     }
 });
+
+
+
+
 

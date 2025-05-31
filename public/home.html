@@ -20,7 +20,7 @@
                 <a href="./intro.html" class="bg-yellow-200 px-4 py-1 rounded">Trang chủ</a>
                 <a href="./home.html" class="bg-yellow-200 px-4 py-1 rounded">Lớp học</a>
                 <a href="./profile.html" class="bg-yellow-200 px-4 py-1 rounded">Hồ sơ</a>
-                <a href="./index.html" class="bg-green-400 text-white px-4 py-1 rounded">Đăng xuất</a>
+                <a href="./index.html" class="bg-green-400 text-white px-4 py-1 rounded logout-link">Đăng xuất</a>
 
             </div>
         </div>
@@ -56,6 +56,15 @@
 
             <!-- Class Cards -->
             <div id="classContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Thông báo khi chưa tham gia lớp học nào -->
+                <div id="noClassesMessage" class="col-span-1 md:col-span-2 lg:col-span-3 hidden">
+                    <div class="text-center py-4">
+                        <div class="text-gray-500">
+                            <i class="fas fa-school text-4xl mb-2"></i>
+                            <p>Bạn chưa tham gia lớp học nào</p>
+                        </div>
+                    </div>
+                </div>
                 <!-- Các thẻ lớp học sẽ được thêm vào đây bởi JavaScript -->
             </div>
         </div>
@@ -82,4 +91,5 @@
         </div>
     </div>
 </body>
+<script src="./js/logout.js"></script>
 </html>
