@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                 // Chuyển hướng dựa vào loại người dùng
                 if (userType === "teacher") {
-                    window.location.href = "teacher_home.html";
+                    window.location.href = "classes_list.html";
                 } else {
                     window.location.href = "intro.html";
                 }

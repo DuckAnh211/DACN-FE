@@ -2,7 +2,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cấu hình API
     const BASE_API_URL = 'http://localhost:8080/v1/api';
     const API_ENDPOINTS = {
-        GET_CLASS: `${BASE_API_URL}/classrooms`
+        GET_CLASS: `${BASE_API_URL}/classrooms`,
+        GET_STUDENTS: `${BASE_API_URL}/classroom-students`,
+        GET_LESSONS: `${BASE_API_URL}/lessons/classroom`, // Cập nhật endpoint mới
+        CREATE_LESSON: `${BASE_API_URL}/lessons`,
+        DELETE_LESSON: `${BASE_API_URL}/lessons`, // Endpoint cơ bản, ID sẽ được thêm vào sau
+        // Thêm các endpoint khác nếu cần
     };
 
     // Lấy tham chiếu đến các phần tử DOM
@@ -67,6 +72,29 @@ document.addEventListener('DOMContentLoaded', function() {
             // Tải danh sách bài kiểm tra nếu cần
             loadTests();
         });
+    }
+    
+    // Thêm event listener cho nút thêm bài học
+    const btnAddNewLesson = document.getElementById('btnAddNewLesson');
+    if (btnAddNewLesson) {
+        btnAddNewLesson.addEventListener('click', openAddLessonModal);
+    }
+    
+    const btnAddLesson = document.getElementById('btnAddLesson');
+    if (btnAddLesson) {
+        btnAddLesson.addEventListener('click', openAddLessonModal);
+    }
+    
+    // Thêm event listener cho form thêm bài học
+    const lessonForm = document.getElementById('lessonForm');
+    if (lessonForm) {
+        lessonForm.addEventListener('submit', handleLessonSubmit);
+    }
+    
+    // Thêm event listener cho nút đóng modal
+    const closeLessonModalBtn = document.getElementById('closeLessonModal');
+    if (closeLessonModalBtn) {
+        closeLessonModalBtn.addEventListener('click', closeLessonModal);
     }
     
     // Hàm kích hoạt tab
@@ -153,7 +181,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (totalStudentsElement) {
                     totalStudentsElement.textContent = students.length;
                 }
-                
+                            
+
                 if (!Array.isArray(students) || students.length === 0) {
                     studentsList.innerHTML = `
                         <tr>
@@ -234,8 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Hàm tải danh sách bài học
     function loadLessons() {
-        if (!lessonsContent) return;
-        
         const lessonsList = document.getElementById('lessonsList');
         if (!lessonsList) return;
         
@@ -256,48 +283,145 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Gọi API để lấy danh sách bài học
-        fetch(`${BASE_API_URL}/lessons/class/${classCode}`)
+        // Gọi API để lấy danh sách bài học với endpoint mới
+        fetch(`${API_ENDPOINTS.GET_LESSONS}/${classCode}`)
             .then(response => response.json())
             .then(data => {
-                const lessons = data.data || [];
+                console.log('Dữ liệu bài học:', data);
+                
+                // Kiểm tra cấu trúc dữ liệu trả về
+                const lessons = data.success && Array.isArray(data.data) ? data.data : [];
                 
                 if (lessons.length === 0) {
                     lessonsList.innerHTML = `
                         <div class="text-center py-4">
                             <p class="text-gray-500">Chưa có bài học nào</p>
+                            <button id="btnAddLesson" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                                <i class="fas fa-plus mr-1"></i> Thêm bài học mới
+                            </button>
                         </div>
                     `;
+                    
+                    // Thêm event listener cho nút thêm bài học
+                    const btnAddLesson = document.getElementById('btnAddLesson');
+                    if (btnAddLesson) {
+                        btnAddLesson.addEventListener('click', openAddLessonModal);
+                    }
+                    
                     return;
                 }
                 
                 // Hiển thị danh sách bài học
-                lessonsList.innerHTML = '';
+                lessonsList.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Danh sách bài học</h3>
+                        <a id="btnAddNewLesson" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm">
+                            <i class="fas fa-plus mr-1"></i> Thêm bài học
+                        </a>
+                    </div>
+                    <div id="lessonsContainer" class="space-y-3"></div>
+                `;
+                
+                // Thêm event listener cho nút thêm bài học
+                const btnAddNewLesson = document.getElementById('btnAddNewLesson');
+                if (btnAddNewLesson) {
+                    btnAddNewLesson.addEventListener('click', openAddLessonModal);
+                }
+                
+                // Lấy container để thêm các bài học
+                const lessonsContainer = document.getElementById('lessonsContainer');
+                if (!lessonsContainer) return;
+                
+                // Hiển thị từng bài học
                 lessons.forEach(lesson => {
                     const lessonItem = document.createElement('div');
                     lessonItem.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow';
+                    
+                    // Xác định nếu có file đính kèm
+                    const hasAttachment = lesson.fileUrl || lesson.fileName;
+                    
+                    // Xác định thông tin giáo viên
+                    const teacherName = lesson.teacherId && lesson.teacherId.name 
+                        ? lesson.teacherId.name 
+                        : (lesson.teacherName || 'Không xác định');
+                    
+                    // Định dạng ngày tạo
+                    const createdDate = new Date(lesson.createdAt).toLocaleDateString('vi-VN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    // Xác định loại file để hiển thị icon phù hợp
+                    let fileIcon = 'fas fa-file-alt';
+                    if (lesson.fileType) {
+                        if (lesson.fileType.includes('pdf')) {
+                            fileIcon = 'fas fa-file-pdf';
+                        } else if (lesson.fileType.includes('word')) {
+                            fileIcon = 'fas fa-file-word';
+                        } else if (lesson.fileType.includes('presentation') || lesson.fileType.includes('powerpoint')) {
+                            fileIcon = 'fas fa-file-powerpoint';
+                        } else if (lesson.fileType.includes('sheet') || lesson.fileType.includes('excel')) {
+                            fileIcon = 'fas fa-file-excel';
+                        } else if (lesson.fileType.includes('image')) {
+                            fileIcon = 'fas fa-file-image';
+                        } else if (lesson.fileType.includes('video')) {
+                            fileIcon = 'fas fa-file-video';
+                        } else if (lesson.fileType.includes('audio')) {
+                            fileIcon = 'fas fa-file-audio';
+                        }
+                    }
+                    
+                    // Tạo URL đầy đủ cho file
+                    const fileFullUrl = lesson.fileUrl ? `${BASE_API_URL}${lesson.fileUrl}` : '#';
+                    
                     lessonItem.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3 mt-1">
                                     <i class="fas fa-book-open text-green-500"></i>
                                 </div>
                                 <div>
-                                    <h4 class="font-medium">${lesson.title || 'Bài học không có tiêu đề'}</h4>
-                                    <p class="text-sm text-gray-600">Ngày tạo: ${new Date(lesson.createdAt || Date.now()).toLocaleDateString()}</p>
+                                    <h4 class="font-medium text-lg">${lesson.title || 'Bài học không có tiêu đề'}</h4>
+                                    <div class="flex items-center text-sm text-gray-600 mt-1">
+                                        <span class="flex items-center mr-3">
+                                            <i class="fas fa-user mr-1"></i> ${teacherName}
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="far fa-calendar-alt mr-1"></i> ${createdDate}
+                                        </span>
+                                    </div>
+                                    ${lesson.description ? `<p class="text-sm text-gray-700 mt-2">${lesson.description}</p>` : ''}
+                                    ${hasAttachment ? `
+                                        <div class="mt-3 p-2 bg-gray-50 rounded border border-gray-200">
+                                            <a href="${fileFullUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 flex items-center">
+                                                <i class="${fileIcon} mr-2 text-lg"></i>
+                                                <div>
+                                                    <span class="font-medium">${lesson.fileName || 'Tài liệu đính kèm'}</span>
+                                                    <span class="text-xs text-gray-500 block">
+                                                        ${formatFileSize(lesson.fileSize || 0)}
+                                                    </span>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
-                            <div class="flex space-x-2">
-                                <button class="text-blue-500 hover:text-blue-700" onclick="editLesson('${lesson.id}')">
+                            <div class="flex space-x-1">
+                                <button class="text-blue-500 hover:text-blue-700 p-1" onclick="viewLesson('${lesson._id}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-blue-500 hover:text-blue-700 p-1" onclick="editLesson('${lesson._id}')">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="text-red-500 hover:text-red-700" onclick="deleteLesson('${lesson.id}')">
+                                <button class="text-red-500 hover:text-red-700 p-1" onclick="deleteLesson('${lesson._id}')">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
                         </div>
                     `;
-                    lessonsList.appendChild(lessonItem);
+                    
+                    lessonsContainer.appendChild(lessonItem);
                 });
                 
                 // Đánh dấu đã tải
@@ -308,9 +432,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 lessonsList.innerHTML = `
                     <div class="text-center py-4">
                         <p class="text-red-500">Có lỗi xảy ra khi tải danh sách bài học</p>
+                        <button id="btnRetryLoadLessons" class="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-sync-alt mr-1"></i> Thử lại
+                        </button>
                     </div>
                 `;
+                
+                // Thêm event listener cho nút thử lại
+                const btnRetryLoadLessons = document.getElementById('btnRetryLoadLessons');
+                if (btnRetryLoadLessons) {
+                    btnRetryLoadLessons.addEventListener('click', () => {
+                        lessonsList.dataset.loaded = 'false';
+                        loadLessons();
+                    });
+                }
             });
+    }
+
+    // Hàm định dạng kích thước file
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
     
     // Hàm tải danh sách bài tập
@@ -769,118 +916,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Hàm xem tiến độ học sinh
-    function viewStudentProgress(studentId) {
-        if (!studentId) return;
-        
-        // Hiển thị modal tiến độ học sinh
-        const modal = document.getElementById('studentProgressModal');
-        if (!modal) return;
-        
-        // Hiển thị loading
-        const modalContent = document.getElementById('studentProgressContent');
-        if (modalContent) {
-            modalContent.innerHTML = `
-                <div class="text-center py-4">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                    <p class="text-gray-500">Đang tải tiến độ học tập...</p>
-                </div>
-            `;
-        }
-        
-        // Hiển thị modal
-        modal.classList.remove('hidden');
-        
-        // Lấy mã lớp từ URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const classCode = urlParams.get('code');
-        
-        if (!classCode) return;
-        
-        // Gọi API để lấy tiến độ học tập của học sinh
-        fetch(`${BASE_API_URL}/students/${studentId}/progress?classCode=${classCode}`)
-            .then(response => response.json())
-            .then(data => {
-                const progress = data.data || data;
-                
-                if (!progress) {
-                    if (modalContent) {
-                        modalContent.innerHTML = `
-                            <div class="text-center py-4">
-                                <p class="text-gray-500">Chưa có dữ liệu tiến độ học tập</p>
-                            </div>
-                        `;
-                    }
-                    return;
-                }
-                
-                // Hiển thị tiến độ học tập
-                if (modalContent) {
-                    modalContent.innerHTML = `
-                        <div class="bg-white p-6 rounded-lg">
-                            <h3 class="text-xl font-bold mb-4">Tiến độ học tập</h3>
-                            
-                            <div class="mb-4">
-                                <h4 class="font-medium mb-2">Tổng quan</h4>
-                                <div class="grid grid-cols-3 gap-4">
-                                    <div class="bg-blue-50 p-3 rounded">
-                                        <p class="text-sm text-gray-500">Bài học đã hoàn thành</p>
-                                        <p class="font-bold text-xl">${progress.completedLessons || 0}/${progress.totalLessons || 0}</p>
-                                    </div>
-                                    <div class="bg-green-50 p-3 rounded">
-                                        <p class="text-sm text-gray-500">Bài tập đã nộp</p>
-                                        <p class="font-bold text-xl">${progress.submittedAssignments || 0}/${progress.totalAssignments || 0}</p>
-                                    </div>
-                                    <div class="bg-yellow-50 p-3 rounded">
-                                        <p class="text-sm text-gray-500">Bài kiểm tra đã làm</p>
-                                        <p class="font-bold text-xl">${progress.completedTests || 0}/${progress.totalTests || 0}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <h4 class="font-medium mb-2">Điểm số</h4>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p class="text-sm text-gray-500">Điểm trung bình bài tập</p>
-                                        <p class="font-bold text-xl">${progress.averageAssignmentScore || 0}/10</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Điểm trung bình kiểm tra</p>
-                                        <p class="font-bold text-xl">${progress.averageTestScore || 0}/10</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex justify-end">
-                                <button class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300" onclick="closeStudentProgressModal()">
-                                    Đóng
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading student progress:', error);
-                if (modalContent) {
-                    modalContent.innerHTML = `
-                        <div class="text-center py-4">
-                            <p class="text-red-500">Có lỗi xảy ra khi tải tiến độ học tập</p>
-                        </div>
-                    `;
-                }
-            });
-    }
-
-    // Hàm đóng modal tiến độ học sinh
-    function closeStudentProgressModal() {
-        const modal = document.getElementById('studentProgressModal');
-        if (modal) {
-            modal.classList.add('hidden');
-        }
-    }
-
     // Hàm xóa học sinh khỏi lớp
     function removeStudent(studentId) {
         if (!studentId || !confirm('Bạn có chắc chắn muốn xóa học sinh này khỏi lớp?')) return;
@@ -979,7 +1014,334 @@ document.addEventListener('DOMContentLoaded', function() {
             classIconTypeElement.className = iconClass;
         }
     }
+
+    // Hàm mở modal thêm bài học
+    function openAddLessonModal() {
+        const modal = document.getElementById('addLessonModal');
+        if (!modal) {
+            // Nếu modal chưa tồn tại, tạo mới và thêm vào DOM
+            createAddLessonModal();
+        } else {
+            // Reset form
+            const lessonForm = document.getElementById('lessonForm');
+            if (lessonForm) lessonForm.reset();
+            
+            // Hiển thị modal
+            modal.classList.remove('hidden');
+        }
+    }
+
+    // Hàm tạo modal thêm bài học
+    function createAddLessonModal() {
+        // Tạo element cho modal
+        const modal = document.createElement('div');
+        modal.id = 'addLessonModal';
+        modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+        
+        // Lấy mã lớp từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const classCode = urlParams.get('code');
+        const teacherEmail = localStorage.getItem('userEmail');
+        
+        // Tạo nội dung modal
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4">
+                <div class="flex justify-between items-center border-b px-6 py-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Thêm bài học mới</h3>
+                    <a id="closeLessonModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+                
+                <form id="lessonForm" class="px-6 py-4">
+                    <div class="mb-4">
+                        <label for="lessonTitle" class="block text-gray-700 font-medium mb-2">Tiêu đề bài học <span class="text-red-500">*</span></label>
+                        <input type="text" id="lessonTitle" name="title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="lessonDescription" class="block text-gray-700 font-medium mb-2">Mô tả bài học</label>
+                        <textarea id="lessonDescription" name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="lessonFile" class="block text-gray-700 font-medium mb-2">Tài liệu bài học</label>
+                        <input type="file" id="lessonFile" name="lessonFile" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-sm text-gray-500 mt-1">Hỗ trợ các định dạng: PDF, DOCX, PPTX (tối đa 10MB)</p>
+                    </div>
+                    
+                    <input type="hidden" id="lessonClassCode" name="classCode" value="${classCode || ''}">
+                    <input type="hidden" id="lessonTeacherEmail" name="teacherEmail" value="${teacherEmail || ''}">
+                    
+                    <div class="flex justify-end border-t pt-4 mt-4">                   
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-save mr-1"></i> Lưu bài học
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        // Thêm modal vào body
+        document.body.appendChild(modal);
+        
+        // Thêm event listener cho nút đóng modal
+        const closeLessonModalBtn = document.getElementById('closeLessonModal');
+        if (closeLessonModalBtn) {
+            closeLessonModalBtn.addEventListener('click', closeLessonModal);
+        }
+        
+        // Thêm event listener cho form
+        const lessonForm = document.getElementById('lessonForm');
+        if (lessonForm) {
+            lessonForm.addEventListener('submit', handleLessonSubmit);
+        }
+    }
+
+    // Hàm đóng modal thêm bài học
+    function closeLessonModal() {
+        const modal = document.getElementById('addLessonModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    // Hàm xử lý submit form thêm bài học
+    async function handleLessonSubmit(event) {
+        event.preventDefault();
+        
+        // Lấy dữ liệu từ form
+        const title = document.getElementById('lessonTitle').value.trim();
+        const description = document.getElementById('lessonDescription').value.trim();
+        const classCode = document.getElementById('lessonClassCode').value.trim();
+        const teacherEmail = document.getElementById('lessonTeacherEmail').value.trim();
+        const fileInput = document.getElementById('lessonFile');
+        
+        // Kiểm tra dữ liệu
+        if (!title) {
+            alert('Vui lòng nhập tiêu đề bài học');
+            return;
+        }
+        
+        if (!classCode) {
+            alert('Không tìm thấy mã lớp học');
+            return;
+        }
+        
+        if (!teacherEmail) {
+            alert('Không tìm thấy thông tin giáo viên');
+            return;
+        }
+        
+        // Hiển thị loading
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Đang tải lên...`;
+        
+        try {
+            // Tạo FormData để gửi dữ liệu và file
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('classCode', classCode);
+            formData.append('teacherEmail', teacherEmail);
+            
+            // Thêm file nếu có
+            if (fileInput.files.length > 0) {
+                formData.append('lessonFile', fileInput.files[0]);
+            }
+            
+            // Gọi API để tạo bài học
+            const response = await fetch(API_ENDPOINTS.CREATE_LESSON, {
+                method: 'POST',
+                body: formData
+            });
+            
+            // Xử lý kết quả
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Tải lên bài học thành công!');
+                closeLessonModal();
+                
+                // Tải lại danh sách bài học
+                const lessonsList = document.getElementById('lessonsList');
+                if (lessonsList) {
+                    lessonsList.dataset.loaded = 'false';
+                    loadLessons();
+                }
+            } else {
+                alert(`Lỗi: ${result.message || 'Không thể tải lên bài học'}`);
+            }
+        } catch (error) {
+            console.error('Error creating lesson:', error);
+            alert('Có lỗi xảy ra khi tải lên bài học');
+        } finally {
+            // Khôi phục trạng thái nút submit
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    }
+
+    // Hàm xem chi tiết bài học
+    function viewLesson(lessonId) {
+        if (!lessonId) return;
+        
+        // Lấy mã lớp từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const classCode = urlParams.get('code');
+        
+        if (!classCode) return;
+        
+        // Chuyển hướng đến trang chi tiết bài học
+        window.location.href = `./lesson_detail.html?id=${lessonId}&class=${classCode}`;
+    }
+
+    // Hàm chỉnh sửa bài học
+    function editLesson(lessonId) {
+        if (!lessonId) return;
+        
+        // Lấy mã lớp từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const classCode = urlParams.get('code');
+        
+        if (!classCode) return;
+        
+        // Hiển thị loading
+        showToast('Đang tải thông tin bài học...', 'info');
+        
+        // Gọi API để lấy thông tin chi tiết bài học
+        fetch(`${BASE_API_URL}/lessons/${lessonId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const lesson = data.data;
+                    
+                    // Mở modal chỉnh sửa bài học
+                    openEditLessonModal(lesson);
+                } else {
+                    showToast('Không thể tải thông tin bài học', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading lesson details:', error);
+                showToast('Có lỗi xảy ra khi tải thông tin bài học', 'error');
+            });
+    }
+
+    // Hàm xóa bài học
+    function deleteLesson(lessonId) {
+        if (!lessonId || !confirm('Bạn có chắc chắn muốn xóa bài học này?')) return;
+        
+        // Hiển thị loading
+        const lessonElement = document.querySelector(`[onclick="deleteLesson('${lessonId}')"]`).closest('.bg-white');
+        if (lessonElement) {
+            lessonElement.classList.add('opacity-50');
+        }
+        
+        // Gọi API để xóa bài học
+        fetch(`${API_ENDPOINTS.DELETE_LESSON}/${lessonId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Hiển thị thông báo thành công
+                showToast('Xóa bài học thành công!', 'success');
+                
+                // Xóa phần tử khỏi DOM
+                if (lessonElement) {
+                    lessonElement.remove();
+                }
+                
+                // Hoặc tải lại danh sách bài học
+                const lessonsList = document.getElementById('lessonsList');
+                if (lessonsList) {
+                    lessonsList.dataset.loaded = 'false';
+                    loadLessons();
+                }
+            } else {
+                // Hiển thị thông báo lỗi
+                showToast(`Lỗi: ${data.message || 'Không thể xóa bài học'}`, 'error');
+                
+                // Khôi phục trạng thái phần tử
+                if (lessonElement) {
+                    lessonElement.classList.remove('opacity-50');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting lesson:', error);
+            showToast('Có lỗi xảy ra khi xóa bài học', 'error');
+            
+            // Khôi phục trạng thái phần tử
+            if (lessonElement) {
+                lessonElement.classList.remove('opacity-50');
+            }
+        });
+    }
+
+    // Hàm hiển thị thông báo
+    function showToast(message, type = 'success') {
+        // Kiểm tra xem đã có toast container chưa
+        let toastContainer = document.getElementById('toastContainer');
+        
+        if (!toastContainer) {
+            // Tạo toast container nếu chưa có
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'fixed bottom-4 right-4 z-50';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // Tạo toast
+        const toast = document.createElement('div');
+        toast.className = `flex items-center p-4 mb-3 rounded-lg shadow-lg ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } text-white`;
+        
+        // Thêm nội dung cho toast
+        toast.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+            <span>${message}</span>
+            <button class="ml-auto text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        // Thêm toast vào container
+        toastContainer.appendChild(toast);
+        
+        // Thêm event listener cho nút đóng
+        const closeBtn = toast.querySelector('button');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                toast.remove();
+            });
+        }
+        
+        // Tự động đóng toast sau 3 giây
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
 });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

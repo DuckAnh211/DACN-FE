@@ -89,9 +89,6 @@ function displayClasses(classes) {
             <td class="px-4 py-3 border-b">${teacherInfo}</td>
             <td class="px-4 py-3 border-b">
                 <div class="flex space-x-2">
-                    <button class="edit-class text-blue-500 hover:text-blue-700" data-id="${classItem._id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
                     <button class="delete-class text-red-500 hover:text-red-700" data-id="${classItem._id}">
                         <i class="fas fa-trash"></i>
                     </button>

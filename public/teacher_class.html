@@ -85,7 +85,7 @@
                             </div>
                             <div>
                                 <p class="text-gray-500 text-sm">Bài học</p>
-                                <h3 id="totalLessons" class="text-2xl font-bold text-gray-800">0</h3>
+                                <h3 id="totalLessons" class="text-2xl font-bold text-gray-800">--</h3>
                             </div>
                         </div>
                     </div>
@@ -96,51 +96,12 @@
                             </div>
                             <div>
                                 <p class="text-gray-500 text-sm">Bài kiểm tra</p>
-                                <h3 id="totalTests" class="text-2xl font-bold text-gray-800">0</h3>
+                                <h3 id="totalTests" class="text-2xl font-bold text-gray-800">--</h3>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Activities -->
-                <div class="mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-800">Hoạt động gần đây</h3>
-                        <button id="btnRefreshActivities" class="text-blue-500 hover:text-blue-700">
-                            <i class="fas fa-sync-alt"></i> Làm mới
-                        </button>
-                    </div>
-                    <div id="recentActivities" class="space-y-3 bg-gray-50 p-4 rounded-lg">
-                        <div class="text-center py-4">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                            <p class="text-gray-500">Đang tải hoạt động gần đây...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Thao tác nhanh</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <button id="btnAddLesson" class="flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg transition-colors">
-                            <i class="fas fa-plus-circle mr-2"></i> Thêm bài học
-                        </button>
-                        <button id="btnCreateTest" class="flex items-center justify-center bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-lg transition-colors">
-                            <i class="fas fa-clipboard-list mr-2"></i> Tạo bài kiểm tra
-                        </button>
-                        <button id="btnCreateMeeting" class="flex items-center justify-center bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition-colors">
-                            <i class="fas fa-video mr-2"></i> Tạo buổi học trực tuyến
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Class Description -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Mô tả lớp học</h3>
-                    <div id="classDescription" class="bg-gray-50 p-4 rounded-lg">
-                        <p class="text-gray-600">Đang tải mô tả lớp học...</p>
-                    </div>
-                </div>
             </div>
 
             <!-- Students Content -->
@@ -149,23 +110,6 @@
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-gray-800">Danh sách học sinh</h3>
                     <div class="flex space-x-2">
-                    </div>
-                </div>
-
-                <!-- Search and Filter -->
-                <div class="flex flex-col md:flex-row gap-4 mb-4">
-                    <div class="flex-grow">
-                        <input type="text" id="searchStudent" placeholder="Tìm kiếm học sinh..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div class="flex gap-2">
-                        <select id="filterStatus" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all">Tất cả trạng thái</option>
-                            <option value="active">Đang học</option>
-                            <option value="inactive">Tạm nghỉ</option>
-                        </select>
-                        <button id="btnApplyFilter" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md transition-colors">
-                            <i class="fas fa-filter"></i>
-                        </button>
                     </div>
                 </div>
 
@@ -195,13 +139,7 @@
 
             <!-- Lessons Content -->
             <div id="lessons-content" class="hidden space-y-6">
-                <!-- Lessons List Header -->
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800">Danh sách bài học</h3>
-                    <button id="btnAddNewLesson" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors">
-                        <i class="fas fa-plus-circle mr-1"></i> Thêm bài học mới
-                    </button>
-                </div>
+
 
                 <!-- Lessons List -->
                 <div id="lessonsList" class="space-y-4">
@@ -251,32 +189,9 @@
             </div>
         </div>
     </div>
+</body>
+</html>
 
-    <!-- Add Student Modal -->
-    <div id="addStudentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Thêm học sinh vào lớp</h3>
-                <button id="closeAddStudentModal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="addStudentForm">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Phương thức thêm</label>
-                    <div class="flex space-x-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="addMethod" value="email" checked class="mr-2">
-                            <span>Thêm bằng email</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="radio" name="addMethod" value="code" class="mr-2">
-                            <span>Mã tham gia</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div id="emailMethod" class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email học sinh</label>
-                    <input type="email" id="studentEmail" placeholder="Nhập email học sinh" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p class="text-xs text-gray-500 mt-1">Nhập email của học sinh đã đăng ký tài khoản trên hệ thống.</
+
+
+
