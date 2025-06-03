@@ -8,11 +8,12 @@
   <script src="./js/addtest.js" defer></script>
 </head>
 <body>
+  <button id="homeBtn" onclick="window.location.href='teacher_home.html'">🏠 Home</button>
+
   <h2>📋 DANH SÁCH CÂU HỎI</h2>
 
   <div class="button-group">
     <button id="openModalBtn">+ Một lựa chọn</button>
-    <!-- Thêm các nút khác nếu cần -->
   </div>
 
   <br>
@@ -26,6 +27,7 @@
         <th>Câu hỏi</th>
         <th>Lớp học</th>
         <th>Môn học</th>
+        <th>Đáp án đúng</th>
         <th>Trạng thái</th>
         <th>Sửa</th>
         <th>Xóa</th>
@@ -40,29 +42,41 @@
   <div id="questionModal" class="modal">
     <div class="modal-content">
       <span class="close-btn">&times;</span>
-      <h2>Thêm câu hỏi Một lựa chọn</h2>
+      <h2>Thêm câu hỏi</h2>
 
       <label>Lớp học</label>
       <select id="input-grade">
-        <option value="">- Lớp 10</option>
+        <option value="">- Chọn lớp học -</option>
+        <option value="Lớp 10">Lớp 10</option>
         <option value="Lớp 11">Lớp 11</option>
         <option value="Lớp 12">Lớp 12</option>
       </select>
 
       <label>Môn học</label>
       <select id="input-subject">
+        <option value="">- Chọn môn học -</option>
         <option value="Toán học">Toán học</option>
         <option value="Vật lý">Vật lý</option>
         <option value="Hóa học">Hóa học</option>
       </select>
 
-      <label>Mã câu hỏi (*)</label>
-      <input type="text" id="input-code" />
+      
+<label>Mã câu hỏi (*)</label>
+<input type="text" id="input-code" />
 
-      <label>Câu hỏi (*)</label>
-      <textarea id="input-text"></textarea>
+<label>Câu hỏi (bao gồm cả các đáp án)</label>
+<textarea id="input-text"></textarea>
 
-      <button id="add-btn">✅ Lưu câu hỏi</button>
+<label>Đáp án đúng (*)</label>
+<select id="input-correct-answer">
+  <option value="">- Chọn đáp án đúng -</option>
+  <option value="A">A</option>
+  <option value="B">B</option>
+  <option value="C">C</option>
+  <option value="D">D</option>
+</select>
+
+<button id="add-btn">✅ Lưu câu hỏi</button>
     </div>
   </div>
 </body>

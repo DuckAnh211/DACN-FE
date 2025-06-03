@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080/v1/api/questions'; // Đổi nếu cần
+const API_URL = 'http://localhost:8080/v1/api/questions';
 
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("questionModal");
@@ -8,8 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const codeInput = document.getElementById("input-code");
   const gradeSelect = document.getElementById("input-grade");
   const subjectSelect = document.getElementById("input-subject");
+  const correctAnswerSelect = document.getElementById("input-correct-answer");
   const addBtn = document.getElementById("add-btn");
-
   const tableBody = document.getElementById("question-table-body");
 
   // Khởi tạo TinyMCE
@@ -42,13 +42,14 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${q.content}</td>
         <td>${q.grade}</td>
         <td>${q.subject}</td>
+        <td>${q.correctAnswer || ''}</td>
         <td><button class="status-btn">${q.status ? 'ON' : 'OFF'}</button></td>
         <td><button class="edit-btn">✏️</button></td>
         <td><button class="delete-btn">🗑️</button></td>
       `;
       tableBody.appendChild(tr);
 
-      // Gán sự kiện xoá
+      // Xoá
       const deleteBtn = tr.querySelector(".delete-btn");
       deleteBtn.addEventListener("click", async () => {
         if (confirm("Bạn có chắc muốn xoá câu hỏi này?")) {
@@ -60,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!response.ok) throw new Error("Lỗi xoá");
 
             alert("Đã xoá câu hỏi.");
-            fetchQuestions(); // tải lại danh sách
+            fetchQuestions(); // tải lại
           } catch (err) {
             console.error(err);
             alert("Xoá thất bại!");
@@ -76,18 +77,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const text = tinymce.get("input-text").getContent().trim();
     const grade = gradeSelect.value || "Lớp 10";
     const subject = subjectSelect.value;
-    const status = true; // mặc định bật
+    const correctAnswer = correctAnswerSelect.value;
+    const status = true;
 
-    if (!code || !text) {
-      alert("Vui lòng nhập mã và nội dung câu hỏi!");
+    if (!code || !text || !correctAnswer) {
+      alert("Vui lòng nhập đầy đủ thông tin: mã, câu hỏi và đáp án đúng!");
       return;
     }
+
+    const newQuestion = {
+      code,
+      content: text,
+      grade,
+      subject,
+      correctAnswer,
+      status
+    };
 
     try {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, content: text, grade, subject, status }),
+        body: JSON.stringify(newQuestion),
       });
 
       if (!response.ok) throw new Error("Lỗi khi thêm câu hỏi");
@@ -95,8 +106,9 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Đã thêm câu hỏi thành công!");
       modal.style.display = "none";
       codeInput.value = "";
+      correctAnswerSelect.value = "";
       tinymce.get("input-text").setContent("");
-      fetchQuestions(); // tải lại
+      fetchQuestions();
     } catch (err) {
       console.error(err);
       alert("Thêm thất bại!");
