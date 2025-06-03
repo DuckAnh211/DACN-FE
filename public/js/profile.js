@@ -33,6 +33,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const genderDisplay = document.getElementById('genderDisplay');
     const addressDisplay = document.getElementById('addressDisplay');
 
+    // Hàm chuyển đổi giới tính từ mã sang chữ
+    function translateGender(gender) {
+        switch(gender) {
+            case 'male':
+            case 'Nam':
+                return 'Nam';
+            case 'female':
+            case 'Nữ':
+                return 'Nữ';
+            default:
+                return 'Không xác định';
+        }
+    }
+
+    // Hàm định dạng ngày tháng
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        
+        // Kiểm tra nếu dateString đã ở định dạng dd/mm/yyyy
+        if (dateString.includes('/')) return dateString;
+        
+        // Xử lý định dạng ISO hoặc yyyy-mm-dd
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        
+        return date.toLocaleDateString('vi-VN');
+    }
+
     // Fetch and display user data
     // Các biến và hằng số
     const BASE_API_URL = 'http://localhost:8080/v1/api';
@@ -52,8 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     nameDisplay.textContent = data.name || 'Chưa cập nhật';
                     emailDisplay.textContent = data.email || userEmail;
                     phoneDisplay.textContent = data.phone || 'Chưa cập nhật';
-                    dobDisplay.textContent = data.dateOfBirth || 'Chưa cập nhật';
-                    genderDisplay.textContent = data.gender || 'Chưa cập nhật';
+                    dobDisplay.textContent = formatDate(data.dateOfBirth) || 'Chưa cập nhật';
+                    genderDisplay.textContent = translateGender(data.gender) || 'Chưa cập nhật';
                     addressDisplay.textContent = data.address || 'Chưa cập nhật';
 
                     // Lưu tên người dùng vào localStorage để sử dụng trong meeting.html

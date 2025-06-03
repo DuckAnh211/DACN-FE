@@ -15,16 +15,13 @@
         <div class="bg-white rounded-lg shadow-md p-4 mb-6">
             <h1 class="text-xl font-semibold text-center mb-2">E-Learning</h1>
             <div class="flex justify-center gap-4">
-                <a href="teacher_home.html" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
-                    <i class="fas fa-home mr-1"></i> Trang chủ
-                </a>
                 <a href="classes_list.html" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
                     <i class="fas fa-chalkboard mr-1"></i> Lớp học
                 </a>
                 <a href="profile-teacher.html" class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
                     <i class="fas fa-user mr-1"></i> Hồ sơ
                 </a>
-                <a id="logoutBtn" class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+                <a id="logoutBtn" class="bg-green-400 text-white px-4 py-1 rounded logout-link">
                     <i class="fas fa-sign-out-alt mr-1"></i> Đăng xuất
                 </a>
             </div>
@@ -59,7 +56,7 @@
                     </div>
                     <!-- Profile View Mode -->
                     <div id="profileView" class="space-y-3 bg-gray-50 p-5 rounded-lg shadow-sm">
-                        <div class="flex justify-between">
+                        <div class="flex justify-between hidden">
                             <span class="text-gray-600">Họ và tên:</span>
                             <span id="nameDisplay" class="text-gray-800 font-medium"></span>
                         </div>
@@ -179,5 +176,6 @@
     </div>
 
     <script src="./js/profile-teacher.js"></script>
+    <script src="./js/logout.js"></script>
 </body>
 </html>
