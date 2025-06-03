@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Xem đề thi</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h4>Chi tiết đề thi</h4>
+    <div id="examDetail" class="mb-4"></div>
+
+    <h5>Danh sách câu hỏi</h5>
+    <ul id="questionList" class="list-group mb-4"></ul>
+
+    <a href="danh-sach-de-thi.html" class="btn btn-secondary">← Quay lại danh sách</a>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const examId = params.get('examId');
+
+    if (!examId) {
+      document.body.innerHTML = '<div class="alert alert-danger">Không tìm thấy ID đề thi.</div>';
+    } else {
+      fetch(`http://localhost:8080/v1/api/exams/${examId}`)
+        .then(res => res.json())
+        .then(exam => {
+          const examDiv = document.getElementById('examDetail');
+          examDiv.innerHTML = `
+            <p><strong>Tên đề:</strong> ${exam.title}</p>
+            <p><strong>Mã đề:</strong> ${exam.code}</p>
+            <p><strong>Lớp:</strong> ${exam.grade}</p>
+            <p><strong>Môn:</strong> ${exam.subject}</p>
+            <p><strong>Thời gian:</strong> ${exam.duration} phút</p>
+            <p><strong>Bắt đầu:</strong> ${new Date(exam.startTime).toLocaleString()}</p>
+            <p><strong>Kết thúc:</strong> ${new Date(exam.endTime).toLocaleString()}</p>
+            <p><strong>Trạng thái:</strong> ${exam.status}</p>
+          `;
+
+          const listEl = document.getElementById('questionList');
+          if (exam.questionIds && exam.questionIds.length > 0) {
+            fetch('http://localhost:8080/v1/api/questions')
+              .then(res => res.json())
+              .then(allQuestions => {
+                const selectedQuestions = allQuestions.filter(q => exam.questionIds.includes(q._id));
+                selectedQuestions.forEach((q, idx) => {
+                  const li = document.createElement('li');
+                  li.className = 'list-group-item';
+                  li.innerHTML = `<strong>Câu ${idx + 1}:</strong> ${q.content}`;
+                  listEl.appendChild(li);
+                });
+              });
+          } else {
+            listEl.innerHTML = '<li class="list-group-item text-muted">Không có câu hỏi nào.</li>';
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          document.body.innerHTML = '<div class="alert alert-danger">Lỗi khi tải đề thi.</div>';
+        });
+    }
+  </script>
+</body>
+</html>
