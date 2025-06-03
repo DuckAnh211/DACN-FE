@@ -1,6 +1,119 @@
 // Định nghĩa BASE_API_URL
 const BASE_API_URL = 'http://localhost:8080/v1/api';
 
+// Định nghĩa API_ENDPOINTS
+const API_ENDPOINTS = {
+    GET_CLASS: `${BASE_API_URL}/classrooms`,
+    GET_CLASSES: `${BASE_API_URL}/classrooms`,
+    GET_LESSONS: `${BASE_API_URL}/lessons/classroom`,
+    DELETE_LESSON: `${BASE_API_URL}/lessons`
+};
+
+// Hàm lấy danh sách lớp học
+async function fetchClasses() {
+    try {
+        console.log('Đang lấy danh sách lớp học từ API');
+        
+        // Lấy thông tin người dùng từ localStorage
+        const userEmail = localStorage.getItem('userEmail');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!userEmail) {
+            console.error('Không tìm thấy thông tin người dùng');
+            return [];
+        }
+        
+        let apiUrl = API_ENDPOINTS.GET_CLASSES;
+        
+        // Thêm tham số query tùy thuộc vào vai trò người dùng
+        if (userRole === 'teacher') {
+            apiUrl += `?teacher=${encodeURIComponent(userEmail)}`;
+        } else if (userRole === 'student') {
+            apiUrl += `?student=${encodeURIComponent(userEmail)}`;
+        }
+        
+        console.log('API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Dữ liệu lớp học từ API:', data);
+        
+        // Kiểm tra cấu trúc dữ liệu trả về
+        let classes = [];
+        
+        if (data.success && Array.isArray(data.data)) {
+            classes = data.data;
+        } else if (Array.isArray(data)) {
+            classes = data;
+        } else if (data.data && Array.isArray(data.data)) {
+            classes = data.data;
+        }
+        
+        return classes;
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách lớp học:', error);
+        return [];
+    }
+}
+
+// Tìm kiếm lớp học theo mã lớp
+async function searchClassByCode(classCode) {
+    const searchTerm = classCode.toLowerCase().trim();
+    console.log('Đang tìm kiếm lớp học với mã:', searchTerm);
+    
+    if (!searchTerm) {
+        console.log('Từ khóa tìm kiếm trống');
+        return null;
+    }
+    
+    try {
+        // Lấy danh sách lớp học từ API
+        const allClasses = await fetchClasses();
+        console.log('Danh sách lớp học hiện tại:', allClasses);
+        
+        // Tìm lớp học có mã lớp khớp với từ khóa tìm kiếm
+        const matchedClass = allClasses.find(classItem => 
+            classItem.classCode && classItem.classCode.toLowerCase() === searchTerm
+        );
+        
+        console.log('Kết quả tìm kiếm:', matchedClass);
+        
+        if (matchedClass) {
+            return matchedClass;
+        } else {
+            console.log('Không tìm thấy lớp học với mã:', searchTerm);
+            
+            // Thử tìm kiếm trực tiếp từ API bằng mã lớp
+            try {
+                const response = await fetch(`${API_ENDPOINTS.GET_CLASS}/code/${searchTerm}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Dữ liệu lớp học từ API theo mã:', data);
+                    
+                    if (data.success && data.data) {
+                        return data.data;
+                    } else if (data._id || data.classCode) {
+                        return data;
+                    }
+                }
+            } catch (error) {
+                console.error('Lỗi khi tìm kiếm lớp học theo mã từ API:', error);
+            }
+            
+            return null;
+        }
+    } catch (error) {
+        console.error('Lỗi khi tìm kiếm lớp học:', error);
+        return null;
+    }
+}
+
 // Phần còn lại của mã
 document.addEventListener('DOMContentLoaded', function() {
     // Khai báo biến toàn cục
@@ -25,12 +138,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Lưu trữ lessonsContent vào window
     window.lessonsContent = lessonsContentElement;
     
-    // Cấu hình API
-    const API_ENDPOINTS = {
-        GET_CLASS: `${BASE_API_URL}/classrooms`,
-        GET_LESSONS: `${BASE_API_URL}/lessons/classroom`
-    };
-
     // Lấy tham chiếu đến các phần tử DOM
     const classNameElement = document.getElementById('className');
     const teacherNameElement = document.getElementById('teacherName');

@@ -340,15 +340,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td class="py-3 px-4 text-left">${student.email || 'Không có email'}</td>
                         <td class="py-3 px-4 text-left">${student.phone || 'Chưa cập nhật'}</td>
                         <td class="py-3 px-4 text-left">${genderText}</td>
-                        <td class="py-3 px-4 text-left">
-                            <div class="flex space-x-2">
-                                <button class="text-blue-500 hover:text-blue-700" onclick="viewStudentDetails('${studentId}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="text-red-500 hover:text-red-700" onclick="removeStudent('${studentId}')">
-                                    <i class="fas fa-user-minus"></i>
-                                </button>
-                            </div>
                         </td>
                     `;
                     

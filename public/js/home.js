@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Đang lấy danh sách lớp học đã tham gia cho:', userEmail);
             
             // Sử dụng API endpoint tương tự như trong profile.js
-            const response = await fetch(`${BASE_API_URL}/enrolled-classes?email=${userEmail}`);
+            const response = await fetch(`${BASE_API_URL}/enrolled-classrooms?email=${userEmail}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Tìm kiếm lớp học theo mã lớp
-    function searchClassByCode(classCode) {
+    async function searchClassByCode(classCode) {
         const searchTerm = classCode.toLowerCase().trim();
         console.log('Đang tìm kiếm lớp học với mã:', searchTerm);
         
@@ -198,23 +198,65 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
         
-        console.log('Danh sách lớp học hiện tại:', allClasses);
-        
-        // Tìm lớp học có mã lớp khớp với từ khóa tìm kiếm
-        const matchedClass = allClasses.find(classItem => 
-            classItem.classCode && classItem.classCode.toLowerCase() === searchTerm
-        );
-        
-        console.log('Kết quả tìm kiếm:', matchedClass);
-        
-        if (matchedClass) {
+        try {
+            // Hiển thị loading
+            searchResultContent.innerHTML = `
+                <div class="flex justify-center items-center p-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <p class="ml-2 text-gray-600">Đang tìm kiếm...</p>
+                </div>
+            `;
+            searchResultContainer.classList.remove('hidden');
+            
+            // Lấy danh sách tất cả các lớp học từ API
+            const response = await fetch(`${BASE_API_URL}/classrooms`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Dữ liệu lớp học từ API:', data);
+            
+            // Lấy danh sách lớp học từ response
+            let allClasses = [];
+            if (data.success && Array.isArray(data.data)) {
+                allClasses = data.data;
+            } else if (Array.isArray(data)) {
+                allClasses = data;
+            }
+            
+            console.log('Danh sách lớp học:', allClasses);
+            
+            // Tìm lớp học có mã lớp khớp với từ khóa tìm kiếm
+            const classData = allClasses.find(classItem => 
+                classItem.classCode && classItem.classCode.toLowerCase() === searchTerm
+            );
+            
+            console.log('Kết quả tìm kiếm:', classData);
+            
+            if (!classData) {
+                console.log('Không tìm thấy lớp học với mã:', searchTerm);
+                searchResultContainer.classList.add('hidden');
+                alert('Không tìm thấy lớp học với mã: ' + searchTerm);
+                return null;
+            }
+            
+            // Kiểm tra xem người dùng đã tham gia lớp học này chưa
+            const joinedClassCodes = JSON.parse(localStorage.getItem('joinedClasses') || '[]');
+            if (joinedClassCodes.includes(classData.classCode)) {
+                classData.joined = true;
+            } else {
+                classData.joined = false;
+            }
+            
             // Hiển thị thẻ lớp học tìm thấy
-            displaySearchResult(matchedClass);
-            return matchedClass;
-        } else {
-            console.log('Không tìm thấy lớp học với mã:', searchTerm);
+            displaySearchResult(classData);
+            return classData;
+        } catch (error) {
+            console.error('Lỗi khi tìm kiếm lớp học:', error);
             searchResultContainer.classList.add('hidden');
-            alert('Không tìm thấy lớp học với mã: ' + searchTerm);
+            alert('Có lỗi xảy ra khi tìm kiếm lớp học. Vui lòng thử lại sau.');
             return null;
         }
     }
@@ -252,39 +294,69 @@ document.addEventListener('DOMContentLoaded', function() {
         const teacherName = classData.teacher ? classData.teacher.name : 
                             (classData.teacherName || 'Chưa phân công');
         
-        classCard.innerHTML = `
-            <div class="bg-gradient-to-r ${gradientClass} h-32 flex items-center justify-center">
-                <i class="${iconClass} text-white text-5xl"></i>
-            </div>
-            <div class="p-6 flex flex-col justify-between h-[calc(100%-8rem)]">
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-xl font-bold text-gray-800">${classData.className || 'Không có tên'}</h3> 
-                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Đang học</span>
+        // Kiểm tra xem người dùng đã tham gia lớp học này chưa
+        if (classData.joined) {
+            // Nếu đã tham gia, hiển thị nút "Vào lớp"
+            classCard.innerHTML = `
+                <div class="bg-gradient-to-r ${gradientClass} h-32 flex items-center justify-center">
+                    <i class="${iconClass} text-white text-5xl"></i>
+                </div>
+                <div class="p-6 flex flex-col justify-between h-[calc(100%-8rem)]">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">${classData.className || 'Không có tên'}</h3> 
+                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Đã tham gia</span>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-1">
+                            <i class="fas fa-chalkboard-teacher mr-1"></i> GV: ${teacherName}
+                        </div>
+                        <div class="text-sm text-gray-600 mb-4">
+                            <i class="fas fa-fingerprint mr-1"></i> Mã lớp: ${classData.classCode}
+                        </div>
                     </div>
-                    <div class="text-sm text-gray-600 mb-1">
-                        <i class="fas fa-chalkboard-teacher mr-1"></i> GV: ${teacherName}
-                    </div>
-                    <div class="text-sm text-gray-600 mb-4">
-                        <i class="fas fa-fingerprint mr-1"></i> Mã lớp: ${classData.classCode}
+                    <div class="flex justify-center items-center">                           
+                        <a href="./classroom.html?code=${classData.classCode}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors w-full text-center">
+                            <i class="fas fa-door-open mr-1"></i> Vào lớp
+                        </a>
                     </div>
                 </div>
-                <div class="flex justify-center items-center">                           
-                    <button class="join-class-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors w-full text-center"
-                            data-class-code="${classData.classCode}">
-                        <i class="fas fa-sign-in-alt mr-1"></i> Tham gia lớp học
-                    </button>
+            `;
+        } else {
+            // Nếu chưa tham gia, hiển thị nút "Tham gia lớp học"
+            classCard.innerHTML = `
+                <div class="bg-gradient-to-r ${gradientClass} h-32 flex items-center justify-center">
+                    <i class="${iconClass} text-white text-5xl"></i>
                 </div>
-            </div>
-        `;
-        
-        // Thêm sự kiện khi nhấn nút tham gia lớp học
-        classCard.querySelector('.join-class-btn').addEventListener('click', function() {
-            const classCode = this.getAttribute('data-class-code');
-            if (confirm(`Bạn có muốn tham gia vào lớp học ${classCode} không?`)) {
-                enterClass(classCode);
-            }
-        });
+                <div class="p-6 flex flex-col justify-between h-[calc(100%-8rem)]">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">${classData.className || 'Không có tên'}</h3> 
+                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Chưa tham gia</span>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-1">
+                            <i class="fas fa-chalkboard-teacher mr-1"></i> GV: ${teacherName}
+                        </div>
+                        <div class="text-sm text-gray-600 mb-4">
+                            <i class="fas fa-fingerprint mr-1"></i> Mã lớp: ${classData.classCode}
+                        </div>
+                    </div>
+                    <div class="flex justify-center items-center">                           
+                        <button class="join-class-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors w-full text-center"
+                                data-class-code="${classData.classCode}">
+                            <i class="fas fa-sign-in-alt mr-1"></i> Tham gia lớp học
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Thêm sự kiện khi nhấn nút tham gia lớp học
+            classCard.querySelector('.join-class-btn').addEventListener('click', function() {
+                const classCode = this.getAttribute('data-class-code');
+                if (confirm(`Bạn có muốn tham gia vào lớp học ${classCode} không?`)) {
+                    enterClass(classCode);
+                }
+            });
+        }
         
         // Thêm thẻ lớp học vào kết quả tìm kiếm
         searchResultContent.appendChild(classCard);
@@ -454,6 +526,8 @@ document.getElementById('joinClassForm').addEventListener('submit', function(eve
         enterClass(classCode);
     }
 });
+
+
 
 
 
