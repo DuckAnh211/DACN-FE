@@ -223,8 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="flex-grow">
                             <h4 class="font-medium">${classItem.className || `Lớp ${classItem.classCode}`}</h4>
                             <div class="flex flex-col text-sm">
-                                <span class="text-gray-600">Mã lớp: ${classItem.classCode}</span>
-                                <span class="text-gray-600">Sĩ số: ${classItem.studentCount || 0} học sinh</span>
+                                <span class="text-gray-600">Mã lớp: ${classItem.classCode}</span>                               
                             </div>
                         </div>
                         <a href="./classroom.html?code=${classItem.classCode}" 
@@ -329,57 +328,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error updating profile:', error);
                 alert('Có lỗi xảy ra khi cập nhật thông tin');
-            });
-        });
-    }
-
-    // Change password
-    if (changePasswordBtn) {
-        changePasswordBtn.addEventListener('click', () => {
-            const currentPassword = document.getElementById('currentPassword');
-            const newPassword = document.getElementById('newPassword');
-            const confirmPassword = document.getElementById('confirmPassword');
-            
-            if (!currentPassword || !newPassword || !confirmPassword) {
-                alert('Không tìm thấy các trường mật khẩu');
-                return;
-            }
-
-            if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-                alert('Vui lòng điền đầy đủ thông tin');
-                return;
-            }
-
-            if (newPassword.value !== confirmPassword.value) {
-                alert('Mật khẩu mới không khớp');
-                return;
-            }
-
-            fetch(API_ENDPOINTS.CHANGE_PASSWORD, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: userEmail,
-                    currentPassword: currentPassword.value,
-                    newPassword: newPassword.value
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Đổi mật khẩu thành công!');
-                    currentPassword.value = '';
-                    newPassword.value = '';
-                    confirmPassword.value = '';
-                } else {
-                    alert(data.message || 'Có lỗi xảy ra khi đổi mật khẩu');
-                }
-            })
-            .catch(error => {
-                console.error('Error changing password:', error);
-                alert('Có lỗi xảy ra khi đổi mật khẩu');
             });
         });
     }

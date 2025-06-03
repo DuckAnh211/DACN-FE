@@ -10,6 +10,115 @@ document.addEventListener('DOMContentLoaded', function() {
         // Thêm các endpoint khác nếu cần
     };
 
+    // Đặt API_ENDPOINTS vào window để có thể truy cập từ bất kỳ đâu
+    window.API_ENDPOINTS = API_ENDPOINTS;
+    window.BASE_API_URL = BASE_API_URL;
+    
+    // Định nghĩa hàm deleteLesson
+    window.deleteLesson = function(lessonId) {
+        if (!lessonId || !confirm('Bạn có chắc chắn muốn xóa bài học này?')) return;
+        
+        console.log('Đang xóa bài học với ID:', lessonId);
+        
+        // Hiển thị loading
+        const lessonElement = document.querySelector(`div[data-lesson-id="${lessonId}"]`) || 
+                              document.querySelector(`.lesson-item-${lessonId}`);
+        
+        if (lessonElement) {
+            lessonElement.classList.add('opacity-50');
+        }
+        
+        // Sử dụng endpoint DELETE_LESSON đã được định nghĩa
+        fetch(`${window.API_ENDPOINTS.DELETE_LESSON}/${lessonId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Kết quả xóa bài học:', data);
+            
+            if (data.success) {
+                // Hiển thị thông báo thành công
+                showToast('Xóa bài học thành công!', 'success');
+                
+                // Xóa phần tử khỏi DOM
+                if (lessonElement) {
+                    lessonElement.remove();
+                }
+                
+                // Tải lại danh sách bài học
+                const lessonsList = document.getElementById('lessonsList');
+                if (lessonsList) {
+                    lessonsList.dataset.loaded = 'false';
+                    loadLessons();
+                }
+            } else {
+                // Hiển thị thông báo lỗi
+                showToast(`Lỗi: ${data.message || 'Không thể xóa bài học'}`, 'error');
+                
+                // Khôi phục trạng thái phần tử
+                if (lessonElement) {
+                    lessonElement.classList.remove('opacity-50');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting lesson:', error);
+            showToast('Có lỗi xảy ra khi xóa bài học', 'error');
+            
+            // Khôi phục trạng thái phần tử
+            if (lessonElement) {
+                lessonElement.classList.remove('opacity-50');
+            }
+        });
+    };
+    
+    // Hàm hiển thị thông báo toast
+    window.showToast = function(message, type = 'info') {
+        // Kiểm tra xem đã có container toast chưa
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col space-y-2';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // Tạo toast mới
+        const toast = document.createElement('div');
+        
+        // Xác định màu sắc dựa trên loại thông báo
+        let bgColor = 'bg-blue-500';
+        let icon = 'fas fa-info-circle';
+        
+        if (type === 'success') {
+            bgColor = 'bg-green-500';
+            icon = 'fas fa-check-circle';
+        } else if (type === 'error') {
+            bgColor = 'bg-red-500';
+            icon = 'fas fa-exclamation-circle';
+        } else if (type === 'warning') {
+            bgColor = 'bg-yellow-500';
+            icon = 'fas fa-exclamation-triangle';
+        }
+        
+        toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center max-w-xs`;
+        toast.innerHTML = `
+            <i class="${icon} mr-2"></i>
+            <span>${message}</span>
+        `;
+        
+        // Thêm toast vào container
+        toastContainer.appendChild(toast);
+        
+        // Tự động xóa toast sau 3 giây
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+            setTimeout(() => {
+                toastContainer.removeChild(toast);
+            }, 300);
+        }, 3000);
+    };
+    
     // Lấy tham chiếu đến các phần tử DOM
     const classNameElement = document.getElementById('className');
     const teacherNameElement = document.getElementById('teacherName');
@@ -263,6 +372,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Hàm tải danh sách bài học
     function loadLessons() {
+        if (!lessonsContent) return;
+        
         const lessonsList = document.getElementById('lessonsList');
         if (!lessonsList) return;
         
@@ -287,12 +398,28 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`${API_ENDPOINTS.GET_LESSONS}/${classCode}`)
             .then(response => response.json())
             .then(data => {
-                console.log('Dữ liệu bài học:', data);
+                console.log('Dữ liệu bài học nhận được:', data);
                 
-                // Kiểm tra cấu trúc dữ liệu trả về
-                const lessons = data.success && Array.isArray(data.data) ? data.data : [];
+                // Kiểm tra cấu trúc dữ liệu và đảm bảo lessons là một mảng
+                let lessons = [];
                 
-                if (lessons.length === 0) {
+                // Xử lý cấu trúc dữ liệu mới
+                if (data && data.success && data.data) {
+                    lessons = data.data;
+                } else if (Array.isArray(data)) {
+                    lessons = data;
+                }
+                
+                // Cập nhật số lượng bài học trong phần tổng quan
+                const totalLessonsElement = document.getElementById('totalLessons');
+                if (totalLessonsElement) {
+                    totalLessonsElement.textContent = lessons.length;
+                }
+                
+                // Đánh dấu đã tải danh sách bài học
+                lessonsList.dataset.loaded = 'true';
+                
+                if (!Array.isArray(lessons) || lessons.length === 0) {
                     lessonsList.innerHTML = `
                         <div class="text-center py-4">
                             <p class="text-gray-500">Chưa có bài học nào</p>
@@ -408,9 +535,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
                             <div class="flex space-x-1">
-                                <button class="text-blue-500 hover:text-blue-700 p-1" onclick="viewLesson('${lesson._id}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
                                 <button class="text-blue-500 hover:text-blue-700 p-1" onclick="editLesson('${lesson._id}')">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -421,14 +545,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     `;
                     
-                    lessonsContainer.appendChild(lessonItem);
+                    lessonsList.appendChild(lessonItem);
                 });
                 
                 // Đánh dấu đã tải
                 lessonsList.dataset.loaded = 'true';
             })
             .catch(error => {
-                console.error('Error loading lessons:', error);
+                console.error('Lỗi khi tải danh sách bài học:', error);
                 lessonsList.innerHTML = `
                     <div class="text-center py-4">
                         <p class="text-red-500">Có lỗi xảy ra khi tải danh sách bài học</p>
@@ -636,7 +760,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tải thông tin lớp học
     fetchClassInfo();
     
-    // Lấy thông tin lớp học từ API hoặc localStorage
+    // Lấy thông tin lớp học từ localStorage hoặc dữ liệu mẫu
     async function fetchClassInfo() {
         try {
             console.log('Đang lấy thông tin lớp học với mã:', currentClassCode);
@@ -650,35 +774,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 return classData;
             }
             
-            // Nếu không có trong cache, lấy từ API theo code
-            try {
-                const response = await fetch(`${API_ENDPOINTS.GET_CLASS}/code/${currentClassCode}`);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Dữ liệu lớp học từ API:', data);
-                    
-                    // Lấy dữ liệu lớp học từ response
-                    const classData = data.data || data;
-                    
-                    // Lưu vào localStorage để sử dụng sau này
-                    localStorage.setItem(`class_${currentClassCode}`, JSON.stringify(classData));
-                    
-                    // Hiển thị thông tin lớp học
-                    displayClassInfo(classData);
-                    
-                    return classData;
-                } else {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Lỗi khi lấy thông tin lớp học từ API:', error);
-                throw error; // Ném lỗi để xử lý ở catch bên ngoài
-            }
+            // Nếu không có trong cache, sử dụng dữ liệu mẫu ngay lập tức
+            console.log('Không tìm thấy thông tin lớp học trong cache, sử dụng dữ liệu mẫu');
+            const sampleClassData = getSampleClassData(currentClassCode);
+            displayClassInfo(sampleClassData);
+            
+            return sampleClassData;
         } catch (error) {
             console.error('Lỗi khi lấy thông tin lớp học:', error);
             
-            // Tạo dữ liệu mẫu nếu không lấy được từ API
+            // Tạo dữ liệu mẫu nếu có lỗi
             const sampleClassData = getSampleClassData(currentClassCode);
             displayClassInfo(sampleClassData);
             
@@ -1235,13 +1340,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!lessonId || !confirm('Bạn có chắc chắn muốn xóa bài học này?')) return;
         
         // Hiển thị loading
-        const lessonElement = document.querySelector(`[onclick="deleteLesson('${lessonId}')"]`).closest('.bg-white');
+        const lessonElement = document.querySelector(`[data-lesson-id="${lessonId}"]`);
         if (lessonElement) {
             lessonElement.classList.add('opacity-50');
         }
         
         // Gọi API để xóa bài học
-        fetch(`${API_ENDPOINTS.DELETE_LESSON}/${lessonId}`, {
+        fetch(`${BASE_API_URL}/lessons/${lessonId}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
@@ -1255,12 +1360,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     lessonElement.remove();
                 }
                 
-                // Hoặc tải lại danh sách bài học
-                const lessonsList = document.getElementById('lessonsList');
-                if (lessonsList) {
-                    lessonsList.dataset.loaded = 'false';
-                    loadLessons();
-                }
+                // Cập nhật số lượng bài học
+                updateLessonCount();
             } else {
                 // Hiển thị thông báo lỗi
                 showToast(`Lỗi: ${data.message || 'Không thể xóa bài học'}`, 'error');
@@ -1282,64 +1383,232 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Hàm hiển thị thông báo
-    function showToast(message, type = 'success') {
-        // Kiểm tra xem đã có toast container chưa
+    // Hàm cập nhật số lượng bài học
+    function updateLessonCount() {
+        const totalLessonsElement = document.getElementById('totalLessons');
+        if (totalLessonsElement) {
+            const currentCount = parseInt(totalLessonsElement.textContent) || 0;
+            if (currentCount > 0) {
+                totalLessonsElement.textContent = currentCount - 1;
+            }
+        }
+    }
+
+    // Hàm hiển thị thông báo toast
+    function showToast(message, type = 'info') {
+        // Kiểm tra xem đã có container toast chưa
         let toastContainer = document.getElementById('toastContainer');
-        
         if (!toastContainer) {
-            // Tạo toast container nếu chưa có
             toastContainer = document.createElement('div');
             toastContainer.id = 'toastContainer';
-            toastContainer.className = 'fixed bottom-4 right-4 z-50';
+            toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col space-y-2';
             document.body.appendChild(toastContainer);
         }
         
-        // Tạo toast
+        // Tạo toast mới
         const toast = document.createElement('div');
-        toast.className = `flex items-center p-4 mb-3 rounded-lg shadow-lg ${
-            type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        } text-white`;
         
-        // Thêm nội dung cho toast
+        // Xác định màu sắc dựa trên loại thông báo
+        let bgColor = 'bg-blue-500';
+        let icon = 'fas fa-info-circle';
+        
+        if (type === 'success') {
+            bgColor = 'bg-green-500';
+            icon = 'fas fa-check-circle';
+        } else if (type === 'error') {
+            bgColor = 'bg-red-500';
+            icon = 'fas fa-exclamation-circle';
+        } else if (type === 'warning') {
+            bgColor = 'bg-yellow-500';
+            icon = 'fas fa-exclamation-triangle';
+        }
+        
+        toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center max-w-xs`;
         toast.innerHTML = `
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+            <i class="${icon} mr-2"></i>
             <span>${message}</span>
-            <button class="ml-auto text-white hover:text-gray-200">
-                <i class="fas fa-times"></i>
-            </button>
         `;
         
         // Thêm toast vào container
         toastContainer.appendChild(toast);
         
-        // Thêm event listener cho nút đóng
-        const closeBtn = toast.querySelector('button');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                toast.remove();
-            });
-        }
-        
-        // Tự động đóng toast sau 3 giây
+        // Tự động xóa toast sau 3 giây
         setTimeout(() => {
             toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
             setTimeout(() => {
-                toast.remove();
+                toastContainer.removeChild(toast);
             }, 300);
         }, 3000);
     }
 });
 
+// Đặt hàm deleteLesson vào window object để có thể gọi từ bất kỳ đâu
+window.deleteLesson = function(lessonId) {
+    if (!lessonId || !confirm('Bạn có chắc chắn muốn xóa bài học này?')) return;
+    
+    console.log('Đang xóa bài học với ID:', lessonId);
+    
+    // Hiển thị loading
+    const lessonElement = document.querySelector(`div[data-lesson-id="${lessonId}"]`) || 
+                          document.querySelector(`.lesson-item-${lessonId}`);
+    
+    if (lessonElement) {
+        lessonElement.classList.add('opacity-50');
+    }
+    
+    // Sử dụng endpoint DELETE_LESSON đã được định nghĩa
+    // API_ENDPOINTS.DELETE_LESSON là "${BASE_API_URL}/lessons"
+    // Nên cần thêm ID vào cuối URL
+    fetch(`${API_ENDPOINTS.DELETE_LESSON}/${lessonId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Kết quả xóa bài học:', data);
+        
+        if (data.success) {
+            // Hiển thị thông báo thành công
+            showToast('Xóa bài học thành công!', 'success');
+            
+            // Xóa phần tử khỏi DOM
+            if (lessonElement) {
+                lessonElement.remove();
+            }
+            
+            // Tải lại danh sách bài học
+            const lessonsList = document.getElementById('lessonsList');
+            if (lessonsList) {
+                lessonsList.dataset.loaded = 'false';
+                loadLessons();
+            }
+        } else {
+            // Hiển thị thông báo lỗi
+            showToast(`Lỗi: ${data.message || 'Không thể xóa bài học'}`, 'error');
+            
+            // Khôi phục trạng thái phần tử
+            if (lessonElement) {
+                lessonElement.classList.remove('opacity-50');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting lesson:', error);
+        showToast('Có lỗi xảy ra khi xóa bài học', 'error');
+        
+        // Khôi phục trạng thái phần tử
+        if (lessonElement) {
+            lessonElement.classList.remove('opacity-50');
+        }
+    });
+};
 
+// Thêm hàm showToast nếu chưa có
+window.showToast = function(message, type = 'info') {
+    // Kiểm tra xem đã có container toast chưa
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col space-y-2';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Tạo toast mới
+    const toast = document.createElement('div');
+    
+    // Xác định màu sắc dựa trên loại thông báo
+    let bgColor = 'bg-blue-500';
+    let icon = 'fas fa-info-circle';
+    
+    if (type === 'success') {
+        bgColor = 'bg-green-500';
+        icon = 'fas fa-check-circle';
+    } else if (type === 'error') {
+        bgColor = 'bg-red-500';
+        icon = 'fas fa-exclamation-circle';
+    } else if (type === 'warning') {
+        bgColor = 'bg-yellow-500';
+        icon = 'fas fa-exclamation-triangle';
+    }
+    
+    toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center max-w-xs`;
+    toast.innerHTML = `
+        <i class="${icon} mr-2"></i>
+        <span>${message}</span>
+    `;
+    
+    // Thêm toast vào container
+    toastContainer.appendChild(toast);
+    
+    // Tự động xóa toast sau 3 giây
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+        setTimeout(() => {
+            toastContainer.removeChild(toast);
+        }, 300);
+    }, 3000);
+};
 
+// Hàm định dạng kích thước file
+window.formatFileSize = function(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
+// Hàm định dạng ngày tháng
+window.formatDate = function(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
 
-
-
-
-
-
+// Đảm bảo tất cả các hàm cần thiết đều được đăng ký vào window object
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM đã sẵn sàng, đăng ký các hàm vào window object');
+    
+    // Đăng ký các hàm vào window object
+    window.deleteLesson = deleteLesson;
+    window.showToast = showToast;
+    window.formatFileSize = formatFileSize;
+    window.formatDate = formatDate;
+    
+    // Kiểm tra xem có nút xóa bài học nào không
+    const deleteButtons = document.querySelectorAll('button[onclick*="deleteLesson"]');
+    console.log(`Tìm thấy ${deleteButtons.length} nút xóa bài học`);
+    
+    // Thay thế onclick bằng event listener
+    deleteButtons.forEach(button => {
+        const onclickAttr = button.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes('deleteLesson')) {
+            // Trích xuất lessonId từ onclick
+            const match = onclickAttr.match(/deleteLesson\(['"]([^'"]+)['"]\)/);
+            if (match && match[1]) {
+                const lessonId = match[1];
+                
+                // Xóa onclick và thêm data-lesson-id
+                button.removeAttribute('onclick');
+                button.setAttribute('data-lesson-id', lessonId);
+                
+                // Thêm event listener
+                button.addEventListener('click', function() {
+                    deleteLesson(lessonId);
+                });
+                
+                console.log(`Đã thay thế onclick bằng event listener cho nút xóa bài học với ID: ${lessonId}`);
+            }
+        }
+    });
+});
 
 
 

@@ -66,14 +66,14 @@
             <!-- Overview Content -->
             <div id="overview-content" class="space-y-6">
                 <!-- Class Statistics -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
                         <div class="flex items-center">
                             <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
                                 <i class="fas fa-users text-blue-500 text-xl"></i>
                             </div>
                             <div>
-                                <p class="text-gray-500 text-sm">Tổng số học sinh</p>
+                                <p class="text-gray-500 text-sm">Số học sinh</p>
                                 <h3 id="totalStudents" class="text-2xl font-bold text-gray-800">--</h3>
                             </div>
                         </div>
@@ -84,8 +84,19 @@
                                 <i class="fas fa-book-open text-green-500 text-xl"></i>
                             </div>
                             <div>
-                                <p class="text-gray-500 text-sm">Bài học</p>
+                                <p class="text-gray-500 text-sm">Số bài học</p>
                                 <h3 id="totalLessons" class="text-2xl font-bold text-gray-800">--</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-tasks text-yellow-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Số bài tập</p>
+                                <h3 id="totalAssignments" class="text-2xl font-bold text-gray-800">--</h3>
                             </div>
                         </div>
                     </div>
@@ -95,7 +106,7 @@
                                 <i class="fas fa-clipboard-check text-purple-500 text-xl"></i>
                             </div>
                             <div>
-                                <p class="text-gray-500 text-sm">Bài kiểm tra</p>
+                                <p class="text-gray-500 text-sm">Số bài kiểm tra</p>
                                 <h3 id="totalTests" class="text-2xl font-bold text-gray-800">--</h3>
                             </div>
                         </div>
@@ -191,6 +202,7 @@
     </div>
 </body>
 </html>
+
 
 
 
