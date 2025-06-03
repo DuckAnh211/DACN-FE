@@ -1,25 +1,7 @@
-/**
- * Mở trình xem PDF khi người dùng nhấp vào nút xem bài
- * @param {string} pdfUrl - URL của tệp PDF cần hiển thị
- */
-function openPDFViewer(pdfUrl) { 
-    document.getElementById('pdfFrame').src = pdfUrl; 
-    document.getElementById('pdfModal').classList.remove('hidden'); 
-    document.getElementById('pdfModal').classList.add('flex'); 
-} 
+// Định nghĩa BASE_API_URL
+const BASE_API_URL = 'http://localhost:8080/v1/api';
 
-/**
- * Đóng trình xem PDF
- */
-function closePDFViewer() { 
-    document.getElementById('pdfModal').classList.add('hidden'); 
-    document.getElementById('pdfModal').classList.remove('flex'); 
-    document.getElementById('pdfFrame').src = ''; 
-} 
-
-/**
- * Khởi tạo chức năng chuyển đổi tab
- */
+// Phần còn lại của mã
 document.addEventListener('DOMContentLoaded', function() {
     // Khai báo biến toàn cục
     window.lessons = [];
@@ -44,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.lessonsContent = lessonsContentElement;
     
     // Cấu hình API
-    const BASE_API_URL = 'http://localhost:8080/v1/api';
     const API_ENDPOINTS = {
         GET_CLASS: `${BASE_API_URL}/classrooms`,
         GET_LESSONS: `${BASE_API_URL}/lessons/classroom`
@@ -420,9 +401,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Xác định loại tệp và biểu tượng
             const fileExtension = lesson.fileUrl.split('.').pop().toLowerCase();
             let fileIcon = 'fas fa-file';
+            let isPdf = false;
             
             if (['pdf'].includes(fileExtension)) {
                 fileIcon = 'fas fa-file-pdf';
+                isPdf = true;
             } else if (['doc', 'docx'].includes(fileExtension)) {
                 fileIcon = 'fas fa-file-word';
             } else if (['xls', 'xlsx'].includes(fileExtension)) {
@@ -436,6 +419,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Tạo URL đầy đủ cho tệp
             const fileFullUrl = lesson.fileUrl.startsWith('http') ? lesson.fileUrl : `${BASE_API_URL}/${lesson.fileUrl}`;
             
+            // Tạo nút xem trực tuyến dựa vào loại file
+            let viewButton = '';
+            if (isPdf) {
+                // Sử dụng API xem PDF cho file PDF
+                viewButton = `<button onclick="openPDFViewerByLessonId('${lesson._id}')" class="text-blue-500 hover:text-blue-700 p-2" title="Xem trực tuyến">
+                    <i class="fas fa-eye"></i>
+                </button>`;
+            } else {
+                // Sử dụng cách mở file thông thường cho các loại file khác
+                viewButton = `<button onclick="openPDFViewer('${fileFullUrl}')" class="text-blue-500 hover:text-blue-700 p-2" title="Xem trực tuyến">
+                    <i class="fas fa-eye"></i>
+                </button>`;
+            }
+            
             fileHTML = `
                 <div class="mt-6 border-t border-gray-200 pt-4">
                     <h4 class="font-medium text-gray-700 mb-3">Tệp đính kèm</h4>
@@ -445,18 +442,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <i class="${fileIcon} text-blue-500"></i>
                             </div>
                             <div class="flex-grow">
-                                <p class="font-medium text-gray-800">${lesson.fileName}</p>
+                                <p class="font-medium text-gray-800">${lesson.fileName || 'Tài liệu đính kèm'}</p>
                                 <p class="text-xs text-gray-500 block">
                                     ${formatFileSize(lesson.fileSize || 0)}
                                 </p>
                             </div>
                             <div class="flex space-x-2">
-                                <button onclick="openPDFViewer('${fileFullUrl}')" class="text-blue-500 hover:text-blue-700 p-2">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <a href="${fileFullUrl}" download="${lesson.fileName}" class="text-green-500 hover:text-green-700 p-2">
-                                    <i class="fas fa-download"></i>
-                                </a>
+                                ${viewButton}
                             </div>
                         </div>
                     </div>
@@ -678,4 +670,84 @@ window.showLessonsList = function() {
     });
     
     console.log(`Đã hiển thị ${lessons.length} bài học`);
+};
+
+// Thêm vào cuối file, bên ngoài event listener DOMContentLoaded
+// Tạo modal PDF viewer nếu chưa tồn tại
+document.addEventListener('DOMContentLoaded', function() {
+    // Mã hiện tại...
+    
+    // Thêm modal PDF viewer vào trang
+    if (!document.getElementById('pdfModal')) {
+        const pdfModal = document.createElement('div');
+        pdfModal.id = 'pdfModal';
+        pdfModal.className = 'fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center';
+        pdfModal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-xl font-semibold text-gray-800">Xem tài liệu</h3>
+                    <button onclick="closePDFViewer()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="flex-grow p-0 overflow-hidden">
+                    <iframe id="pdfFrame" src="" class="w-full h-full border-0"></iframe>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(pdfModal);
+        
+        // Thêm event listener cho nút đóng
+        document.getElementById('closePdfModalBtn').addEventListener('click', closePDFViewer);
+    }
+});
+
+// Định nghĩa hàm openPDFViewer ở mức global để có thể gọi từ bất kỳ đâu
+window.openPDFViewer = function(pdfUrl) {
+    // Đóng modal Chi tiết bài học nếu đang mở
+    const lessonModal = document.getElementById('lessonDetailsModal');
+    if (lessonModal && !lessonModal.classList.contains('hidden')) {
+        lessonModal.classList.add('hidden');
+    }
+    
+    // Mở modal PDF viewer
+    document.getElementById('pdfFrame').src = pdfUrl;
+    document.getElementById('pdfModal').classList.remove('hidden');
+    document.getElementById('pdfModal').classList.add('flex');
+};
+
+// Định nghĩa hàm openPDFViewerByLessonId ở mức global
+window.openPDFViewerByLessonId = function(lessonId) {
+    if (!lessonId) {
+        showToast('Không thể mở tài liệu: ID bài học không hợp lệ', 'error');
+        return;
+    }
+    
+    // Đóng modal Chi tiết bài học nếu đang mở
+    const lessonModal = document.getElementById('lessonDetailsModal');
+    if (lessonModal && !lessonModal.classList.contains('hidden')) {
+        lessonModal.classList.add('hidden');
+    }
+    
+    const pdfUrl = `${BASE_API_URL}/lessons/${lessonId}/view-pdf`;
+    
+    // Mở modal PDF viewer
+    document.getElementById('pdfFrame').src = pdfUrl;
+    document.getElementById('pdfModal').classList.remove('hidden');
+    document.getElementById('pdfModal').classList.add('flex');
+};
+
+// Thêm hàm đóng PDF viewer ở mức global
+window.closePDFViewer = function() {
+    const pdfModal = document.getElementById('pdfModal');
+    if (pdfModal) {
+        pdfModal.classList.add('hidden');
+        pdfModal.classList.remove('flex');
+        
+        // Xóa nội dung iframe để tránh tiếp tục tải tài nguyên
+        const pdfFrame = document.getElementById('pdfFrame');
+        if (pdfFrame) {
+            pdfFrame.src = '';
+        }
+    }
 };
