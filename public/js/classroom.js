@@ -6,7 +6,8 @@ const API_ENDPOINTS = {
     GET_CLASS: `${BASE_API_URL}/classrooms`,
     GET_CLASSES: `${BASE_API_URL}/classrooms`,
     GET_LESSONS: `${BASE_API_URL}/lessons/classroom`,
-    DELETE_LESSON: `${BASE_API_URL}/lessons`
+    DELETE_LESSON: `${BASE_API_URL}/lessons`,
+    GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`
 };
 
 // Hàm lấy danh sách lớp học
@@ -858,3 +859,249 @@ window.closePDFViewer = function() {
         }
     }
 };
+
+// Xử lý thông báo
+const notificationsBtn = document.getElementById('notificationsBtn');
+const notificationsModal = document.getElementById('notificationsModal');
+const closeNotificationsBtn = document.getElementById('closeNotificationsBtn');
+const unreadBadge = document.getElementById('unreadBadge');
+
+if (notificationsBtn && notificationsModal) {
+    // Mở modal thông báo khi nhấn nút
+    notificationsBtn.addEventListener('click', function() {
+        notificationsModal.classList.remove('hidden');
+        notificationsModal.classList.add('flex');
+        loadNotifications();
+    });
+    
+    // Đóng modal thông báo
+    if (closeNotificationsBtn) {
+        closeNotificationsBtn.addEventListener('click', function() {
+            notificationsModal.classList.add('hidden');
+            notificationsModal.classList.remove('flex');
+        });
+    }
+    
+    // Kiểm tra thông báo chưa đọc khi trang được tải
+    checkUnreadNotifications();
+}
+
+// Hàm tải danh sách thông báo
+async function loadNotifications() {
+    const notificationsList = document.getElementById('notificationsList');
+    if (!notificationsList) return;
+    
+    // Hiển thị loading
+    notificationsList.innerHTML = `
+        <div class="text-center py-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+            <p class="text-gray-500">Đang tải thông báo...</p>
+        </div>
+    `;
+    
+    // Lấy mã lớp từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    
+    if (!classCode) {
+        notificationsList.innerHTML = `
+            <div class="text-center py-4">
+                <p class="text-red-500">Không tìm thấy mã lớp học</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Lấy email người dùng từ localStorage
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+        notificationsList.innerHTML = `
+            <div class="text-center py-4">
+                <p class="text-red-500">Không tìm thấy thông tin người dùng</p>
+            </div>
+        `;
+        return;
+    }
+    
+    try {
+        // Gọi API để lấy danh sách thông báo
+        const response = await fetch(`${API_ENDPOINTS.GET_NOTIFICATIONS}/${classCode}?userEmail=${userEmail}`);
+        const data = await response.json();
+        
+        console.log('Dữ liệu thông báo nhận được:', data);
+        
+        // Kiểm tra cấu trúc dữ liệu và đảm bảo notifications là một mảng
+        let notifications = [];
+        
+        if (data && data.success && Array.isArray(data.data)) {
+            notifications = data.data;
+        } else if (Array.isArray(data)) {
+            notifications = data;
+        }
+        
+        if (notifications.length === 0) {
+            notificationsList.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-gray-500">Chưa có thông báo nào</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Hiển thị danh sách thông báo
+        notificationsList.innerHTML = '';
+        
+        notifications.forEach(notification => {
+            // Kiểm tra xem người dùng đã đọc thông báo chưa
+            const isRead = Array.isArray(notification.readBy) && notification.readBy.includes(userEmail);
+            
+            // Định dạng ngày tạo
+            const createdDate = new Date(notification.createdAt).toLocaleDateString('vi-VN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const notificationItem = document.createElement('div');
+            notificationItem.className = `bg-white p-4 rounded-lg shadow-sm border ${isRead ? 'border-gray-200' : 'border-blue-200 bg-blue-50'} hover:shadow-md transition-shadow`;
+            notificationItem.dataset.notificationId = notification._id;
+            
+            notificationItem.innerHTML = `
+                <div class="flex items-start">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3 mt-1">
+                        <i class="fas fa-bell text-blue-500"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <h4 class="font-medium text-lg">${notification.title || 'Thông báo không có tiêu đề'}</h4>
+                        <div class="flex items-center text-sm text-gray-600 mt-1">
+                            <span class="flex items-center mr-3">
+                                <i class="fas fa-user mr-1"></i> ${notification.teacherName || 'Giáo viên'}
+                            </span>
+                            <span class="flex items-center">
+                                <i class="far fa-calendar-alt mr-1"></i> ${createdDate}
+                            </span>
+                        </div>
+                        ${notification.content ? `<p class="text-sm text-gray-700 mt-2">${notification.content}</p>` : ''}
+                    </div>
+                    ${!isRead ? `<span class="w-3 h-3 bg-blue-500 rounded-full"></span>` : ''}
+                </div>
+            `;
+            
+            // Thêm sự kiện click để đánh dấu là đã đọc
+            notificationItem.addEventListener('click', () => markAsRead(notification._id));
+            
+            notificationsList.appendChild(notificationItem);
+        });
+        
+        // Cập nhật số lượng thông báo chưa đọc
+        updateUnreadBadge(notifications);
+        
+    } catch (error) {
+        console.error('Lỗi khi tải thông báo:', error);
+        notificationsList.innerHTML = `
+            <div class="text-center py-4">
+                <p class="text-red-500">Có lỗi xảy ra khi tải thông báo</p>
+                <button class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md" onclick="loadNotifications()">
+                    <i class="fas fa-sync-alt mr-1"></i> Thử lại
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Hàm đánh dấu thông báo đã đọc
+async function markAsRead(notificationId) {
+    if (!notificationId) return;
+    
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) return;
+    
+    try {
+        // Gọi API để đánh dấu thông báo đã đọc
+        const response = await fetch(`${BASE_API_URL}/notifications/${notificationId}/read`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userEmail: userEmail
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Cập nhật giao diện
+            const notificationItem = document.querySelector(`div[data-notification-id="${notificationId}"]`);
+            if (notificationItem) {
+                notificationItem.classList.remove('border-blue-200', 'bg-blue-50');
+                notificationItem.classList.add('border-gray-200');
+                
+                // Xóa dấu chấm xanh
+                const unreadDot = notificationItem.querySelector('.bg-blue-500.rounded-full');
+                if (unreadDot) unreadDot.remove();
+            }
+            
+            // Tải lại số lượng thông báo chưa đọc
+            checkUnreadNotifications();
+        }
+    } catch (error) {
+        console.error('Lỗi khi đánh dấu thông báo đã đọc:', error);
+    }
+}
+
+// Hàm kiểm tra thông báo chưa đọc
+async function checkUnreadNotifications() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    const userEmail = localStorage.getItem('userEmail');
+    
+    if (!classCode || !userEmail) return;
+    
+    try {
+        // Gọi API để lấy danh sách thông báo
+        const response = await fetch(`${API_ENDPOINTS.GET_NOTIFICATIONS}/${classCode}?userEmail=${userEmail}`);
+        const data = await response.json();
+        
+        let notifications = [];
+        
+        if (data && data.success && Array.isArray(data.data)) {
+            notifications = data.data;
+        } else if (Array.isArray(data)) {
+            notifications = data;
+        }
+        
+        // Cập nhật số lượng thông báo chưa đọc
+        updateUnreadBadge(notifications);
+        
+    } catch (error) {
+        console.error('Lỗi khi kiểm tra thông báo chưa đọc:', error);
+    }
+}
+
+// Hàm cập nhật badge thông báo chưa đọc
+function updateUnreadBadge(notifications) {
+    if (!unreadBadge) return;
+    
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) return;
+    
+    // Đếm số lượng thông báo chưa đọc
+    const unreadCount = notifications.filter(notification => {
+        return !(Array.isArray(notification.readBy) && notification.readBy.includes(userEmail));
+    }).length;
+    
+    if (unreadCount > 0) {
+        unreadBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        unreadBadge.classList.remove('hidden');
+    } else {
+        unreadBadge.classList.add('hidden');
+    }
+}
+
+// Đặt các hàm vào window để có thể gọi từ bất kỳ đâu
+window.loadNotifications = loadNotifications;
+window.markAsRead = markAsRead;
+window.checkUnreadNotifications = checkUnreadNotifications;

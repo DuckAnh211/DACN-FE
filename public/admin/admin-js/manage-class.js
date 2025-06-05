@@ -3,7 +3,7 @@ const BASE_API_URL = 'http://localhost:8080/v1/api';
 const API_ENDPOINTS = {
     GET_CLASSES: `${BASE_API_URL}/classrooms`,
     CREATE_CLASS: `${BASE_API_URL}/create-classroom`,
-    UPDATE_CLASS: `${BASE_API_URL}/update-class`,
+    UPDATE_CLASSROOM: `${BASE_API_URL}/update-classroom`, // Thêm endpoint mới
     DELETE_CLASS: `${BASE_API_URL}/delete-classroom`,
     GET_TEACHERS: `${BASE_API_URL}/teacher`
 };
@@ -13,6 +13,10 @@ let allClasses = [];
 let allTeachers = [];
 let currentClassId = null;
 
+// Biến lưu trữ thông tin lớp học hiện tại đang được chỉnh sửa giáo viên
+let currentChangeTeacherClassId = null;
+let currentChangeTeacherClassCode = null;
+
 // DOM Elements
 const classTableBody = document.getElementById('classTableBody');
 const searchInput = document.getElementById('searchInput');
@@ -21,6 +25,11 @@ const classModal = document.getElementById('classModal');
 const classForm = document.getElementById('classForm');
 const modalTitle = document.getElementById('modalTitle');
 const teacherSelect = document.getElementById('teacher');
+
+// Thêm DOM Elements cho modal thay đổi giáo viên
+const changeTeacherModal = document.getElementById('changeTeacherModal');
+const changeTeacherForm = document.getElementById('changeTeacherForm');
+const newTeacherSelect = document.getElementById('newTeacher');
 
 // Hàm khởi tạo
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,6 +41,16 @@ document.addEventListener('DOMContentLoaded', () => {
     addClass.addEventListener('click', () => openModal('add'));
     document.getElementById('closeModal').addEventListener('click', closeModal);
     classForm.addEventListener('submit', handleClassFormSubmit);
+    
+    // Thêm event listeners cho modal thay đổi giáo viên
+    if (changeTeacherForm) {
+        changeTeacherForm.addEventListener('submit', handleChangeTeacherSubmit);
+    }
+    
+    const closeChangeTeacherModalBtn = document.getElementById('closeChangeTeacherModal');
+    if (closeChangeTeacherModalBtn) {
+        closeChangeTeacherModalBtn.addEventListener('click', closeChangeTeacherModal);
+    }
 });
 
 // Hàm lấy danh sách lớp học
@@ -89,6 +108,9 @@ function displayClasses(classes) {
             <td class="px-4 py-3 border-b">${teacherInfo}</td>
             <td class="px-4 py-3 border-b">
                 <div class="flex space-x-2">
+                    <button class="change-teacher text-green-500 hover:text-green-700 mr-2" data-id="${classItem._id}" data-code="${classItem.classCode}">
+                        <i class="fas fa-user-edit"></i>
+                    </button>
                     <button class="delete-class text-red-500 hover:text-red-700" data-id="${classItem._id}">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -102,6 +124,10 @@ function displayClasses(classes) {
     // Thêm event listeners cho các nút
     document.querySelectorAll('.edit-class').forEach(button => {
         button.addEventListener('click', () => editClass(button.dataset.id));
+    });
+    
+    document.querySelectorAll('.change-teacher').forEach(button => {
+        button.addEventListener('click', () => openChangeTeacherModal(button.dataset.id, button.dataset.code));
     });
     
     document.querySelectorAll('.delete-class').forEach(button => {
@@ -376,5 +402,119 @@ async function deleteClass(classId) {
     } catch (error) {
         console.error('Error deleting class:', error);
         alert('Không thể xóa lớp học: ' + error.message);
+    }
+}
+
+// Hàm mở modal thay đổi giáo viên
+function openChangeTeacherModal(classId, classCode) {
+    if (!changeTeacherModal) return;
+    
+    currentChangeTeacherClassId = classId;
+    currentChangeTeacherClassCode = classCode;
+    
+    // Tìm thông tin lớp học
+    const classItem = allClasses.find(c => c._id === classId);
+    if (!classItem) {
+        alert('Không tìm thấy thông tin lớp học');
+        return;
+    }
+    
+    // Điền thông tin lớp học vào form
+    document.getElementById('changeTeacherClassName').value = `${classItem.className} (${classItem.subject})`;
+    document.getElementById('changeTeacherClassCode').value = classItem.classCode;
+    
+    // Hiển thị thông tin giáo viên hiện tại
+    const currentTeacherInput = document.getElementById('currentTeacher');
+    if (currentTeacherInput) {
+        if (classItem.teacher) {
+            currentTeacherInput.value = `${classItem.teacher.name} (${classItem.teacher.email})`;
+        } else {
+            currentTeacherInput.value = 'Chưa phân công';
+        }
+    }
+    
+    // Điền danh sách giáo viên vào select
+    populateNewTeacherSelect();
+    
+    // Hiển thị modal
+    changeTeacherModal.classList.remove('hidden');
+}
+
+// Hàm đóng modal thay đổi giáo viên
+function closeChangeTeacherModal() {
+    if (!changeTeacherModal) return;
+    
+    changeTeacherModal.classList.add('hidden');
+    currentChangeTeacherClassId = null;
+    currentChangeTeacherClassCode = null;
+}
+
+// Hàm điền danh sách giáo viên vào select trong modal thay đổi giáo viên
+function populateNewTeacherSelect() {
+    if (!newTeacherSelect) return;
+    
+    newTeacherSelect.innerHTML = '<option value="">-- Chọn giáo viên --</option>';
+    
+    allTeachers.forEach(teacher => {
+        const option = document.createElement('option');
+        option.value = teacher.email;
+        option.textContent = `${teacher.name} (${teacher.subject})`;
+        newTeacherSelect.appendChild(option);
+    });
+}
+
+// Hàm xử lý submit form thay đổi giáo viên
+async function handleChangeTeacherSubmit(event) {
+    event.preventDefault();
+    
+    if (!currentChangeTeacherClassCode) {
+        alert('Không tìm thấy mã lớp học');
+        return;
+    }
+    
+    const newTeacherEmail = newTeacherSelect.value;
+    if (!newTeacherEmail) {
+        alert('Vui lòng chọn giáo viên mới');
+        return;
+    }
+    
+    // Tạo đối tượng dữ liệu
+    const updateData = {
+        classCode: currentChangeTeacherClassCode,
+        newTeacherEmail: newTeacherEmail
+    };
+    
+    try {
+        console.log("Sending data to:", API_ENDPOINTS.UPDATE_CLASSROOM);
+        console.log("Data:", JSON.stringify(updateData));
+        
+        // Gọi API để cập nhật giáo viên
+        const response = await fetch(API_ENDPOINTS.UPDATE_CLASSROOM, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("API Error:", response.status, errorText);
+            throw new Error(`Server responded with ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log("API response:", result);
+        
+        if (result.success) {
+            alert(result.message || 'Cập nhật giáo viên thành công');
+            closeChangeTeacherModal();
+            fetchClasses(); // Tải lại danh sách lớp học
+        } else {
+            alert(result.message || 'Có lỗi xảy ra khi cập nhật giáo viên');
+        }
+    } catch (error) {
+        console.error('Error updating teacher:', error);
+        alert(`Không thể cập nhật giáo viên: ${error.message}`);
     }
 }

@@ -313,13 +313,10 @@ teacherForm.addEventListener('submit', async (e) => {
                 alert(data.message || 'Cập nhật thông tin giáo viên thành công');
                 closeModal();
                 fetchTeachers(); // Refresh danh sách
-            } else {
-                throw new Error(data.message || 'Có lỗi xảy ra');
-            }
+            } 
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Có lỗi xảy ra khi thực hiện thao tác: ' + error.message);
     }
 });
 

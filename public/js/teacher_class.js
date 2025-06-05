@@ -1,19 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Cấu hình API
-    const BASE_API_URL = 'http://localhost:8080/v1/api';
-    const API_ENDPOINTS = {
-        GET_CLASS: `${BASE_API_URL}/classrooms`,
-        GET_STUDENTS: `${BASE_API_URL}/classroom-students`,
-        GET_LESSONS: `${BASE_API_URL}/lessons/classroom`, // Cập nhật endpoint mới
-        CREATE_LESSON: `${BASE_API_URL}/lessons`,
-        DELETE_LESSON: `${BASE_API_URL}/lessons`, // Endpoint cơ bản, ID sẽ được thêm vào sau
-        // Thêm các endpoint khác nếu cần
-    };
-
-    // Đặt API_ENDPOINTS vào window để có thể truy cập từ bất kỳ đâu
-    window.API_ENDPOINTS = API_ENDPOINTS;
-    window.BASE_API_URL = BASE_API_URL;
-    
+document.addEventListener('DOMContentLoaded', function() {   
     // Định nghĩa hàm deleteLesson
     window.deleteLesson = function(lessonId) {
         if (!lessonId || !confirm('Bạn có chắc chắn muốn xóa bài học này?')) return;
@@ -1601,7 +1586,402 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Cấu hình API 
+const BASE_API_URL = 'http://localhost:8080/v1/api';
+const API_ENDPOINTS = {
+    GET_CLASS: `${BASE_API_URL}/classrooms`,
+    GET_STUDENTS: `${BASE_API_URL}/classroom-students`,
+    GET_LESSONS: `${BASE_API_URL}/lessons/classroom`,
+    CREATE_LESSON: `${BASE_API_URL}/lessons`,
+    DELETE_LESSON: `${BASE_API_URL}/lessons`,
+    GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`,
+    CREATE_NOTIFICATION: `${BASE_API_URL}/notifications`,
+    DELETE_NOTIFICATION: `${BASE_API_URL}/notifications`
+};
 
+// Đặt API_ENDPOINTS vào window để có thể truy cập từ bất kỳ đâu
+window.API_ENDPOINTS = API_ENDPOINTS;
+window.BASE_API_URL = BASE_API_URL;
 
+// Thêm event listener cho nút tạo thông báo mới trong phần Tổng quan
+const btnAddNewNotificationOverview = document.getElementById('btnAddNewNotificationOverview');
+if (btnAddNewNotificationOverview) {
+    btnAddNewNotificationOverview.addEventListener('click', openNotificationModal);
+}
 
+// Hàm tạo modal thông báo
+function createNotificationModal() {
+    // Lấy mã lớp từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    const teacherEmail = localStorage.getItem('userEmail');
+    
+    // Tạo element cho modal
+    const modal = document.createElement('div');
+    modal.id = 'notificationModal';
+    modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center border-b px-6 py-4">
+                <h3 class="text-lg font-medium text-gray-900">Tạo thông báo mới</h3>
+                <button id="closeNotificationModal" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="notificationForm" class="px-6 py-4">
+                <div class="mb-4">
+                    <label for="notificationTitle" class="block text-gray-700 font-medium mb-2">Tiêu đề thông báo <span class="text-red-500">*</span></label>
+                    <input type="text" id="notificationTitle" name="title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="notificationContent" class="block text-gray-700 font-medium mb-2">Nội dung thông báo <span class="text-red-500">*</span></label>
+                    <textarea id="notificationContent" name="content" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+                </div>
+                
+                <input type="hidden" id="notificationClassCode" name="classCode" value="${classCode || ''}">
+                <input type="hidden" id="notificationTeacherEmail" name="teacherEmail" value="${teacherEmail || ''}">
+                
+                <div class="flex justify-end border-t pt-4 mt-4">
+                    <button type="button" id="cancelNotificationBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2">
+                        Hủy bỏ
+                    </button>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                        <i class="fas fa-paper-plane mr-1"></i> Gửi thông báo
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    // Thêm modal vào body
+    document.body.appendChild(modal);
+    
+    // Thêm event listener cho nút đóng modal
+    const closeNotificationModalBtn = document.getElementById('closeNotificationModal');
+    const cancelNotificationBtn = document.getElementById('cancelNotificationBtn');
+    
+    if (closeNotificationModalBtn) {
+        closeNotificationModalBtn.addEventListener('click', closeNotificationModal);
+    }
+    
+    if (cancelNotificationBtn) {
+        cancelNotificationBtn.addEventListener('click', closeNotificationModal);
+    }
+    
+    // Thêm event listener cho form
+    const notificationForm = document.getElementById('notificationForm');
+    if (notificationForm) {
+        notificationForm.addEventListener('submit', handleNotificationSubmit);
+    }
+}
+
+// Hàm mở modal thông báo
+function openNotificationModal() {
+    // Kiểm tra xem modal đã tồn tại chưa
+    let modal = document.getElementById('notificationModal');
+    
+    // Nếu chưa tồn tại, tạo mới
+    if (!modal) {
+        createNotificationModal();
+    } else {
+        // Nếu đã tồn tại, hiển thị lại
+        modal.classList.remove('hidden');
+        
+        // Reset form
+        const form = document.getElementById('notificationForm');
+        if (form) form.reset();
+    }
+}
+
+// Hàm đóng modal thông báo
+function closeNotificationModal() {
+    const modal = document.getElementById('notificationModal');
+    if (modal) {
+        // Thêm hiệu ứng fade-out
+        modal.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+        
+        // Sau khi hiệu ứng hoàn thành, ẩn modal
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('opacity-0', 'transition-opacity', 'duration-300');
+        }, 300);
+    }
+}
+
+// Hàm xử lý submit form thông báo
+async function handleNotificationSubmit(event) {
+    event.preventDefault();
+    
+    // Lấy dữ liệu từ form
+    const title = document.getElementById('notificationTitle').value.trim();
+    const content = document.getElementById('notificationContent').value.trim();
+    const classCode = document.getElementById('notificationClassCode').value.trim();
+    const teacherEmail = document.getElementById('notificationTeacherEmail').value.trim();
+    
+    // Kiểm tra dữ liệu
+    if (!title) {
+        showToast('Vui lòng nhập tiêu đề thông báo', 'error');
+        return;
+    }
+    
+    if (!content) {
+        showToast('Vui lòng nhập nội dung thông báo', 'error');
+        return;
+    }
+    
+    if (!classCode) {
+        showToast('Không tìm thấy mã lớp học', 'error');
+        return;
+    }
+    
+    if (!teacherEmail) {
+        showToast('Không tìm thấy thông tin giáo viên', 'error');
+        return;
+    }
+    
+    // Tạo đối tượng dữ liệu để gửi đi
+    const notificationData = {
+        title,
+        content,
+        classCode,
+        teacherEmail
+    };
+    
+    console.log('Dữ liệu thông báo sẽ gửi:', notificationData);
+    
+    // Hiển thị loading
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Đang gửi...`;
+    
+    try {
+        // Gọi API để tạo thông báo
+        const response = await fetch(API_ENDPOINTS.CREATE_NOTIFICATION, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(notificationData)
+        });
+        
+        // Xử lý kết quả
+        const result = await response.json();
+        console.log('Kết quả tạo thông báo:', result);
+        
+        if (result.success) {
+            // Hiển thị thông báo thành công
+            showToast('Gửi thông báo thành công!', 'success');
+            
+            // Đóng modal
+            closeNotificationModal();
+            
+            // Tải lại danh sách thông báo trong phần Tổng quan
+            loadOverviewNotifications();
+        } else {
+            // Hiển thị thông báo lỗi
+            showToast(`Lỗi: ${result.message || 'Không thể gửi thông báo'}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error creating notification:', error);
+        showToast('Có lỗi xảy ra khi gửi thông báo', 'error');
+    } finally {
+        // Khôi phục trạng thái nút submit
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+    }
+}
+
+// Hàm tải thông báo trong phần Tổng quan
+async function loadOverviewNotifications() {
+    const overviewNotificationsList = document.getElementById('overviewNotificationsList');
+    if (!overviewNotificationsList) return;
+    
+    // Hiển thị loading
+    overviewNotificationsList.innerHTML = `
+        <div class="text-center py-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+            <p class="text-gray-500">Đang tải thông báo...</p>
+        </div>
+    `;
+    
+    // Lấy mã lớp từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    
+    if (!classCode) {
+        console.error('Không tìm thấy mã lớp trong URL');
+        overviewNotificationsList.innerHTML = `
+            <div class="text-center py-4">
+                <p class="text-red-500">Không tìm thấy mã lớp học</p>
+            </div>
+        `;
+        return;
+    }
+    
+    try {
+        // Gọi API để lấy danh sách thông báo
+        const response = await fetch(`${API_ENDPOINTS.GET_NOTIFICATIONS}/${classCode}`);
+        const data = await response.json();
+        
+        console.log('Dữ liệu thông báo nhận được (Tổng quan):', data);
+        
+        // Kiểm tra cấu trúc dữ liệu và đảm bảo notifications là một mảng
+        let notifications = [];
+        
+        if (data && data.success && data.data) {
+            notifications = data.data;
+        } else if (Array.isArray(data)) {
+            notifications = data;
+        }
+        
+        if (!Array.isArray(notifications) || notifications.length === 0) {
+            overviewNotificationsList.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-gray-500">Chưa có thông báo nào</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Hiển thị 3 thông báo gần đây nhất
+        const recentNotifications = notifications.slice(0, 3);
+        
+        overviewNotificationsList.innerHTML = '';
+        
+        // Hiển thị từng thông báo
+        recentNotifications.forEach(notification => {
+            const notificationItem = document.createElement('div');
+            notificationItem.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow mb-3';
+            notificationItem.dataset.notificationId = notification._id;
+            
+            // Định dạng ngày tạo
+            const createdDate = new Date(notification.createdAt).toLocaleDateString('vi-VN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            notificationItem.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3 mt-1">
+                            <i class="fas fa-bell text-blue-500"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-lg">${notification.title || 'Thông báo không có tiêu đề'}</h4>
+                            <div class="flex items-center text-sm text-gray-600 mt-1">
+                                <span class="flex items-center mr-3">
+                                    <i class="fas fa-user mr-1"></i> ${notification.teacherName || 'Giáo viên'}
+                                </span>
+                                <span class="flex items-center">
+                                    <i class="far fa-calendar-alt mr-1"></i> ${createdDate}
+                                </span>
+                            </div>
+                            ${notification.content ? `<p class="text-sm text-gray-700 mt-2">${notification.content}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex space-x-1">
+                        <button class="text-blue-500 hover:text-blue-700 p-1" onclick="editNotification('${notification._id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="text-red-500 hover:text-red-700 p-1" onclick="deleteNotification('${notification._id}')">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            overviewNotificationsList.appendChild(notificationItem);
+        });
+    } catch (error) {
+        console.error('Lỗi khi tải thông báo trong phần Tổng quan:', error);
+        overviewNotificationsList.innerHTML = `
+            <div class="text-center py-4">
+                <p class="text-red-500">Có lỗi xảy ra khi tải thông báo</p>
+                <button class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md" onclick="loadOverviewNotifications()">
+                    <i class="fas fa-sync-alt mr-1"></i> Thử lại
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Hàm xóa thông báo
+async function deleteNotification(notificationId) {
+    if (!notificationId || !confirm('Bạn có chắc chắn muốn xóa thông báo này?')) return;
+    
+    console.log('Đang xóa thông báo với ID:', notificationId);
+    
+    // Hiển thị loading
+    const notificationElements = document.querySelectorAll(`div[data-notification-id="${notificationId}"]`);
+    
+    notificationElements.forEach(element => {
+        if (element) {
+            element.classList.add('opacity-50');
+        }
+    });
+    
+    try {
+        // Gọi API để xóa thông báo
+        const response = await fetch(`${API_ENDPOINTS.DELETE_NOTIFICATION}/${notificationId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                teacherEmail: localStorage.getItem('userEmail')
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Hiển thị thông báo thành công
+            showToast('Xóa thông báo thành công!', 'success');
+            
+            // Xóa thông báo khỏi DOM
+            notificationElements.forEach(element => {
+                if (element) {
+                    element.remove();
+                }
+            });
+            
+            // Tải lại danh sách thông báo trong phần Tổng quan
+            loadOverviewNotifications();
+        } else {
+            // Hiển thị thông báo lỗi
+            showToast(`Lỗi: ${data.message || 'Không thể xóa thông báo'}`, 'error');
+            
+            // Khôi phục trạng thái phần tử
+            notificationElements.forEach(element => {
+                if (element) {
+                    element.classList.remove('opacity-50');
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+        showToast('Có lỗi xảy ra khi xóa thông báo', 'error');
+        
+        // Khôi phục trạng thái phần tử
+        notificationElements.forEach(element => {
+            if (element) {
+                element.classList.remove('opacity-50');
+            }
+        });
+    }
+}
+
+// Đặt các hàm vào window object để có thể gọi từ bất kỳ đâu
+window.openNotificationModal = openNotificationModal;
+window.closeNotificationModal = closeNotificationModal;
+window.loadOverviewNotifications = loadOverviewNotifications;
+window.deleteNotification = deleteNotification;
+
+// Tải thông báo trong phần Tổng quan khi trang được tải
+loadOverviewNotifications();
 
