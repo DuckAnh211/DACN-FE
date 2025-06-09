@@ -7,7 +7,8 @@ const API_ENDPOINTS = {
     GET_CLASSES: `${BASE_API_URL}/classrooms`,
     GET_LESSONS: `${BASE_API_URL}/lessons/classroom`,
     DELETE_LESSON: `${BASE_API_URL}/lessons`,
-    GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`
+    GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`,
+    GET_ASSIGNMENTS: `${BASE_API_URL}/assignments/class`
 };
 
 // Hàm lấy danh sách lớp học
@@ -119,6 +120,7 @@ async function searchClassByCode(classCode) {
 document.addEventListener('DOMContentLoaded', function() {
     // Khai báo biến toàn cục
     window.lessons = [];
+    window.assignments = [];
     
     // Tạo phần tử lessonsContent nếu chưa tồn tại
     let lessonsContentElement = document.getElementById('lessonsContent');
@@ -1105,3 +1107,245 @@ function updateUnreadBadge(notifications) {
 window.loadNotifications = loadNotifications;
 window.markAsRead = markAsRead;
 window.checkUnreadNotifications = checkUnreadNotifications;
+
+// Thêm hàm tải danh sách bài tập
+async function loadAssignments(classCode) {
+    try {
+        const assignmentsContent = document.getElementById('assignments-content');
+        if (!assignmentsContent) return;
+        
+        // Hiển thị trạng thái đang tải
+        assignmentsContent.innerHTML = `
+            <div class="text-center py-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p class="text-gray-500">Đang tải danh sách bài tập...</p>
+            </div>
+        `;
+        
+        // Gọi API để lấy danh sách bài tập
+        const response = await fetch(`${API_ENDPOINTS.GET_ASSIGNMENTS}/${classCode}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Dữ liệu bài tập từ API:', result);
+        
+        // Kiểm tra cấu trúc dữ liệu trả về
+        let assignments = [];
+        if (result.success && Array.isArray(result.data)) {
+            assignments = result.data;
+        } else if (Array.isArray(result)) {
+            assignments = result;
+        }
+        
+        // Hiển thị danh sách bài tập
+        displayAssignments(assignments, assignmentsContent);
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách bài tập:', error);
+        const assignmentsContent = document.getElementById('assignments-content');
+        if (assignmentsContent) {
+            assignmentsContent.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-red-500">Có lỗi xảy ra khi tải danh sách bài tập</p>
+                    <button class="mt-2 text-blue-500 hover:text-blue-700" onclick="loadAssignments('${classCode}')">
+                        <i class="fas fa-sync-alt mr-1"></i> Thử lại
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+// Hàm hiển thị danh sách bài tập
+function displayAssignments(assignments, container) {
+    if (!container) return;
+    
+    if (!assignments || assignments.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <div class="text-gray-500 mb-4">
+                    <i class="fas fa-tasks text-5xl mb-3"></i>
+                    <p class="text-lg">Chưa có bài tập nào</p>
+                </div>
+                <p class="text-sm text-gray-400">Giáo viên sẽ cập nhật bài tập trong thời gian tới</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Sắp xếp bài tập theo thứ tự mới nhất trước
+    assignments.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    
+    // Tạo container cho danh sách bài tập
+    const assignmentsContainer = document.createElement('div');
+    assignmentsContainer.className = 'space-y-4';
+    
+    // Hiển thị từng bài tập
+    assignments.forEach(assignment => {
+        // Định dạng ngày hạn nộp
+        const dueDate = new Date(assignment.dueDate);
+        const formattedDueDate = dueDate.toLocaleString('vi-VN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        // Xác định trạng thái bài tập
+        let statusBadge = '';
+        if (assignment.status === 'active') {
+            statusBadge = '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Đang mở</span>';
+        } else if (assignment.status === 'completed') {
+            statusBadge = '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Đã hoàn thành</span>';
+        } else if (assignment.status === 'closed') {
+            statusBadge = '<span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Đã đóng</span>';
+        }
+        
+        // Xác định nếu có file đính kèm
+        const hasAttachment = assignment.fileUrl && assignment.fileName;
+        
+        // Tạo phần tử bài tập
+        const assignmentItem = document.createElement('div');
+        assignmentItem.className = 'bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow';
+        assignmentItem.innerHTML = `
+            <div class="flex items-start justify-between">
+                <div class="flex items-start">
+                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                        <i class="fas fa-tasks text-yellow-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-800">${assignment.title || 'Bài tập không có tiêu đề'}</h3>
+                        <p class="text-sm text-gray-600 mt-1">${assignment.description || 'Không có mô tả'}</p>
+                        <div class="flex flex-wrap items-center mt-2 text-xs text-gray-500">
+                            <span class="mr-3"><i class="far fa-clock mr-1"></i>Hạn nộp: ${formattedDueDate}</span>
+                            <span class="mr-3"><i class="fas fa-star mr-1"></i>Điểm tối đa: ${assignment.maxScore || 10}</span>
+                            ${statusBadge}
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded-md" 
+                            onclick="viewAssignment('${assignment._id}')">
+                        Xem chi tiết
+                    </button>
+                </div>
+            </div>
+            ${hasAttachment ? `
+                <div class="mt-3 p-2 bg-gray-50 rounded-md">
+                    <a href="${assignment.fileUrl}" target="_blank" class="flex items-center text-blue-500 hover:text-blue-700">
+                        <i class="fas fa-paperclip mr-2"></i>
+                        <span>${assignment.fileName}</span>
+                        <span class="text-xs text-gray-500 ml-2">(${formatFileSize(assignment.fileSize)})</span>
+                    </a>
+                </div>
+            ` : ''}
+            <div class="mt-3 flex justify-between items-center">
+                <div class="text-xs text-gray-500">
+                    <span><i class="fas fa-user mr-1"></i>Giáo viên: ${assignment.teacherId?.name || 'Không xác định'}</span>
+                </div>
+                <div>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        ${assignment.submissionCount || 0} bài nộp
+                    </span>
+                    <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full ml-1">
+                        ${assignment.viewCount || 0} lượt xem
+                    </span>
+                </div>
+            </div>
+        `;
+        
+        assignmentsContainer.appendChild(assignmentItem);
+    });
+    
+    // Thêm container vào trang
+    container.innerHTML = '';
+    container.appendChild(assignmentsContainer);
+}
+
+// Hàm định dạng kích thước file
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Hàm xem chi tiết bài tập
+function viewAssignment(assignmentId) {
+    // Chuyển hướng đến trang chi tiết bài tập
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    
+    if (classCode && assignmentId) {
+        window.location.href = `./assignment_detail.html?code=${classCode}&id=${assignmentId}`;
+    }
+}
+
+// Sửa lại phần xử lý sự kiện chuyển tab để tải bài tập khi chuyển đến tab bài tập
+document.addEventListener('DOMContentLoaded', function() {
+    // Khai báo biến toàn cục
+    window.lessons = [];
+    window.assignments = [];
+    
+    // Lấy tham chiếu đến các tab và nội dung
+    const lessonsTab = document.getElementById('lessons-tab');
+    const assignmentsTab = document.getElementById('assignments-tab');
+    const testsTab = document.getElementById('tests-tab');
+    const lessonsContent = document.getElementById('lessons-content');
+    const assignmentsContent = document.getElementById('assignments-content');
+    const testsContent = document.getElementById('tests-content');
+    
+    // Lấy mã lớp học từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    
+    // Xử lý sự kiện chuyển tab
+    if (assignmentsTab) {
+        assignmentsTab.addEventListener('click', function() {
+            // Hiển thị tab bài tập, ẩn các tab khác
+            if (lessonsContent) lessonsContent.classList.add('hidden');
+            if (assignmentsContent) assignmentsContent.classList.remove('hidden');
+            if (testsContent) testsContent.classList.add('hidden');
+            
+            // Cập nhật trạng thái active của các tab
+            if (lessonsTab) {
+                lessonsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+                lessonsTab.classList.add('text-gray-500');
+            }
+            assignmentsTab.classList.add('border-b-2', 'border-blue-500', 'text-blue-500');
+            assignmentsTab.classList.remove('text-gray-500');
+            if (testsTab) {
+                testsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+                testsTab.classList.add('text-gray-500');
+            }
+            
+            // Tải danh sách bài tập nếu chưa tải
+            if (classCode && (!window.assignments || window.assignments.length === 0)) {
+                loadAssignments(classCode);
+            }
+        });
+    }
+    
+    // Thêm vào phần fetchClassInfo để tải bài tập khi lớp học được tải
+    const originalFetchClassInfo = window.fetchClassInfo;
+    window.fetchClassInfo = async function() {
+        const classData = await originalFetchClassInfo();
+        
+        // Sau khi lấy thông tin lớp học, tải danh sách bài tập
+        if (classData && classData.classCode) {
+            // Tải danh sách bài tập nếu tab bài tập đang hiển thị
+            if (assignmentsContent && !assignmentsContent.classList.contains('hidden')) {
+                loadAssignments(classData.classCode);
+            }
+        }
+        
+        return classData;
+    };
+});
