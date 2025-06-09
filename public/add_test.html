@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quản lý đề thi</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
   <style>
@@ -72,115 +71,108 @@
   </div>
 </div>
 
-  <!-- Modal thêm đề thi -->
-  <div class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50" id="addExamModal">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-screen overflow-y-auto">
-      <form id="examForm" class="p-6">
-        <div class="flex justify-between items-center border-b pb-4 mb-4">
-          <h3 class="text-xl font-bold text-gray-800">Thêm đề thi mới</h3>
-          <button type="button" class="text-gray-400 hover:text-gray-500" id="closeExamModal">
-            <i class="fas fa-times text-xl"></i>
-          </button>
+<!-- Modal thêm đề thi -->
+<div class="modal fade" id="addExamModal" tabindex="-1" role="dialog" aria-labelledby="addExamModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-lg-custom" role="document">
+    <div class="modal-content">
+      <form id="examForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addExamModalLabel">Thêm đề thi</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
         </div>
 
-        <div class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Tên đề thi</label>
-              <input type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" name="tenDe" required />
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Tên đề thi</label>
+              <input type="text" class="form-control" name="tenDe" required />
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Mã đề thi</label>
-              <input type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" name="maDe" required />
+            <div class="form-group col-md-6">
+              <label>Mã đề thi</label>
+              <input type="text" class="form-control" name="maDe" required />
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Lớp học</label>
-              <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" name="lopHoc">
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label>Lớp học</label>
+              <select class="form-control" name="lopHoc">
                 <option>Lớp 10</option>
                 <option>Lớp 11</option>
                 <option>Lớp 12</option>
               </select>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Môn học</label>
-              <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" name="monHoc">
+            <div class="form-group col-md-4">
+              <label>Môn học</label>
+              <select class="form-control" name="monHoc">
                 <option>Toán học</option>
                 <option>Vật lý</option>
                 <option>Hóa học</option>
-                <option>Sinh học</option>
-                <option>Ngữ văn</option>
-                <option>Tiếng Anh</option>
-                <option>Lịch sử</option>
-                <option>Địa lý</option>
               </select>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian làm bài (phút)</label>
-              <input type="number" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" name="thoiGian" value="45" />
+            <div class="form-group col-md-4">
+              <label>Thời gian làm bài (phút)</label>
+              <input type="number" class="form-control" name="thoiGian" value="45" />
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Bắt đầu thi</label>
-              <input type="datetime-local" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" name="batDau" />
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Bắt đầu thi</label>
+              <input type="datetime-local" class="form-control" name="batDau" />
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Kết thúc thi</label>
-              <input type="datetime-local" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" name="ketThuc" />
+            <div class="form-group col-md-6">
+              <label>Kết thúc thi</label>
+              <input type="datetime-local" class="form-control" name="ketThuc" />
             </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Loại đề thi</label>
-            <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="loai" name="loaiDe">
+          <div class="form-group">
+            <label for="loai">Loại đề thi</label>
+            <select class="form-control" id="loai" name="loaiDe">
               <option value="tu_mas">Câu hỏi từ danh sách mã câu hỏi</option>
               <option value="upload_pdf">Tải lên file PDF</option>
             </select>
           </div>
 
           <!-- Nút mở modal chọn câu hỏi -->
-          <div>
-            <button type="button" id="btnOpenSelectQuestions" class="inline-flex items-center px-3 py-2 border border-blue-500 text-blue-500 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <i class="fas fa-list-check mr-2"></i> Chọn câu hỏi
+          <div class="form-group">
+            <button type="button" id="btnOpenSelectQuestions" class="btn btn-sm btn-outline-primary mt-2">
+              Click chọn mã
             </button>
           </div>
 
           <!-- Hiển thị câu hỏi đã chọn -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Câu hỏi đã chọn:</label>
-            <div class="border border-gray-200 rounded-md p-3 max-h-40 overflow-y-auto bg-gray-50">
-              <ul id="selectedQuestionsList" class="space-y-1">
-                <li class="text-gray-500 italic">Chưa chọn câu hỏi nào.</li>
-              </ul>
-            </div>
+          <div class="form-group">
+            <label>Câu hỏi đã chọn:</label>
+            <ul id="selectedQuestionsList" class="list-group list-group-flush" style="max-height: 150px; overflow-y: auto;">
+              <li class="list-group-item text-muted">Chưa chọn câu hỏi nào.</li>
+            </ul>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Hoặc tải lên file đề thi (PDF)</label>
-            <input type="file" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" name="pdfFile" id="pdfFile" accept="application/pdf" />
-            <p class="text-xs text-gray-500 mt-1">Chỉ chấp nhận định dạng .pdf</p>
+          <div class="form-group">
+            <label for="pdfFile">Hoặc tải lên file đề thi (PDF)</label>
+            <input type="file" class="form-control-file" name="pdfFile" id="pdfFile" accept="application/pdf" />
+            <small class="form-text text-muted">Chỉ chấp nhận định dạng .pdf</small>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-            <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" name="trangThai">
+          <div class="form-group">
+            <label>Trạng thái</label>
+            <select class="form-control" name="trangThai">
               <option>Hoạt động</option>
               <option>Không hoạt động</option>
             </select>
           </div>
         </div>
 
-        <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
-          <button type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50" id="cancelExamBtn">Hủy bỏ</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Lưu đề thi</button>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Lưu đề thi</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
         </div>
       </form>
     </div>
   </div>
+</div>
 
 <!-- Modal chọn câu hỏi -->
 <div class="modal fade" id="selectQuestionsModal" tabindex="-1" role="dialog" aria-labelledby="selectQuestionsModalLabel" aria-hidden="true">
@@ -286,44 +278,67 @@
   });
 
   function loadDanhSachDeThi() {
-    const tbody = document.querySelector('table tbody');
-    tbody.innerHTML = '<tr><td colspan="14">Đang tải dữ liệu...</td></tr>';
+  const tbody = document.querySelector('table tbody');
+  tbody.innerHTML = '<tr><td colspan="14">Đang tải dữ liệu...</td></tr>';
 
-    fetch('http://localhost:8080/v1/api/exams')
-      .then(res => res.json())
-      .then(data => {
-        tbody.innerHTML = '';
-        if (data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="14" class="text-muted">Không có đề thi nào.</td></tr>';
-          return;
-        }
+  fetch('http://localhost:8080/v1/api/exams')
+    .then(res => res.json())
+    .then(data => {
+      tbody.innerHTML = '';
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="14" class="text-muted">Không có đề thi nào.</td></tr>';
+        return;
+      }
 
-        data.forEach((exam, index) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${exam.title || ''}</td>
-            <td>${exam.code || ''}</td>
-            <td>${exam.duration || ''}</td>
-            <td>${exam.questionType || ''}</td>
-            <td>${exam.grade || ''}</td>
-            <td>${exam.subject || ''}</td>
-            <td>${exam.startTime ? new Date(exam.startTime).toLocaleString() : ''}</td>
-            <td>${exam.endTime ? new Date(exam.endTime).toLocaleString() : ''}</td>
-            <td>${exam.questionIds?.length || 0}</td>
-            <td><a href="#">Xem</a></td>
-            <td>${exam.status || ''}</td>
-            <td><button class="btn btn-sm btn-warning">Sửa</button></td>
-            <td><button class="btn btn-sm btn-danger">Xoá</button></td>
-          `;
-          tbody.appendChild(row);
-        });
-      })
-      .catch(err => {
-        tbody.innerHTML = '<tr><td colspan="14" class="text-danger">Lỗi tải danh sách đề thi.</td></tr>';
-        console.error('Lỗi khi lấy danh sách đề thi:', err);
+      data.forEach((exam, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${exam.title || ''}</td>
+          <td>${exam.code || ''}</td>
+          <td>${exam.duration || ''}</td>
+          <td>${exam.questionType || ''}</td>
+          <td>${exam.grade || ''}</td>
+          <td>${exam.subject || ''}</td>
+          <td>${exam.startTime ? new Date(exam.startTime).toLocaleString() : ''}</td>
+          <td>${exam.endTime ? new Date(exam.endTime).toLocaleString() : ''}</td>
+          <td>${exam.questionIds?.length || 0}</td>
+          <td><a href="#">Xem</a></td>
+          <td>${exam.status || ''}</td>
+          <td><button class="btn btn-sm btn-warning">Sửa</button></td>
+          <td><button class="btn btn-sm btn-danger btn-delete-exam" data-id="${exam._id}">Xoá</button></td>
+        `;
+        tbody.appendChild(row);
       });
+
+      // 🚨 BƯỚC 2: Gắn sự kiện click cho tất cả nút xoá
+      const deleteButtons = document.querySelectorAll('.btn-delete-exam');
+      deleteButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const examId = btn.getAttribute('data-id');
+          if (confirm('Bạn có chắc muốn xoá đề thi này?')) {
+            fetch(`http://localhost:8080/v1/api/exams/${examId}`, {
+              method: 'DELETE',
+            })
+              .then(res => {
+                if (!res.ok) throw new Error('Xoá thất bại');
+                alert('Đã xoá đề thi thành công!');
+                loadDanhSachDeThi(); // Tải lại danh sách sau khi xoá
+              })
+              .catch(err => {
+                console.error('Lỗi xoá đề thi:', err);
+                alert('Không thể xoá đề thi.');
+              });
+          }
+        });
+      });
+    })
+    .catch(err => {
+      tbody.innerHTML = '<tr><td colspan="14" class="text-danger">Lỗi tải danh sách đề thi.</td></tr>';
+      console.error('Lỗi khi lấy danh sách đề thi:', err);
+    });
   }
+
 
   // Gửi form tạo đề thi
   document.getElementById('examForm').addEventListener('submit', function(e) {
