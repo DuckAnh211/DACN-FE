@@ -648,10 +648,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <span class="flex items-center mr-3 mb-1">
                                                 <i class="far fa-calendar-alt mr-1 text-amber-500"></i> Hạn nộp: ${formattedDueDate}
                                             </span>
-                                            <br>
-                                            <span class="flex items-center mb-1">
-                                                <i class="fas fa-star mr-1 text-amber-500"></i> Điểm tối đa: ${assignment.maxScore || 10}
-                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -2474,16 +2470,12 @@ function openCreateAssignmentModal() {
                         <textarea id="assignmentDescription" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-1 gap-2 mb-2">
                         <div>
                             <label for="assignmentDueDate" class="block text-gray-700 font-medium mb-2">Hạn nộp <span class="text-red-500">*</span></label>
                             <input type="datetime-local" id="assignmentDueDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                         </div>
                         
-                        <div>
-                            <label for="assignmentMaxScore" class="block text-gray-700 font-medium mb-2">Điểm tối đa <span class="text-red-500">*</span></label>
-                            <input type="number" id="assignmentMaxScore" min="0" max="100" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        </div>
                     </div>
                     
                     <div class="mb-4">
@@ -2520,7 +2512,7 @@ function openCreateAssignmentModal() {
         if (closeBtn) {
             closeBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                 
+                closeCreateAssignmentModal();
             });
         }
         
@@ -2807,6 +2799,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Assignment functions setup complete');
 });
+
 
 
 
