@@ -634,7 +634,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         hour: '2-digit',
                         minute: '2-digit'
                     });
-                    
+
                     assignmentItem.innerHTML = `
                         <div class="flex flex-col">
                             <div class="flex items-start justify-between">
@@ -651,7 +651,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="flex space-x-1">
+                                <div class="flex space-x-2">
+                                    <button class="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-full transition-colors" 
+                                            title="Xem danh sách nộp bài" onclick="viewSubmissions('${assignment._id || assignment.id}')">
+                                        <i class="fas fa-users"></i>
+                                    </button>
                                     <button class="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-full transition-colors" 
                                             title="Chỉnh sửa bài tập" onclick="editAssignment('${assignment._id || assignment.id}')">
                                         <i class="fas fa-edit"></i>
@@ -685,22 +689,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </a>
                                 </div>
                             ` : ''}
-                            
-                            <div class="mt-3 pl-13 flex justify-between items-center">
-                                <div class="text-xs text-gray-500">
-                                    <span><i class="fas fa-user-edit mr-1"></i>Tạo bởi: ${assignment.teacherId?.name || 'Giáo viên'}</span>
-                                </div>
-                                <div class="flex space-x-2">
-                                    ${assignment.submissionCount ? `
-                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                            <i class="fas fa-paper-plane mr-1"></i>${assignment.submissionCount} bài nộp
-                                        </span>
-                                    ` : ''}
-                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                                        <i class="fas fa-eye mr-1"></i>${assignment.viewCount || 0} lượt xem
-                                    </span>
-                                </div>
-                            </div>
                         </div>
                     `;
                     
@@ -1829,7 +1817,7 @@ window.showToast = function(message, type = 'info') {
         toastContainer = document.createElement('div');
         toastContainer.id = 'toastContainer';
         toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col space-y-2';
-        document.body.appendChild(toastContainer);
+                             document.body.appendChild(toastContainer);
     }
     
     // Tạo toast mới
@@ -1945,7 +1933,8 @@ const API_ENDPOINTS = {
     DELETE_NOTIFICATION: `${BASE_API_URL}/notifications`,
     CREATE_ASSIGNMENT: `${BASE_API_URL}/assignments`,
     GET_ASSIGNMENTS: `${BASE_API_URL}/assignments/class`,
-    DELETE_ASSIGNMENT: `${BASE_API_URL}/assignments`
+    DELETE_ASSIGNMENT: `${BASE_API_URL}/assignments`,
+    GET_ASSIGNMENT_SUBMISSIONS: `${BASE_API_URL}/submissions/assignment`  
 };
 
 // Đặt API_ENDPOINTS vào window để có thể truy cập từ bất kỳ đâu
@@ -2063,6 +2052,9 @@ function createNotificationModal() {
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
             <div class="flex justify-between items-center border-b px-6 py-4">
                 <h3 class="text-lg font-medium text-gray-900">Tạo thông báo mới</h3>
+                <a id="closeNotificationModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </a>
             </div>
             
             <form id="notificationForm" class="px-6 py-4">
@@ -2080,9 +2072,6 @@ function createNotificationModal() {
                 <input type="hidden" id="notificationTeacherEmail" name="teacherEmail" value="${teacherEmail || ''}">
                 
                 <div class="flex justify-end border-t pt-4 mt-4">
-                    <button type="button" id="cancelNotificationBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2">
-                        Hủy bỏ
-                    </button>
                     <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
                         <i class="fas fa-paper-plane mr-1"></i> Gửi thông báo
                     </button>
@@ -2417,8 +2406,7 @@ window.deleteNotification = deleteNotification;
 // Tải thông báo trong phần Tổng quan khi trang được tải
 loadOverviewNotifications();
 
-// Đảm bảo tất cả các hàm được gán vào window object
-// Đặt đoạn mã này ở cuối file để đảm bảo tất cả các hàm đã được định nghĩa
+// Đảm bảo tất cả các hàm được gán vào window object khi trang được tải
 document.addEventListener('DOMContentLoaded', function() {
     // Gán các hàm vào window object
     window.editLesson = editLesson;
@@ -2470,12 +2458,9 @@ function openCreateAssignmentModal() {
                         <textarea id="assignmentDescription" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-1 gap-2 mb-2">
-                        <div>
-                            <label for="assignmentDueDate" class="block text-gray-700 font-medium mb-2">Hạn nộp <span class="text-red-500">*</span></label>
-                            <input type="datetime-local" id="assignmentDueDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        </div>
-                        
+                    <div class="mb-4">
+                        <label for="assignmentDueDate" class="block text-gray-700 font-medium mb-2">Hạn nộp <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" id="assignmentDueDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
                     
                     <div class="mb-4">
@@ -2554,226 +2539,71 @@ function closeCreateAssignmentModal() {
 
 // Hàm xử lý tạo bài tập mới
 function handleCreateAssignmentSubmit() {
-    console.log('Handling assignment form submission');
-    
-    // Lấy các phần tử form
+    // Get form elements
     const titleInput = document.getElementById('assignmentTitle');
     const descriptionInput = document.getElementById('assignmentDescription');
     const dueDateInput = document.getElementById('assignmentDueDate');
-    const maxScoreInput = document.getElementById('assignmentMaxScore');
     const fileInput = document.getElementById('assignmentFile');
     const classCodeInput = document.getElementById('assignmentClassCode');
     const teacherEmailInput = document.getElementById('assignmentTeacherEmail');
     
-    // Kiểm tra xem các phần tử có tồn tại không
-    if (!titleInput || !descriptionInput || !dueDateInput || !maxScoreInput || !classCodeInput || !teacherEmailInput) {
-        console.error('Missing form elements', {
-            titleInput, descriptionInput, dueDateInput, maxScoreInput, classCodeInput, teacherEmailInput
-        });
-        showToast('Có lỗi xảy ra: Không tìm thấy các trường dữ liệu', 'error');
+    // Validate required fields
+    if (!titleInput?.value.trim()) {
+        showToast('Vui lòng nhập tiêu đề bài tập', 'error');
         return;
     }
     
-    // Lấy dữ liệu từ form
-    const title = titleInput.value.trim();
-    const description = descriptionInput.value.trim();
-    const dueDate = dueDateInput.value;
-    const maxScore = maxScoreInput.value;
-    const classCode = classCodeInput.value;
-    const teacherEmail = teacherEmailInput.value;
-    
-    console.log('Form data:', { title, description, dueDate, maxScore, classCode, teacherEmail });
-    
-    // Kiểm tra dữ liệu
-    if (!title || !description || !dueDate || !maxScore || !classCode || !teacherEmail) {
-        showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+    if (!descriptionInput?.value.trim()) {
+        showToast('Vui lòng nhập mô tả bài tập', 'error');
         return;
     }
     
-    // Hiển thị loading
+    if (!dueDateInput?.value) {
+        showToast('Vui lòng chọn hạn nộp bài', 'error');
+        return;
+    }
+
+    // Create FormData with fixed maxScore = 10
+    const formData = new FormData();
+    formData.append('title', titleInput.value.trim());
+    formData.append('description', descriptionInput.value.trim());
+    formData.append('dueDate', dueDateInput.value);
+    formData.append('maxScore', '10'); // Fixed maxScore value
+    formData.append('classCode', classCodeInput.value);
+    formData.append('teacherEmail', teacherEmailInput.value);
+    
+    // Show loading state
     const submitBtn = document.getElementById('submitCreateAssignmentBtn');
-    if (!submitBtn) {
-        console.error('Submit button not found');
-        showToast('Có lỗi xảy ra: Không tìm thấy nút gửi', 'error');
-        return;
-    }
-    
-    const originalBtnText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Đang tạo...`;
-    
-    try {
-        console.log('Creating FormData');
-        // Tạo FormData để gửi dữ liệu và file
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('description', description);
-        formData.append('classCode', classCode);
-        formData.append('teacherEmail', teacherEmail);
-        formData.append('dueDate', dueDate);
-        formData.append('maxScore', maxScore);
-        
-        // Thêm file nếu có
-        if (fileInput && fileInput.files && fileInput.files.length > 0) {
-            formData.append('assignmentFile', fileInput.files[0]);
-            console.log('File added to FormData:', fileInput.files[0].name);
-        }
-        
-        // Gọi API để tạo bài tập
+    if (submitBtn) {
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang tạo...';
+
+        // Send request
         fetch(API_ENDPOINTS.CREATE_ASSIGNMENT, {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(result => {
-            console.log('Response data:', result);
-            
             if (result.success) {
-                // Hiển thị thông báo thành công
                 showToast('Tạo bài tập thành công!', 'success');
-                
-                // Đóng modal
                 closeCreateAssignmentModal();
-                
-                // Tải lại danh sách bài tập
-                const assignmentsList = document.getElementById('assignmentsList');
-                if (assignmentsList) {
-                    assignmentsList.dataset.loaded = 'false';
-                    loadAssignments();
-                }
+                loadAssignments(); // Reload assignments list
             } else {
-                // Hiển thị thông báo lỗi
-                showToast(`Lỗi: ${result.message || 'Không thể tạo bài tập'}`, 'error');
+                showToast(result.message || 'Không thể tạo bài tập', 'error');
             }
         })
         .catch(error => {
             console.error('Error creating assignment:', error);
-            showToast('Có lỗi xảy ra khi tạo bài tập: ' + (error.message || ''), 'error');
+            showToast('Có lỗi xảy ra khi tạo bài tập', 'error');
         })
         .finally(() => {
-            // Khôi phục trạng thái nút submit
             submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText;
+            submitBtn.innerHTML = originalText;
         });
-    } catch (error) {
-        console.error('Error preparing assignment data:', error);
-        showToast('Có lỗi xảy ra khi chuẩn bị dữ liệu bài tập: ' + (error.message || ''), 'error');
-        
-        // Khôi phục trạng thái nút submit
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
     }
 }
-
-// Hàm gửi dữ liệu bài tập lên server
-async function sendAssignmentData(url, formData, submitBtn, originalBtnText) {
-    try {
-        console.log('Sending request to:', url);
-        // Gọi API để tạo bài tập
-        const response = await fetch(url, {
-            method: 'POST',
-            body: formData
-        });
-        
-        console.log('Response received:', response.status);
-        const result = await response.json();
-        console.log('Response data:', result);
-        
-        if (result.success) {
-            showToast('Tạo bài tập thành công!', 'success');
-            closeCreateAssignmentModal();
-            
-            // Tải lại danh sách bài tập
-            if (typeof loadAssignments === 'function') {
-                loadAssignments();
-            } else {
-                console.warn('loadAssignments function not found, cannot reload assignments list');
-                // Tải lại trang sau 1 giây
-                /*
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-                */
-            }
-        } else {
-            showToast(`Lỗi: ${result.message || 'Không thể tạo bài tập'}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error creating assignment:', error);
-        showToast('Có lỗi xảy ra khi tạo bài tập: ' + (error.message || ''), 'error');
-    } finally {
-        // Khôi phục trạng thái nút submit
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText;
-        }
-    }
-}
-
-// Hiển thị thông báo toast
-function showToast(message, type = 'info') {
-    console.log(`Toast: ${type} - ${message}`);
-    
-    // Kiểm tra xem đã có container toast chưa
-    let toastContainer = document.getElementById('toast-container');
-    
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col items-end space-y-2';
-        document.body.appendChild(toastContainer);
-    }
-    
-    // Tạo toast mới
-    const toast = document.createElement('div');
-    
-    // Thiết lập class dựa trên loại thông báo
-    let bgColor, textColor, icon;
-    
-    switch (type) {
-        case 'success':
-            bgColor = 'bg-green-500';
-            textColor = 'text-white';
-            icon = '<i class="fas fa-check-circle mr-2"></i>';
-            break;
-        case 'error':
-            bgColor = 'bg-red-500';
-            textColor = 'text-white';
-            icon = '<i class="fas fa-exclamation-circle mr-2"></i>';
-            break;
-        case 'warning':
-            bgColor = 'bg-yellow-500';
-            textColor = 'text-white';
-            icon = '<i class="fas fa-exclamation-triangle mr-2"></i>';
-            break;
-        default:
-            bgColor = 'bg-blue-500';
-            textColor = 'text-white';
-            icon = '<i class="fas fa-info-circle mr-2"></i>';
-    }
-    
-    toast.className = `${bgColor} ${textColor} px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 flex items-center max-w-xs`;
-    toast.innerHTML = `
-        ${icon}
-        <span>${message}</span>
-    `;
-    
-    // Thêm toast vào container
-    toastContainer.appendChild(toast);
-    
-    // Hiệu ứng hiển thị
-    setTimeout(() => {
-        toast.classList.add('opacity-0');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, 3000);
-}
-
-// Thêm các hàm vào window object
-window.openCreateAssignmentModal = openCreateAssignmentModal;
-window.closeCreateAssignmentModal = closeCreateAssignmentModal;
-window.handleCreateAssignmentSubmit = handleCreateAssignmentSubmit;
 
 // Đảm bảo các hàm được gán vào window object khi trang được tải
 document.addEventListener('DOMContentLoaded', function() {
@@ -2799,6 +2629,185 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Assignment functions setup complete');
 });
+
+// Add viewSubmissions function
+async function viewSubmissions(assignmentId) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.id = 'submissionsModal';
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold">Danh sách nộp bài</h3>
+                <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('#submissionsModal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+
+    try {
+        const response = await fetch(`${API_ENDPOINTS.GET_ASSIGNMENT_SUBMISSIONS}/${assignmentId}`);
+        const result = await response.json();
+        
+        const contentDiv = modal.querySelector('.p-4');
+        
+        if (result.success && result.data) {
+            const submissions = result.data;
+            
+            if (submissions.length === 0) {
+                contentDiv.innerHTML = '<p class="text-center text-gray-500">Chưa có học sinh nào nộp bài</p>';
+                return;
+            }
+            
+            contentDiv.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl mx-4 max-h-[90vh] flex flex-col">
+    <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-500 to-blue-600">
+        <div class="flex items-center">
+            <i class="fas fa-tasks text-white text-2xl mr-3"></i>
+            <h3 class="text-xl font-semibold text-white">Danh sách nộp bài</h3>
+        </div>
+        <a class="text-white hover:text-gray-200 transition-colors" 
+                onclick="this.closest('#submissionsModal').remove()">
+            <i class="fas fa-times text-xl"></i>
+        </a>
+    </div>
+
+    <div class="p-6 overflow-auto">
+        <div class="bg-gray-50 rounded-lg p-4 mb-6 flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-info-circle text-blue-500 text-xl mr-3"></i>
+                <span class="text-gray-600">Tổng số bài nộp: <span class="font-semibold">${submissions.length}</span></span>
+            </div>
+
+        </div>
+
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                            Học sinh
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                            Thông tin nộp bài
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                            File & Điểm số
+                        </th>
+                        <th class="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                            Thao tác
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    ${submissions.map(sub => `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                        <i class="fas fa-user text-gray-500"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">${sub.studentName || "Không có tên"}</div>
+                                        <div class="text-sm text-gray-500">${sub.studentEmail || "Không có email"}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">
+                                    <div class="flex items-center mb-1">
+                                        <i class="far fa-clock text-gray-400 mr-2"></i>
+                                        ${new Date(sub.submittedAt).toLocaleString('vi-VN')}
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="far fa-calendar-check text-green-500 mr-2"></i>
+                                        <span class="text-green-500">Đã nộp đúng hạn</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col space-y-2">
+                                    ${sub.fileUrl ? `
+                                        <a href="${BASE_API_URL}${sub.fileUrl}" target="_blank" 
+                                           class="flex items-center px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                            <i class="fas fa-file-pdf text-red-500 mr-2 text-lg"></i>
+                                            <span class="text-sm text-gray-600 truncate max-w-[150px]">
+                                                ${sub.fileName || 'Tải xuống'}
+                                            </span>
+                                        </a>
+                                    ` : '<span class="text-sm text-gray-500">Không có file</span>'}
+                                    <div class="flex items-center">
+                                        <input type="number" 
+                                               class="w-20 px-3 py-2 border rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               value="${sub.grade || ''}" 
+                                               min="0" 
+                                               max="10"
+                                               placeholder="Điểm"
+                                               onchange="updateSubmissionGrade('${assignmentId}', '${sub._id}', this.value)">
+                                        <span class="text-gray-500 ml-2">/10</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex justify-center space-x-2">
+                                    <button class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg transition-colors" 
+                                            title="Xem chi tiết"
+                                            onclick="viewSubmissionDetail('${assignmentId}', '${sub._id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+            `;
+        } else {
+            contentDiv.innerHTML = '<p class="text-center text-red-500">Có lỗi khi tải danh sách nộp bài</p>';
+        }
+    } catch (error) {
+        console.error('Error loading submissions:', error);
+        const contentDiv = modal.querySelector('.p-4');
+        contentDiv.innerHTML = '<p class="text-center text-red-500">Có lỗi khi tải danh sách nộp bài</p>';
+    }
+}
+
+// Add updateSubmissionGrade function
+async function updateSubmissionGrade(assignmentId, submissionId, grade) {
+    try {
+        const response = await fetch(`${API_ENDPOINTS.GET_ASSIGNMENT_SUBMISSIONS}/${assignmentId}/submissions/${submissionId}/grade`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                grade: Number(grade),
+                teacherEmail: localStorage.getItem('userEmail')
+            })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            showToast('Cập nhật điểm thành công', 'success');
+        } else {
+            showToast(result.message || 'Không thể cập nhật điểm', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating grade:', error);
+        showToast('Có lỗi khi cập nhật điểm', 'error');
+    }
+}
+
+// Add to window object
+window.viewSubmissions = viewSubmissions;
+window.updateSubmissionGrade = updateSubmissionGrade;
 
 
 

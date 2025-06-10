@@ -1360,9 +1360,9 @@ function showSubmitAssignmentModal(assignmentId, assignmentTitle) {
             <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 overflow-hidden">
                 <div class="bg-blue-500 text-white px-4 py-3 flex justify-between items-center">
                     <h3 class="text-lg font-medium" id="submitModalTitle">Nộp bài tập</h3>
-                    <button id="closeSubmitModalBtn" class="text-white hover:text-gray-200">
+                    <a id="closeSubmitModalBtn" class="text-white hover:text-gray-200">
                         <i class="fas fa-times"></i>
-                    </button>
+                    </a>
                 </div>
                 
                 <form id="submitAssignmentForm" class="p-4">
@@ -1387,9 +1387,6 @@ function showSubmitAssignmentModal(assignmentId, assignmentTitle) {
                     <input type="hidden" id="submissionClassCode">
                     
                     <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" id="cancelSubmitBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">
-                            Hủy
-                        </button>
                         <button type="submit" id="confirmSubmitBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
                             <i class="fas fa-paper-plane mr-1"></i>Nộp bài
                         </button>
