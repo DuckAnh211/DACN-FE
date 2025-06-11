@@ -1934,7 +1934,8 @@ const API_ENDPOINTS = {
     CREATE_ASSIGNMENT: `${BASE_API_URL}/assignments`,
     GET_ASSIGNMENTS: `${BASE_API_URL}/assignments/class`,
     DELETE_ASSIGNMENT: `${BASE_API_URL}/assignments`,
-    GET_ASSIGNMENT_SUBMISSIONS: `${BASE_API_URL}/submissions/assignment`  
+    GET_ASSIGNMENT_SUBMISSIONS: `${BASE_API_URL}/submissions/assignment`,
+    GET_VIEW_SUBMISSIONS: `${BASE_API_URL}/submissions`  
 };
 
 // Đặt API_ENDPOINTS vào window để có thể truy cập từ bất kỳ đâu
@@ -2731,15 +2732,6 @@ async function viewSubmissions(assignmentId) {
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col space-y-2">
-                                    ${sub.fileUrl ? `
-                                        <a href="${BASE_API_URL}${sub.fileUrl}" target="_blank" 
-                                           class="flex items-center px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                            <i class="fas fa-file-pdf text-red-500 mr-2 text-lg"></i>
-                                            <span class="text-sm text-gray-600 truncate max-w-[150px]">
-                                                ${sub.fileName || 'Tải xuống'}
-                                            </span>
-                                        </a>
-                                    ` : '<span class="text-sm text-gray-500">Không có file</span>'}
                                     <div class="flex items-center">
                                         <input type="number" 
                                                class="w-20 px-3 py-2 border rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -2778,6 +2770,20 @@ async function viewSubmissions(assignmentId) {
         contentDiv.innerHTML = '<p class="text-center text-red-500">Có lỗi khi tải danh sách nộp bài</p>';
     }
 }
+
+// Xem chi tiết bài nộp (mở file PDF trong tab mới)
+function viewSubmissionDetail(assignmentId, submissionId) {
+    if (!assignmentId) {
+        showToast('Không tìm thấy assignmentId', 'error');
+        return;
+    }
+    // Mở file PDF bài nộp trong tab mới
+    const url = `${API_ENDPOINTS.GET_VIEW_SUBMISSIONS}/${submissionId}/view-pdf`;
+    window.open(url, '_blank');
+}
+
+// Đăng ký vào window để gọi từ onclick
+window.viewSubmissionDetail = viewSubmissionDetail;
 
 // Add updateSubmissionGrade function
 async function updateSubmissionGrade(assignmentId, submissionId, grade) {

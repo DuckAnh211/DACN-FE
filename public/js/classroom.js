@@ -1399,7 +1399,6 @@ function showSubmitAssignmentModal(assignmentId, assignmentTitle) {
         
         // Thêm event listener cho nút đóng và nút hủy
         document.getElementById('closeSubmitModalBtn').addEventListener('click', closeSubmitAssignmentModal);
-        document.getElementById('cancelSubmitBtn').addEventListener('click', closeSubmitAssignmentModal);
         
         // Thêm event listener cho form nộp bài
         document.getElementById('submitAssignmentForm').addEventListener('submit', handleSubmitAssignment);
