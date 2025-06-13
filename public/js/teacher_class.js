@@ -2660,7 +2660,19 @@ async function viewSubmissions(assignmentId) {
             const submissions = result.data;
             
             if (submissions.length === 0) {
-                contentDiv.innerHTML = '<p class="text-center text-gray-500">Chưa có học sinh nào nộp bài</p>';
+                contentDiv.innerHTML = `
+    <div class="relative bg-white rounded-lg shadow-lg w-full max-w-md mx-auto p-8 flex flex-col items-center">
+        <a 
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full focus:outline-none"
+            onclick="this.closest('#submissionsModal').remove()"
+            title="Đóng"
+        >
+            <i class="fas fa-times text-2xl"></i>
+        </a>
+        <i class="fas fa-folder-open text-5xl text-gray-300 mb-4"></i>
+        <p class="text-center text-gray-500 text-lg">Chưa có học sinh nào nộp bài</p>
+    </div>
+`;
                 return;
             }
             
@@ -2697,7 +2709,7 @@ async function viewSubmissions(assignmentId) {
                             Thông tin nộp bài
                         </th>
                         <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                            File & Điểm số
+                            Điểm số & Đánh giá
                         </th>
                         <th class="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
                             Thao tác
@@ -2732,17 +2744,30 @@ async function viewSubmissions(assignmentId) {
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col space-y-2">
-                                    <div class="flex items-center">
-                                        <input type="number" 
-                                               class="w-20 px-3 py-2 border rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                               value="${sub.grade || ''}" 
-                                               min="0" 
-                                               max="10"
-                                               placeholder="Điểm"
-                                               onchange="updateSubmissionGrade('${assignmentId}', '${sub._id}', this.value)">
-                                        <span class="text-gray-500 ml-2">/10</span>
-                                    </div>
-                                </div>
+    <div class="flex items-center">
+        <input type="number" 
+            class="w-20 px-3 py-2 border rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value="${sub.grade || ''}" 
+            min="0" 
+            max="10"
+            placeholder="Điểm"
+            id="grade-input-${sub._id}"
+        >
+        <span class="text-gray-500 ml-2">/10</span>
+    </div>
+    <textarea
+        class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        placeholder="Nhập nhận xét, đánh giá..."
+        id="feedback-input-${sub._id}"
+        rows="2"
+    >${sub.feedback || ''}</textarea>
+    <button
+        class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded transition-colors text-sm self-end"
+        onclick="submitGradeAndFeedback('${assignmentId}', '${sub._id}')"
+    >
+        Lưu đánh giá
+    </button>
+</div>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex justify-center space-x-2">
@@ -2811,10 +2836,44 @@ async function updateSubmissionGrade(assignmentId, submissionId, grade) {
     }
 }
 
+async function submitGradeAndFeedback(assignmentId, submissionId) {
+    const gradeInput = document.getElementById(`grade-input-${submissionId}`);
+    const feedbackInput = document.getElementById(`feedback-input-${submissionId}`);
+    const grade = gradeInput ? Number(gradeInput.value) : null;
+    const feedback = feedbackInput ? feedbackInput.value.trim() : '';
+    const teacherEmail = localStorage.getItem('userEmail');
+
+    if (grade === null || grade < 0 || grade > 10) {
+        showToast('Điểm phải từ 0 đến 10', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_ENDPOINTS.GET_VIEW_SUBMISSIONS}/${submissionId}/grade`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                grade,
+                feedback,
+                teacherEmail
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('Đã lưu điểm và đánh giá!', 'success');
+        } else {
+            showToast(result.message || 'Không thể lưu đánh giá', 'error');
+        }
+    } catch (error) {
+        showToast('Có lỗi khi lưu đánh giá', 'error');
+    }
+}
+
+
 // Add to window object
 window.viewSubmissions = viewSubmissions;
 window.updateSubmissionGrade = updateSubmissionGrade;
-
+window.submitGradeAndFeedback = submitGradeAndFeedback;
 
 
 
