@@ -476,50 +476,51 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     // Tạo URL đầy đủ cho file
-                    const fileFullUrl = lesson.fileUrl ? `${BASE_API_URL}${lesson.fileUrl}` : '#';
+                    const fileFullUrl = lesson.fileUrl;
                     
                     lessonItem.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-start">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3 mt-1">
-                                    <i class="fas fa-book-open text-green-500"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-medium text-lg">${lesson.title || 'Bài học không có tiêu đề'}</h4>
-                                    <div class="flex items-center text-sm text-gray-600 mt-1">
-                                        <span class="flex items-center mr-3">
-                                            <i class="fas fa-user mr-1"></i> ${teacherName}
-                                        </span>
-                                        <span class="flex items-center">
-                                            <i class="far fa-calendar-alt mr-1"></i> ${createdDate}
-                                        </span>
-                                    </div>
-                                    ${lesson.description ? `<p class="text-sm text-gray-700 mt-2">${lesson.description}</p>` : ''}
-                                    ${hasAttachment ? `
-                                        <div class="mt-3 p-2 bg-gray-50 rounded border border-gray-200">
-                                            <a href="${fileFullUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 flex items-center">
-                                                <i class="${fileIcon} mr-2 text-lg"></i>
-                                                <div>
-                                                    <span class="font-medium">${lesson.fileName || 'Tài liệu đính kèm'}</span>
-                                                    <span class="text-xs text-gray-500 block">
-                                                        ${formatFileSize(lesson.fileSize || 0)}
-                                                    </span>
-                                                </div>
-                                            </a>
-                                        </div>
-                                    ` : ''}
-                                </div>
+                            <div class="flex items-start justify-between">
+        <div class="flex items-start">
+            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3 mt-1">
+                <i class="fas fa-book-open text-green-500"></i>
+            </div>
+            <div>
+                <h4 class="font-medium text-lg">${lesson.title || 'Bài học không có tiêu đề'}</h4>
+                <div class="flex items-center text-sm text-gray-600 mt-1">
+                    <span class="flex items-center mr-3">
+                        <i class="fas fa-user mr-1"></i> ${teacherName}
+                    </span>
+                    <span class="flex items-center">
+                        <i class="far fa-calendar-alt mr-1"></i> ${createdDate}
+                    </span>
+                </div>
+                ${lesson.description ? `<p class="text-sm text-gray-700 mt-2">${lesson.description}</p>` : ''}
+                ${hasAttachment ? `
+                    <div class="mt-3 p-2 bg-gray-50 rounded border border-gray-200 flex items-center space-x-3">
+                        <a href="${lesson.fileUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 flex items-center"
+                        onclick="viewLessonPdf('${lesson._id}')">
+                            <i class="${fileIcon} mr-2 text-lg"></i>
+                            <div>
+                                <span class="font-medium">${lesson.fileName || 'Tài liệu đính kèm'}</span>
+                                <span class="text-xs text-gray-500 block">
+                                    ${formatFileSize(lesson.fileSize || 0)}
+                                </span>
                             </div>
-                            <div class="flex space-x-1">
-                                <button class="text-blue-500 hover:text-blue-700 p-1" onclick="editLesson('${lesson._id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="text-red-500 hover:text-red-700 p-1" onclick="deleteLesson('${lesson._id}')">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+        <div class="flex space-x-1">
+            <button class="text-blue-500 hover:text-blue-700 p-1" onclick="editLesson('${lesson._id}')">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="text-red-500 hover:text-red-700 p-1" onclick="deleteLesson('${lesson._id}')">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </div>
+`;
                     
                     lessonsList.appendChild(lessonItem);
                 });
@@ -537,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </button>
                     </div>
                 `;
-                
+                           
                 // Thêm event listener cho nút thử lại
                 const btnRetryLoadLessons = document.getElementById('btnRetryLoadLessons');
                 if (btnRetryLoadLessons) {
@@ -673,22 +674,23 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             ` : ''}
                             
-                            ${assignment.fileUrl ? `
-                                <div class="mt-3 pl-13">
-                                    <a href="${assignment.fileUrl}" target="_blank" 
-                                       class="flex items-center p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
-                                        <i class="fas fa-file-download text-blue-500 mr-2"></i>
-                                        <div>
-                                            <span class="font-medium text-blue-600">${assignment.fileName || 'Tài liệu đính kèm'}</span>
-                                            ${assignment.fileSize ? `
-                                                <span class="text-xs text-gray-500 block">
-                                                    ${formatFileSize(assignment.fileSize)}
-                                                </span>
-                                            ` : ''}
-                                        </div>
-                                    </a>
-                                </div>
-                            ` : ''}
+                           ${assignment.fileUrl ? `
+    <div class="mt-3 pl-13 flex items-center space-x-3">
+        <a href="${assignment.fileUrl}" target="_blank" 
+           class="flex items-center p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+           onclick="viewAssignmentPdf('${assignment._id || assignment.id}')">
+            <i class="fas fa-file-download text-blue-500 mr-2"></i>
+            <div>
+                <span class="font-medium text-blue-600">${assignment.fileName || 'Tài liệu đính kèm'}</span>
+                ${assignment.fileSize ? `
+                    <span class="text-xs text-gray-500 block">
+                        ${formatFileSize(assignment.fileSize)}
+                    </span>
+                ` : ''}
+            </div>
+        </a>
+    </div>
+` : ''}
                         </div>
                     `;
                     
@@ -719,7 +721,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
     }
-    
+    //Hàm mở file pdf bài tập
+    function viewAssignmentPdf(assignmentId) {
+    if (!assignmentId) {
+        showToast('Không tìm thấy assignmentId', 'error');
+        return;
+    }
+    const url = `${API_ENDPOINTS.CREATE_ASSIGNMENT}/${assignmentId}/view-pdf`;
+    window.open(url, '_blank');
+}
+window.viewAssignmentPdf = viewAssignmentPdf;
     // Hàm tải danh sách bài kiểm tra
     function loadTests() {
         if (!testsContent) return;
@@ -2765,7 +2776,7 @@ async function viewSubmissions(assignmentId) {
         class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded transition-colors text-sm self-end"
         onclick="submitGradeAndFeedback('${assignmentId}', '${sub._id}')"
     >
-        Lưu đánh giá
+        Lưu
     </button>
 </div>
                             </td>
@@ -2868,12 +2879,22 @@ async function submitGradeAndFeedback(assignmentId, submissionId) {
         showToast('Có lỗi khi lưu đánh giá', 'error');
     }
 }
-
+          
+                //xem file pdf bài học
+               function viewLessonPdf(lessonId) {
+                 if (!lessonId) {
+                 showToast('Không tìm thấy lessonId', 'error');
+                 return;
+               }
+                 const url = `${API_ENDPOINTS.CREATE_LESSON}/${lessonId}/view-pdf`;
+                  window.open(url, '_blank');
+             }
 
 // Add to window object
 window.viewSubmissions = viewSubmissions;
 window.updateSubmissionGrade = updateSubmissionGrade;
 window.submitGradeAndFeedback = submitGradeAndFeedback;
+window.viewLessonPdf = viewLessonPdf;
 
 
 

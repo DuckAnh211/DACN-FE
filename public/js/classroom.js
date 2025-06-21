@@ -1,7 +1,7 @@
 // Định nghĩa BASE_API_URL
 const BASE_API_URL = 'http://localhost:8080/v1/api';
 
-// Định nghĩa API_ENDPOINTS
+// Cấu hình API
 const API_ENDPOINTS = {
     GET_CLASS: `${BASE_API_URL}/classrooms`,
     GET_CLASSES: `${BASE_API_URL}/classrooms`,
@@ -10,6 +10,7 @@ const API_ENDPOINTS = {
     GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`,
     GET_ASSIGNMENTS: `${BASE_API_URL}/assignments/class`,
     SUBMIT_ASSIGNMENT: `${BASE_API_URL}/submissions`,
+    VIEW_ASSIGNMENT: `${BASE_API_URL}/assignments`,
     GET_SUBMISSION_STATUS: `${BASE_API_URL}/submissions/status`
 };
 
@@ -1255,61 +1256,84 @@ function displayAssignments(assignments, container) {
         
         // Kiểm tra có file đính kèm không
         const hasAttachment = assignment.fileUrl && assignment.fileName;
+
+          // Kiểm tra quá hạn: nếu hiện tại đã sau hạn nộp thì disable nút, bất kể đã nộp hay chưa
+    const now = new Date();
+    const isOverdue = now > dueDate;
+    const buttonDisabled = isOverdue ? 'disabled' : '';
+    const buttonClass = isOverdue
+        ? 'bg-gray-300 cursor-not-allowed text-white text-sm px-3 py-1 rounded-md'
+        : (submissionStatus.submitted
+            ? 'bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1 rounded-md'
+            : 'bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded-md');
         
         // Tạo phần tử bài tập
-        const assignmentItem = document.createElement('div');
-        assignmentItem.className = 'bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow';
-        assignmentItem.dataset.assignmentId = assignment._id || assignment.id;
-        assignmentItem.innerHTML = `
-            <div class="flex items-start justify-between">
-                <div class="flex items-start">
-                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
-                        <i class="fas fa-tasks text-yellow-500"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-gray-800">${assignment.title || 'Bài tập không có tiêu đề'}</h3>
-                        <p class="text-sm text-gray-600 mt-1">${assignment.description || 'Không có mô tả'}</p>
-                        <div class="flex flex-wrap items-center mt-2 text-xs text-gray-500">
-                            <span class="mr-3"><i class="far fa-clock mr-1"></i>Hạn nộp: ${formattedDueDate}</span>
-                            ${submittedInfo}
-                            <span class="submission-status">${statusBadge}</span>
-                        </div>
-                    </div>
+    const assignmentItem = document.createElement('div');
+    assignmentItem.className = 'bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow';
+    assignmentItem.dataset.assignmentId = assignment._id || assignment.id;
+    assignmentItem.innerHTML = `
+        <div class="flex items-start justify-between">
+            <div class="flex items-start">
+                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                    <i class="fas fa-tasks text-yellow-500"></i>
                 </div>
                 <div>
-                    <button class="submit-button ${submissionStatus.submitted ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'} text-white text-sm px-3 py-1 rounded-md" 
-                            onclick="showSubmitAssignmentModal('${assignment._id || assignment.id}', '${assignment.title.replace(/'/g, "\\'")}')">
-                        ${submissionStatus.submitted ? 'Nộp lại' : 'Nộp bài'}
-                    </button>
-                </div>
-            </div>
-            ${hasAttachment ? `
-                <div class="mt-3 p-2 bg-gray-50 rounded-md">
-                    <a href="${assignment.fileUrl}" target="_blank" class="flex items-center text-blue-500 hover:text-blue-700">
-                        <i class="fas fa-paperclip mr-2"></i>
-                        <span>${assignment.fileName}</span>
-                        <span class="text-xs text-gray-500 ml-2">(${formatFileSize(assignment.fileSize)})</span>
-                    </a>
-                </div>
-            ` : ''}
-            ${submissionStatus.submitted ? `
-                <div class="mt-3 p-2 bg-gray-50 rounded-md">
-                    <div class="flex items-center text-gray-700">
-                        <i class="fas fa-info-circle mr-2 text-blue-500"></i>
-                        <span>Trạng thái: ${getSubmissionStatusText(submissionStatus.status)}</span>
-                        ${submissionStatus.isGraded ? `<span class="ml-2 font-medium">Điểm: ${submissionStatus.grade || 'Chưa có'}</span>` : ''}
+                    <h3 class="font-medium text-gray-800">${assignment.title || 'Bài tập không có tiêu đề'}</h3>
+                    <p class="text-sm text-gray-600 mt-1">${assignment.description || 'Không có mô tả'}</p>
+                    <div class="flex flex-wrap items-center mt-2 text-xs text-gray-500">
+                        <span class="mr-3"><i class="far fa-clock mr-1"></i>Hạn nộp: ${formattedDueDate}</span>
+                        ${submittedInfo}
+                        <span class="submission-status">${statusBadge}</span>
                     </div>
                 </div>
-            ` : ''}
-        `;
-        
-        assignmentsContainer.appendChild(assignmentItem);
-    });
+            </div>
+            <div>
+                <button class="submit-button ${buttonClass}" 
+                        onclick="showSubmitAssignmentModal('${assignment._id || assignment.id}', '${assignment.title.replace(/'/g, "\\'")}')" 
+                        ${buttonDisabled}>
+                    ${submissionStatus.submitted ? 'Nộp lại' : 'Nộp bài'}
+                </button>
+            </div>
+        </div>
+        ${hasAttachment ? `
+            <div class="mt-3 p-2 bg-gray-50 rounded-md">
+                <a href="${assignment.fileUrl}" target="_blank" class="flex items-center text-blue-500 hover:text-blue-700"
+                onclick="viewAssignmentPdf('${assignment._id || assignment.id}')">
+                    <i class="fas fa-paperclip mr-2"></i>
+                    <span>${assignment.fileName}</span>
+                    <span class="text-xs text-gray-500 ml-2">(${formatFileSize(assignment.fileSize)})</span>
+                </a>
+            </div>
+        ` : ''}
+        ${submissionStatus.submitted ? `
+            <div class="mt-3 p-2 bg-gray-50 rounded-md">
+                <div class="flex items-center text-gray-700">
+                    <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                    <span>Trạng thái: ${getSubmissionStatusText(submissionStatus.status)}</span>
+                    ${submissionStatus.isGraded ? `<span class="ml-2 font-medium">Điểm: ${submissionStatus.grade || 'Chưa có'}</span>` : ''}
+                </div>
+            </div>
+        ` : ''}
+    `;
+
+    assignmentsContainer.appendChild(assignmentItem);
+});
     
     // Xóa nội dung cũ và thêm danh sách bài tập mới
     container.innerHTML = '';
     container.appendChild(assignmentsContainer);
 }
+
+// hàm xem file pdf bài tập
+function viewAssignmentPdf(assignmentId) {
+    if (!assignmentId) {
+        showToast('Không tìm thấy assignmentId', 'error');
+        return;
+    }
+    const url = `${API_ENDPOINTS.VIEW_ASSIGNMENT}/${assignmentId}/view-pdf`;
+    window.open(url, '_blank');
+}
+window.viewAssignmentPdf = viewAssignmentPdf;
 
 // Hàm định dạng kích thước file
 function formatFileSize(size) {
