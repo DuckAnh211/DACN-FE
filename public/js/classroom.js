@@ -1288,12 +1288,20 @@ function displayAssignments(assignments, container) {
                 </div>
             </div>
             <div>
-                <button class="submit-button ${buttonClass}" 
-                        onclick="showSubmitAssignmentModal('${assignment._id || assignment.id}', '${assignment.title.replace(/'/g, "\\'")}')" 
-                        ${buttonDisabled}>
-                    ${submissionStatus.submitted ? 'Nộp lại' : 'Nộp bài'}
-                </button>
-            </div>
+    ${
+        submissionStatus.submitted
+        ? `<button class="submit-button ${buttonClass}" 
+                onclick="showResubmitAssignmentModal('${assignment._id || assignment.id}', '${assignment.title.replace(/'/g, "\\'")}', '${submissionStatus.submissionId || ''}')"
+                ${buttonDisabled}>
+                Nộp lại
+            </button>`
+        : `<button class="submit-button ${buttonClass}" 
+                onclick="showSubmitAssignmentModal('${assignment._id || assignment.id}', '${assignment.title.replace(/'/g, "\\'")}')"
+                ${buttonDisabled}>
+                Nộp bài
+            </button>`
+    }
+</div>
         </div>
         ${hasAttachment ? `
             <div class="mt-3 p-2 bg-gray-50 rounded-md">
@@ -1335,6 +1343,30 @@ function viewAssignmentPdf(assignmentId) {
 }
 window.viewAssignmentPdf = viewAssignmentPdf;
 
+// Hàm nộp lại bài tập
+function showResubmitAssignmentModal(assignmentId, assignmentTitle, submissionId) {
+    if (!submissionId) {
+        window.showToast('Không tìm thấy submissionId để nộp lại', 'error');
+        return;
+    }
+    // Hiển thị modal như cũ, nhưng lưu submissionId vào input ẩn
+    showSubmitAssignmentModal(assignmentId, assignmentTitle);
+    // Sau khi modal hiện ra, thêm input ẩn submissionId
+    setTimeout(() => {
+        let input = document.getElementById('submissionSubmissionId');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.id = 'submissionSubmissionId';
+            document.getElementById('submitAssignmentForm').appendChild(input);
+        }
+        input.value = submissionId;
+        // Đánh dấu là nộp lại
+        document.getElementById('submitModalTitle').textContent = 'Nộp lại bài tập';
+    }, 100);
+}
+window.showResubmitAssignmentModal = showResubmitAssignmentModal;
+
 // Hàm định dạng kích thước file
 function formatFileSize(size) {
     if (!size) return 'N/A';
@@ -1367,7 +1399,9 @@ function showSubmitAssignmentModal(assignmentId, assignmentTitle) {
     // Lấy thông tin người dùng từ localStorage
     const studentEmail = localStorage.getItem('userEmail');
     const classCode = new URLSearchParams(window.location.search).get('code');
-    
+    const oldInput = document.getElementById('submissionSubmissionId');
+    if (oldInput) oldInput.remove();
+
     if (!studentEmail || !classCode) {
         showToast('Không thể xác định thông tin học sinh hoặc lớp học', 'error');
         return;
@@ -1396,14 +1430,9 @@ function showSubmitAssignmentModal(assignmentId, assignmentTitle) {
                     </div>
                     
                     <div class="mb-4">
-                        <label for="submissionComment" class="block text-gray-700 font-medium mb-2">Ghi chú (tùy chọn)</label>
-                        <textarea id="submissionComment" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                    </div>
-                    
-                    <div class="mb-4">
                         <label for="submissionFile" class="block text-gray-700 font-medium mb-2">Tệp đính kèm <span class="text-red-500">*</span></label>
                         <input type="file" id="submissionFile" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        <p class="text-xs text-gray-500 mt-1">Tải lên tệp bài làm của bạn (PDF, Word, Excel, v.v.)</p>
+                        <p class="text-xs text-gray-500 mt-1">Tải lên tệp bài làm của bạn (PDF)</p>
                     </div>
                     
                     <input type="hidden" id="submissionAssignmentId">
@@ -1454,8 +1483,8 @@ function handleSubmitAssignment(event) {
     const assignmentId = document.getElementById('submissionAssignmentId').value;
     const studentEmail = document.getElementById('submissionStudentEmail').value;
     const classCode = document.getElementById('submissionClassCode').value;
-    const comment = document.getElementById('submissionComment').value;
     const fileInput = document.getElementById('submissionFile');
+    const submissionId = document.getElementById('submissionSubmissionId')?.value || '';
     
     // Kiểm tra file đã được chọn chưa
     if (!fileInput.files || fileInput.files.length === 0) {
@@ -1474,7 +1503,6 @@ function handleSubmitAssignment(event) {
     formData.append('assignmentId', assignmentId);
     formData.append('studentEmail', studentEmail);
     formData.append('classCode', classCode);
-    formData.append('comment', comment);
     formData.append('submissionFile', fileInput.files[0]);
     
     console.log('API endpoint for submission:', API_ENDPOINTS.SUBMIT_ASSIGNMENT);
@@ -1483,7 +1511,6 @@ function handleSubmitAssignment(event) {
         assignmentId,
         studentEmail,
         classCode,
-        comment,
         fileName: fileInput.files[0].name
     });
 
@@ -1492,49 +1519,44 @@ function handleSubmitAssignment(event) {
         console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
     }
     
-    // Gọi API để nộp bài tập
-    fetch(API_ENDPOINTS.SUBMIT_ASSIGNMENT, {
-        method: 'POST',
+     const apiUrl = submissionId
+        ? `${API_ENDPOINTS.SUBMIT_ASSIGNMENT}/${submissionId}`
+        : API_ENDPOINTS.SUBMIT_ASSIGNMENT;
+    const method = submissionId ? 'PUT' : 'POST';
+
+    fetch(apiUrl, {
+        method,
         body: formData
     })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-    })
-    .then(result => {
-        console.log('Kết quả nộp bài tập:', result);
-        
-        if (result.success) {
-            // Hiển thị thông báo thành công
-            window.showToast('Nộp bài tập thành công!', 'success');
-            
-            // Đóng modal
-            closeSubmitAssignmentModal();
-            
-            // Cập nhật trạng thái nộp bài trong giao diện
-            updateSubmissionStatus(assignmentId, true);
-            
-            // Tải lại danh sách bài tập để cập nhật trạng thái mới nhất
-            const classCode = document.getElementById('submissionClassCode').value;
-            if (classCode) {
-                setTimeout(() => {
-                    loadAssignments(classCode);
-                }, 1000);
-            }
-        } else {
-            // Hiển thị thông báo lỗi
-            window.showToast(`Lỗi: ${result.message || 'Không thể nộp bài tập'}`, 'error');
+  .then(response => {
+    console.log('Response status:', response.status);
+    return response.json();
+})
+.then(result => {
+    console.log('Kết quả nộp bài tập:', result);
+    
+    if (result.success) {
+        window.showToast('Nộp bài tập thành công!', 'success');
+        closeSubmitAssignmentModal();
+        updateSubmissionStatus(assignmentId, true);
+        const classCode = document.getElementById('submissionClassCode').value;
+        if (classCode) {
+            setTimeout(() => {
+                loadAssignments(classCode);
+            }, 1000);
         }
-    })
-    .catch(error => {
-        console.error('Error submitting assignment:', error);
-        window.showToast('Có lỗi xảy ra khi nộp bài tập', 'error');
-    })
-    .finally(() => {
-        // Khôi phục trạng thái nút submit
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
-    });
+    } else {
+        window.showToast(`Lỗi: ${result.message || 'Không thể nộp bài tập'}`, 'error');
+    }
+})
+.catch(error => {
+    console.error('Error submitting assignment:', error);
+    window.showToast('Có lỗi xảy ra khi nộp bài tập', 'error');
+})
+.finally(() => {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
+});
 }
 
 // Hàm cập nhật trạng thái nộp bài trong giao diện

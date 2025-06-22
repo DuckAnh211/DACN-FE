@@ -2485,7 +2485,7 @@ function openCreateAssignmentModal() {
                     <input type="hidden" id="assignmentTeacherEmail" value="${localStorage.getItem('userEmail') || ''}">
                     
                     <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" id="submitCreateAssignmentBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        <button type="submit" id="submitCreateAssignmentBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
                             <i class="fas fa-plus mr-1"></i>Tạo bài tập
                         </button>
                     </div>
@@ -2513,6 +2513,15 @@ function openCreateAssignmentModal() {
             });
         }
         
+         // Sau khi tạo modal, gán event listener cho form:
+const createAssignmentForm = document.getElementById('createAssignmentForm');
+if (createAssignmentForm) {
+    createAssignmentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleCreateAssignmentSubmit();
+    });
+}
+
         // Thêm event listener cho nút hủy
         const cancelBtn = document.getElementById('cancelCreateAssignmentBtn');
         if (cancelBtn) {
@@ -2523,14 +2532,7 @@ function openCreateAssignmentModal() {
         }
         
         // Thêm event listener cho nút submit
-        const submitBtn = document.getElementById('submitCreateAssignmentBtn');
-        if (submitBtn) {
-            submitBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Submit button clicked');
-                handleCreateAssignmentSubmit();
-            });
-        }
+
     } else {
         // Nếu modal đã tồn tại, cập nhật giá trị của các trường ẩn
         document.getElementById('assignmentClassCode').value = classCode;
@@ -2583,7 +2585,12 @@ function handleCreateAssignmentSubmit() {
     formData.append('maxScore', '10'); // Fixed maxScore value
     formData.append('classCode', classCodeInput.value);
     formData.append('teacherEmail', teacherEmailInput.value);
-    
+
+    // Thêm đoạn này để chỉ thêm file nếu có chọn file
+     if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        formData.append('assignmentFile', fileInput.files[0]);
+     }
+
     // Show loading state
     const submitBtn = document.getElementById('submitCreateAssignmentBtn');
     if (submitBtn) {
