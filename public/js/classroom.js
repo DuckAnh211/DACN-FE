@@ -1,14 +1,21 @@
 // Định nghĩa BASE_API_URL
 const BASE_API_URL = 'http://localhost:8080/v1/api';
 
-// Định nghĩa API_ENDPOINTS
+// Cấu hình API
 const API_ENDPOINTS = {
     GET_CLASS: `${BASE_API_URL}/classrooms`,
     GET_CLASSES: `${BASE_API_URL}/classrooms`,
     GET_LESSONS: `${BASE_API_URL}/lessons/classroom`,
     DELETE_LESSON: `${BASE_API_URL}/lessons`,
     GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`,
+<<<<<<< HEAD
     CREATE_MEETING: `${BASE_API_URL}/meetings/create`
+=======
+    GET_ASSIGNMENTS: `${BASE_API_URL}/assignments/class`,
+    SUBMIT_ASSIGNMENT: `${BASE_API_URL}/submissions`,
+    VIEW_ASSIGNMENT: `${BASE_API_URL}/assignments`,
+    GET_SUBMISSION_STATUS: `${BASE_API_URL}/submissions/status`
+>>>>>>> 6e7b8751dfa4f02270406f708116599ee23cff58
 };
 
 // Hàm lấy danh sách lớp học
@@ -120,6 +127,7 @@ async function searchClassByCode(classCode) {
 document.addEventListener('DOMContentLoaded', function() {
     // Khai báo biến toàn cục
     window.lessons = [];
+    window.assignments = [];
     
     // Tạo phần tử lessonsContent nếu chưa tồn tại
     let lessonsContentElement = document.getElementById('lessonsContent');
@@ -1107,6 +1115,7 @@ window.loadNotifications = loadNotifications;
 window.markAsRead = markAsRead;
 window.checkUnreadNotifications = checkUnreadNotifications;
 
+<<<<<<< HEAD
 // Thêm hàm tạo cuộc họp video
 function addVideoMeetingFeature() {
     // Đợi DOM được tải hoàn toàn
@@ -1343,3 +1352,640 @@ document.addEventListener('DOMContentLoaded', function() {
     // Thêm tính năng tạo cuộc họp video
     setTimeout(addVideoMeetingFeature, 500); // Thêm timeout để đảm bảo DOM đã được tạo đầy đủ
 window.checkUnreadNotifications = checkUnreadNotifications;
+=======
+// Thêm hàm tải danh sách bài tập
+async function loadAssignments(classCode) {
+    try {
+        const assignmentsContent = document.getElementById('assignments-content');
+        if (!assignmentsContent) return;
+        
+        // Hiển thị trạng thái đang tải
+        assignmentsContent.innerHTML = `
+            <div class="text-center py-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p class="text-gray-500">Đang tải danh sách bài tập...</p>
+            </div>
+        `;
+        
+        // Lấy trạng thái nộp bài từ API
+        submissionStatusData = await fetchSubmissionStatus(classCode);
+        
+        // Gọi API để lấy danh sách bài tập
+        const response = await fetch(`${API_ENDPOINTS.GET_ASSIGNMENTS}/${classCode}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Dữ liệu bài tập từ API:', result);
+        
+        // Kiểm tra cấu trúc dữ liệu trả về
+        let assignments = [];
+        if (result.success && Array.isArray(result.data)) {
+            assignments = result.data;
+        } else if (Array.isArray(result)) {
+            assignments = result;
+        }
+        
+        // Nếu có dữ liệu trạng thái nộp bài, kết hợp với danh sách bài tập
+        if (submissionStatusData && submissionStatusData.assignments) {
+            // Tạo map từ dữ liệu trạng thái nộp bài
+            const submissionMap = {};
+            submissionStatusData.assignments.forEach(item => {
+                submissionMap[item.assignmentId] = item.submissionStatus;
+            });
+            
+            // Cập nhật trạng thái nộp bài cho từng bài tập
+            assignments = assignments.map(assignment => {
+                const assignmentId = assignment._id || assignment.id;
+                if (submissionMap[assignmentId]) {
+                    assignment.submissionStatus = submissionMap[assignmentId];
+                }
+                return assignment;
+            });
+        }
+        
+        // Hiển thị danh sách bài tập
+        displayAssignments(assignments, assignmentsContent);
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách bài tập:', error);
+        const assignmentsContent = document.getElementById('assignments-content');
+        if (assignmentsContent) {
+            assignmentsContent.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-red-500">Có lỗi xảy ra khi tải danh sách bài tập</p>
+                    <button class="mt-2 text-blue-500 hover:text-blue-700" onclick="loadAssignments('${classCode}')">
+                        <i class="fas fa-sync-alt mr-1"></i> Thử lại
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+// Hàm hiển thị danh sách bài tập
+function displayAssignments(assignments, container) {
+    if (!container) return;
+    
+    if (!assignments || assignments.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <div class="text-gray-500 mb-4">
+                    <i class="fas fa-tasks text-5xl mb-3"></i>
+                    <p class="text-lg">Chưa có bài tập nào</p>
+                </div>
+                <p class="text-sm text-gray-400">Giáo viên sẽ cập nhật bài tập trong thời gian tới</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Sắp xếp bài tập theo thứ tự mới nhất trước
+    assignments.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    
+    // Tạo container cho danh sách bài tập
+    const assignmentsContainer = document.createElement('div');
+    assignmentsContainer.className = 'space-y-4';
+    
+    // Hiển thị từng bài tập
+    assignments.forEach(assignment => {
+        // Định dạng ngày hạn nộp
+        const dueDate = new Date(assignment.dueDate);
+        const formattedDueDate = dueDate.toLocaleString('vi-VN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // Lấy thông tin trạng thái nộp bài
+        const submissionStatus = assignment.submissionStatus || { submitted: false, isLate: false };
+        
+        // Tạo badge trạng thái nộp bài
+        let statusBadge = '';
+        if (submissionStatus.submitted) {
+            if (submissionStatus.isGraded) {
+                statusBadge = `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Đã chấm: ${submissionStatus.grade || 'N/A'}</span>`;
+            } else if (submissionStatus.isLate) {
+                statusBadge = '<span class="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded">Nộp trễ</span>';
+            } else {
+                statusBadge = '<span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Đã nộp</span>';
+            }
+        } else {
+            const now = new Date();
+            if (now > dueDate) {
+                statusBadge = '<span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">Quá hạn</span>';
+            } else {
+                statusBadge = '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Chưa nộp</span>';
+            }
+        }
+        
+        // Tạo thông tin thời gian nộp bài
+        let submittedInfo = '';
+        if (submissionStatus.submitted && submissionStatus.submittedAt) {
+            const submittedDate = new Date(submissionStatus.submittedAt);
+            const formattedSubmittedDate = submittedDate.toLocaleString('vi-VN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            submittedInfo = `<span class="mr-3"><i class="far fa-paper-plane mr-1"></i>Đã nộp: ${formattedSubmittedDate}</span>`;
+        }
+        
+        // Kiểm tra có file đính kèm không
+        const hasAttachment = assignment.fileUrl && assignment.fileName;
+
+          // Kiểm tra quá hạn: nếu hiện tại đã sau hạn nộp thì disable nút, bất kể đã nộp hay chưa
+    const now = new Date();
+    const isOverdue = now > dueDate;
+    const buttonDisabled = isOverdue ? 'disabled' : '';
+    const buttonClass = isOverdue
+        ? 'bg-gray-300 cursor-not-allowed text-white text-sm px-3 py-1 rounded-md'
+        : (submissionStatus.submitted
+            ? 'bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1 rounded-md'
+            : 'bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded-md');
+        
+        // Tạo phần tử bài tập
+    const assignmentItem = document.createElement('div');
+    assignmentItem.className = 'bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow';
+    assignmentItem.dataset.assignmentId = assignment._id || assignment.id;
+    assignmentItem.innerHTML = `
+        <div class="flex items-start justify-between">
+            <div class="flex items-start">
+                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                    <i class="fas fa-tasks text-yellow-500"></i>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-800">${assignment.title || 'Bài tập không có tiêu đề'}</h3>
+                    <p class="text-sm text-gray-600 mt-1">${assignment.description || 'Không có mô tả'}</p>
+                    <div class="flex flex-wrap items-center mt-2 text-xs text-gray-500">
+                        <span class="mr-3"><i class="far fa-clock mr-1"></i>Hạn nộp: ${formattedDueDate}</span>
+                        ${submittedInfo}
+                        <span class="submission-status">${statusBadge}</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+    ${
+        submissionStatus.submitted
+        ? `<button class="submit-button ${buttonClass}" 
+                onclick="showResubmitAssignmentModal('${assignment._id || assignment.id}', '${assignment.title.replace(/'/g, "\\'")}', '${submissionStatus.submissionId || ''}')"
+                ${buttonDisabled}>
+                Nộp lại
+            </button>`
+        : `<button class="submit-button ${buttonClass}" 
+                onclick="showSubmitAssignmentModal('${assignment._id || assignment.id}', '${assignment.title.replace(/'/g, "\\'")}')"
+                ${buttonDisabled}>
+                Nộp bài
+            </button>`
+    }
+</div>
+        </div>
+        ${hasAttachment ? `
+            <div class="mt-3 p-2 bg-gray-50 rounded-md">
+                <a href="${assignment.fileUrl}" target="_blank" class="flex items-center text-blue-500 hover:text-blue-700"
+                onclick="viewAssignmentPdf('${assignment._id || assignment.id}')">
+                    <i class="fas fa-paperclip mr-2"></i>
+                    <span>${assignment.fileName}</span>
+                    <span class="text-xs text-gray-500 ml-2">(${formatFileSize(assignment.fileSize)})</span>
+                </a>
+            </div>
+        ` : ''}
+        ${submissionStatus.submitted ? `
+            <div class="mt-3 p-2 bg-gray-50 rounded-md">
+                <div class="flex items-center text-gray-700">
+                    <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                    <span>Trạng thái: ${getSubmissionStatusText(submissionStatus.status)}</span>
+                    ${submissionStatus.isGraded ? `<span class="ml-2 font-medium">Điểm: ${submissionStatus.grade || 'Chưa có'}</span>` : ''}
+                </div>
+            </div>
+        ` : ''}
+    `;
+
+    assignmentsContainer.appendChild(assignmentItem);
+});
+    
+    // Xóa nội dung cũ và thêm danh sách bài tập mới
+    container.innerHTML = '';
+    container.appendChild(assignmentsContainer);
+}
+
+// hàm xem file pdf bài tập
+function viewAssignmentPdf(assignmentId) {
+    if (!assignmentId) {
+        showToast('Không tìm thấy assignmentId', 'error');
+        return;
+    }
+    const url = `${API_ENDPOINTS.VIEW_ASSIGNMENT}/${assignmentId}/view-pdf`;
+    window.open(url, '_blank');
+}
+window.viewAssignmentPdf = viewAssignmentPdf;
+
+// Hàm nộp lại bài tập
+function showResubmitAssignmentModal(assignmentId, assignmentTitle, submissionId) {
+    if (!submissionId) {
+        window.showToast('Không tìm thấy submissionId để nộp lại', 'error');
+        return;
+    }
+    // Hiển thị modal như cũ, nhưng lưu submissionId vào input ẩn
+    showSubmitAssignmentModal(assignmentId, assignmentTitle);
+    // Sau khi modal hiện ra, thêm input ẩn submissionId
+    setTimeout(() => {
+        let input = document.getElementById('submissionSubmissionId');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.id = 'submissionSubmissionId';
+            document.getElementById('submitAssignmentForm').appendChild(input);
+        }
+        input.value = submissionId;
+        // Đánh dấu là nộp lại
+        document.getElementById('submitModalTitle').textContent = 'Nộp lại bài tập';
+    }, 100);
+}
+window.showResubmitAssignmentModal = showResubmitAssignmentModal;
+
+// Hàm định dạng kích thước file
+function formatFileSize(size) {
+    if (!size) return 'N/A';
+    
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let formattedSize = size;
+    let unitIndex = 0;
+    
+    while (formattedSize >= 1024 && unitIndex < units.length - 1) {
+        formattedSize /= 1024;
+        unitIndex++;
+    }
+    
+    return `${formattedSize.toFixed(1)} ${units[unitIndex]}`;
+}
+
+// Hàm xem chi tiết bài tập
+function viewAssignment(assignmentId) {
+    // Chuyển hướng đến trang chi tiết bài tập
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    
+    if (classCode && assignmentId) {
+        window.location.href = `./assignment_detail.html?code=${classCode}&id=${assignmentId}`;
+    }
+}
+
+// Hàm hiển thị modal nộp bài tập
+function showSubmitAssignmentModal(assignmentId, assignmentTitle) {
+    // Lấy thông tin người dùng từ localStorage
+    const studentEmail = localStorage.getItem('userEmail');
+    const classCode = new URLSearchParams(window.location.search).get('code');
+    const oldInput = document.getElementById('submissionSubmissionId');
+    if (oldInput) oldInput.remove();
+
+    if (!studentEmail || !classCode) {
+        showToast('Không thể xác định thông tin học sinh hoặc lớp học', 'error');
+        return;
+    }
+    
+    // Tạo modal nếu chưa tồn tại
+    let submitModal = document.getElementById('submitAssignmentModal');
+    
+    if (!submitModal) {
+        submitModal = document.createElement('div');
+        submitModal.id = 'submitAssignmentModal';
+        submitModal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden';
+        submitModal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 overflow-hidden">
+                <div class="bg-blue-500 text-white px-4 py-3 flex justify-between items-center">
+                    <h3 class="text-lg font-medium" id="submitModalTitle">Nộp bài tập</h3>
+                    <a id="closeSubmitModalBtn" class="text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+                
+                <form id="submitAssignmentForm" class="p-4">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">Bài tập</label>
+                        <div id="assignmentTitleDisplay" class="px-3 py-2 bg-gray-100 rounded-md"></div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="submissionFile" class="block text-gray-700 font-medium mb-2">Tệp đính kèm <span class="text-red-500">*</span></label>
+                        <input type="file" id="submissionFile" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <p class="text-xs text-gray-500 mt-1">Tải lên tệp bài làm của bạn (PDF)</p>
+                    </div>
+                    
+                    <input type="hidden" id="submissionAssignmentId">
+                    <input type="hidden" id="submissionStudentEmail">
+                    <input type="hidden" id="submissionClassCode">
+                    
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="submit" id="confirmSubmitBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-paper-plane mr-1"></i>Nộp bài
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(submitModal);
+        
+        // Thêm event listener cho nút đóng và nút hủy
+        document.getElementById('closeSubmitModalBtn').addEventListener('click', closeSubmitAssignmentModal);
+        
+        // Thêm event listener cho form nộp bài
+        document.getElementById('submitAssignmentForm').addEventListener('submit', handleSubmitAssignment);
+    }
+    
+    // Cập nhật thông tin trong modal
+    document.getElementById('assignmentTitleDisplay').textContent = assignmentTitle || 'Bài tập';
+    document.getElementById('submissionAssignmentId').value = assignmentId;
+    document.getElementById('submissionStudentEmail').value = studentEmail;
+    document.getElementById('submissionClassCode').value = classCode;
+    
+    // Hiển thị modal
+    submitModal.classList.remove('hidden');
+}
+
+// Hàm đóng modal nộp bài tập
+function closeSubmitAssignmentModal() {
+    const modal = document.getElementById('submitAssignmentModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Hàm xử lý nộp bài tập
+function handleSubmitAssignment(event) {
+    event.preventDefault();
+    
+    // Lấy các giá trị từ form
+    const assignmentId = document.getElementById('submissionAssignmentId').value;
+    const studentEmail = document.getElementById('submissionStudentEmail').value;
+    const classCode = document.getElementById('submissionClassCode').value;
+    const fileInput = document.getElementById('submissionFile');
+    const submissionId = document.getElementById('submissionSubmissionId')?.value || '';
+    
+    // Kiểm tra file đã được chọn chưa
+    if (!fileInput.files || fileInput.files.length === 0) {
+        window.showToast('Vui lòng chọn tệp bài làm để nộp', 'error');
+        return;
+    }
+    
+    // Hiển thị loading
+    const submitBtn = document.getElementById('confirmSubmitBtn');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Đang nộp bài...`;
+    
+    // Tạo FormData để gửi dữ liệu và file
+    const formData = new FormData();
+    formData.append('assignmentId', assignmentId);
+    formData.append('studentEmail', studentEmail);
+    formData.append('classCode', classCode);
+    formData.append('submissionFile', fileInput.files[0]);
+    
+    console.log('API endpoint for submission:', API_ENDPOINTS.SUBMIT_ASSIGNMENT);
+
+    console.log('Đang gửi dữ liệu nộp bài tập:', {
+        assignmentId,
+        studentEmail,
+        classCode,
+        fileName: fileInput.files[0].name
+    });
+
+    console.log('FormData entries:');
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
+    }
+    
+     const apiUrl = submissionId
+        ? `${API_ENDPOINTS.SUBMIT_ASSIGNMENT}/${submissionId}`
+        : API_ENDPOINTS.SUBMIT_ASSIGNMENT;
+    const method = submissionId ? 'PUT' : 'POST';
+
+    fetch(apiUrl, {
+        method,
+        body: formData
+    })
+  .then(response => {
+    console.log('Response status:', response.status);
+    return response.json();
+})
+.then(result => {
+    console.log('Kết quả nộp bài tập:', result);
+    
+    if (result.success) {
+        window.showToast('Nộp bài tập thành công!', 'success');
+        closeSubmitAssignmentModal();
+        updateSubmissionStatus(assignmentId, true);
+        const classCode = document.getElementById('submissionClassCode').value;
+        if (classCode) {
+            setTimeout(() => {
+                loadAssignments(classCode);
+            }, 1000);
+        }
+    } else {
+        window.showToast(`Lỗi: ${result.message || 'Không thể nộp bài tập'}`, 'error');
+    }
+})
+.catch(error => {
+    console.error('Error submitting assignment:', error);
+    window.showToast('Có lỗi xảy ra khi nộp bài tập', 'error');
+})
+.finally(() => {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
+});
+}
+
+// Hàm cập nhật trạng thái nộp bài trong giao diện
+function updateSubmissionStatus(assignmentId, isSubmitted) {
+    const assignmentElement = document.querySelector(`[data-assignment-id="${assignmentId}"]`);
+    if (!assignmentElement) return;
+    
+    const statusBadge = assignmentElement.querySelector('.submission-status');
+    if (statusBadge) {
+        if (isSubmitted) {
+            statusBadge.innerHTML = '<span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Đã nộp</span>';
+        } else {
+            statusBadge.innerHTML = '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Chưa nộp</span>';
+        }
+    }
+    
+    // Cập nhật nút nộp bài
+    const submitButton = assignmentElement.querySelector('.submit-button');
+    if (submitButton) {
+        if (isSubmitted) {
+            submitButton.textContent = 'Nộp lại';
+            submitButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            submitButton.classList.add('bg-green-500', 'hover:bg-green-600');
+        }
+    }
+}
+
+// Sửa lại phần xử lý sự kiện chuyển tab để tải bài tập khi chuyển đến tab bài tập
+document.addEventListener('DOMContentLoaded', function() {
+    // Khai báo biến toàn cục
+    window.lessons = [];
+    window.assignments = [];
+    
+    // Lấy tham chiếu đến các tab và nội dung
+    const lessonsTab = document.getElementById('lessons-tab');
+    const assignmentsTab = document.getElementById('assignments-tab');
+    const testsTab = document.getElementById('tests-tab');
+    const lessonsContent = document.getElementById('lessons-content');
+    const assignmentsContent = document.getElementById('assignments-content');
+    const testsContent = document.getElementById('tests-content');
+    
+    // Lấy mã lớp học từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    
+    // Xử lý sự kiện chuyển tab
+    if (assignmentsTab) {
+        assignmentsTab.addEventListener('click', function() {
+            // Hiển thị tab bài tập, ẩn các tab khác
+            if (lessonsContent) lessonsContent.classList.add('hidden');
+            if (assignmentsContent) assignmentsContent.classList.remove('hidden');
+            if (testsContent) testsContent.classList.add('hidden');
+            
+            // Cập nhật trạng thái active của các tab
+            if (lessonsTab) {
+                lessonsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+                lessonsTab.classList.add('text-gray-500');
+            }
+            assignmentsTab.classList.add('border-b-2', 'border-blue-500', 'text-blue-500');
+            assignmentsTab.classList.remove('text-gray-500');
+            if (testsTab) {
+                testsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
+                testsTab.classList.add('text-gray-500');
+            }
+            
+            // Tải danh sách bài tập nếu chưa tải
+            if (classCode && (!window.assignments || window.assignments.length === 0)) {
+                loadAssignments(classCode);
+            }
+        });
+    }
+    
+    // Thêm vào phần fetchClassInfo để tải bài tập khi lớp học được tải
+    const originalFetchClassInfo = window.fetchClassInfo;
+    window.fetchClassInfo = async function() {
+        const classData = await originalFetchClassInfo();
+        
+        // Sau khi lấy thông tin lớp học, tải danh sách bài tập
+        if (classData && classData.classCode) {
+            // Tải danh sách bài tập nếu tab bài tập đang hiển thị
+            if (assignmentsContent && !assignmentsContent.classList.contains('hidden')) {
+                loadAssignments(classData.classCode);
+            }
+        }
+        
+        return classData;
+    };
+});
+
+// Hàm hiển thị thông báo
+window.showToast = function(message, type = 'info') {
+    // Tạo phần tử toast nếu chưa tồn tại
+    let toast = document.getElementById('toast');
+    
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.className = 'fixed bottom-4 right-4 z-50 transform transition-transform duration-300 translate-y-full';
+        document.body.appendChild(toast);
+    }
+    
+    // Xác định màu sắc dựa trên loại thông báo
+    let bgColor, textColor, icon;
+    
+    switch (type) {
+        case 'success':
+            bgColor = 'bg-green-500';
+            textColor = 'text-white';
+            icon = '<i class="fas fa-check-circle mr-2"></i>';
+            break;
+        case 'error':
+            bgColor = 'bg-red-500';
+            textColor = 'text-white';
+            icon = '<i class="fas fa-exclamation-circle mr-2"></i>';
+            break;
+        case 'warning':
+            bgColor = 'bg-yellow-500';
+            textColor = 'text-white';
+            icon = '<i class="fas fa-exclamation-triangle mr-2"></i>';
+            break;
+        default:
+            bgColor = 'bg-blue-500';
+            textColor = 'text-white';
+            icon = '<i class="fas fa-info-circle mr-2"></i>';
+    }
+    
+    // Cập nhật nội dung và lớp CSS
+    toast.className = `fixed bottom-4 right-4 z-50 ${bgColor} ${textColor} px-4 py-3 rounded-lg shadow-lg flex items-center transform transition-transform duration-300 translate-y-0`;
+    toast.innerHTML = `
+        ${icon}
+        <span>${message}</span>
+    `;
+    
+    // Hiển thị toast
+    setTimeout(() => {
+        toast.classList.remove('translate-y-full');
+        toast.classList.add('translate-y-0');
+    }, 100);
+    
+    // Tự động ẩn toast sau 3 giây
+    setTimeout(() => {
+        toast.classList.remove('translate-y-0');
+        toast.classList.add('translate-y-full');
+    }, 3000);
+};
+
+// Biến lưu trữ thông tin trạng thái nộp bài
+let submissionStatusData = null;
+
+// Hàm lấy trạng thái nộp bài từ API
+async function fetchSubmissionStatus(classCode) {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail || !classCode) return null;
+    
+    try {
+        const response = await fetch(`${API_ENDPOINTS.GET_SUBMISSION_STATUS}/${classCode}?studentEmail=${userEmail}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Dữ liệu trạng thái nộp bài:', result);
+        
+        if (result.success && result.data) {
+            return result.data;
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Lỗi khi lấy trạng thái nộp bài:', error);
+        return null;
+    }
+}
+
+// Hàm chuyển đổi trạng thái nộp bài thành văn bản
+function getSubmissionStatusText(status) {
+    switch (status) {
+        case 'pending':
+            return 'Đang chờ chấm';
+        case 'graded':
+            return 'Đã chấm điểm';
+        case 'late':
+            return 'Nộp trễ';
+        case 'rejected':
+            return 'Bị từ chối';
+        default:
+            return 'Đã nộp';
+    }
+}
+>>>>>>> 6e7b8751dfa4f02270406f708116599ee23cff58

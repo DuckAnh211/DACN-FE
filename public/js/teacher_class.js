@@ -476,50 +476,51 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     // Tạo URL đầy đủ cho file
-                    const fileFullUrl = lesson.fileUrl ? `${BASE_API_URL}${lesson.fileUrl}` : '#';
+                    const fileFullUrl = lesson.fileUrl;
                     
                     lessonItem.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-start">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3 mt-1">
-                                    <i class="fas fa-book-open text-green-500"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-medium text-lg">${lesson.title || 'Bài học không có tiêu đề'}</h4>
-                                    <div class="flex items-center text-sm text-gray-600 mt-1">
-                                        <span class="flex items-center mr-3">
-                                            <i class="fas fa-user mr-1"></i> ${teacherName}
-                                        </span>
-                                        <span class="flex items-center">
-                                            <i class="far fa-calendar-alt mr-1"></i> ${createdDate}
-                                        </span>
-                                    </div>
-                                    ${lesson.description ? `<p class="text-sm text-gray-700 mt-2">${lesson.description}</p>` : ''}
-                                    ${hasAttachment ? `
-                                        <div class="mt-3 p-2 bg-gray-50 rounded border border-gray-200">
-                                            <a href="${fileFullUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 flex items-center">
-                                                <i class="${fileIcon} mr-2 text-lg"></i>
-                                                <div>
-                                                    <span class="font-medium">${lesson.fileName || 'Tài liệu đính kèm'}</span>
-                                                    <span class="text-xs text-gray-500 block">
-                                                        ${formatFileSize(lesson.fileSize || 0)}
-                                                    </span>
-                                                </div>
-                                            </a>
-                                        </div>
-                                    ` : ''}
-                                </div>
+                            <div class="flex items-start justify-between">
+        <div class="flex items-start">
+            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3 mt-1">
+                <i class="fas fa-book-open text-green-500"></i>
+            </div>
+            <div>
+                <h4 class="font-medium text-lg">${lesson.title || 'Bài học không có tiêu đề'}</h4>
+                <div class="flex items-center text-sm text-gray-600 mt-1">
+                    <span class="flex items-center mr-3">
+                        <i class="fas fa-user mr-1"></i> ${teacherName}
+                    </span>
+                    <span class="flex items-center">
+                        <i class="far fa-calendar-alt mr-1"></i> ${createdDate}
+                    </span>
+                </div>
+                ${lesson.description ? `<p class="text-sm text-gray-700 mt-2">${lesson.description}</p>` : ''}
+                ${hasAttachment ? `
+                    <div class="mt-3 p-2 bg-gray-50 rounded border border-gray-200 flex items-center space-x-3">
+                        <a href="${lesson.fileUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 flex items-center"
+                        onclick="viewLessonPdf('${lesson._id}')">
+                            <i class="${fileIcon} mr-2 text-lg"></i>
+                            <div>
+                                <span class="font-medium">${lesson.fileName || 'Tài liệu đính kèm'}</span>
+                                <span class="text-xs text-gray-500 block">
+                                    ${formatFileSize(lesson.fileSize || 0)}
+                                </span>
                             </div>
-                            <div class="flex space-x-1">
-                                <button class="text-blue-500 hover:text-blue-700 p-1" onclick="editLesson('${lesson._id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="text-red-500 hover:text-red-700 p-1" onclick="deleteLesson('${lesson._id}')">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+        <div class="flex space-x-1">
+            <button class="text-blue-500 hover:text-blue-700 p-1" onclick="editLesson('${lesson._id}')">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="text-red-500 hover:text-red-700 p-1" onclick="deleteLesson('${lesson._id}')">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </div>
+`;
                     
                     lessonsList.appendChild(lessonItem);
                 });
@@ -537,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </button>
                     </div>
                 `;
-                
+                           
                 // Thêm event listener cho nút thử lại
                 const btnRetryLoadLessons = document.getElementById('btnRetryLoadLessons');
                 if (btnRetryLoadLessons) {
@@ -562,8 +563,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Hàm tải danh sách bài tập
     function loadAssignments() {
-        if (!assignmentsContent) return;
-        
         const assignmentsList = document.getElementById('assignmentsList');
         if (!assignmentsList) return;
         
@@ -585,17 +584,38 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         // Gọi API để lấy danh sách bài tập
-        fetch(`${BASE_API_URL}/assignments/class/${classCode}`)
+        fetch(`${API_ENDPOINTS.GET_ASSIGNMENTS}/${classCode}`)
             .then(response => response.json())
             .then(data => {
+                console.log('Dữ liệu bài tập nhận được:', data);
+                
                 const assignments = data.data || [];
+                
+                // Cập nhật số lượng bài tập trong phần tổng quan
+                const totalAssignmentsElement = document.getElementById('totalAssignments');
+                if (totalAssignmentsElement) {
+                    totalAssignmentsElement.textContent = assignments.length;
+                }
                 
                 if (assignments.length === 0) {
                     assignmentsList.innerHTML = `
-                        <div class="text-center py-4">
-                            <p class="text-gray-500">Chưa có bài tập nào</p>
+                        <div class="text-center py-8">
+                            <i class="fas fa-tasks text-gray-300 text-5xl mb-4"></i>
+                            <p class="text-gray-500">Chưa có bài tập nào trong lớp học này</p>
+                            <button id="btnAddFirstAssignment" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-plus-circle mr-1"></i> Tạo bài tập 
+                            </button>
                         </div>
                     `;
+                    
+                    // Thêm event listener cho nút tạo bài tập 
+                    const btnAddFirstAssignment = document.getElementById('btnAddFirstAssignment');
+                    if (btnAddFirstAssignment) {
+                        btnAddFirstAssignment.addEventListener('click', openCreateAssignmentModal);
+                    }
+                    
+                    // Đánh dấu đã tải
+                    assignmentsList.dataset.loaded = 'true';
                     return;
                 }
                 
@@ -603,28 +623,77 @@ document.addEventListener('DOMContentLoaded', function() {
                 assignmentsList.innerHTML = '';
                 assignments.forEach(assignment => {
                     const assignmentItem = document.createElement('div');
-                    assignmentItem.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow';
+                    assignmentItem.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow mb-4';
+                    assignmentItem.dataset.assignmentId = assignment._id || assignment.id;
+                    
+                    // Định dạng ngày hạn nộp
+                    const dueDate = new Date(assignment.dueDate);
+                    const formattedDueDate = dueDate.toLocaleDateString('vi-VN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
                     assignmentItem.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
-                                    <i class="fas fa-tasks text-yellow-500"></i>
+                        <div class="flex flex-col">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start">
+                                    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mr-3 mt-1">
+                                        <i class="fas fa-clipboard-list text-amber-500"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-semibold text-gray-800">${assignment.title || 'Bài tập không có tiêu đề'}</h3>
+                                        <div class="flex flex-wrap items-center text-sm text-gray-600 mt-1">
+                                            <span class="flex items-center mr-3 mb-1">
+                                                <i class="far fa-calendar-alt mr-1 text-amber-500"></i> Hạn nộp: ${formattedDueDate}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 class="font-medium">${assignment.title || 'Bài tập không có tiêu đề'}</h4>
-                                    <p class="text-sm text-gray-600">Hạn nộp: ${new Date(assignment.dueDate || Date.now()).toLocaleDateString()}</p>
+                                <div class="flex space-x-2">
+                                    <button class="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-full transition-colors" 
+                                            title="Xem danh sách nộp bài" onclick="viewSubmissions('${assignment._id || assignment.id}')">
+                                        <i class="fas fa-users"></i>
+                                    </button>
+                                    <button class="text-blue-500 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-full transition-colors" 
+                                            title="Chỉnh sửa bài tập" onclick="editAssignment('${assignment._id || assignment.id}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-full transition-colors" 
+                                            title="Xóa bài tập" onclick="deleteAssignment('${assignment._id || assignment.id}')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="flex space-x-2">
-                                <button class="text-blue-500 hover:text-blue-700" onclick="editAssignment('${assignment.id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="text-red-500 hover:text-red-700" onclick="deleteAssignment('${assignment.id}')">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
+                            
+                            ${assignment.description ? `
+                                <div class="mt-3 pl-13">
+                                    <p class="text-gray-700">${assignment.description}</p>
+                                </div>
+                            ` : ''}
+                            
+                           ${assignment.fileUrl ? `
+    <div class="mt-3 pl-13 flex items-center space-x-3">
+        <a href="${assignment.fileUrl}" target="_blank" 
+           class="flex items-center p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+           onclick="viewAssignmentPdf('${assignment._id || assignment.id}')">
+            <i class="fas fa-file-download text-blue-500 mr-2"></i>
+            <div>
+                <span class="font-medium text-blue-600">${assignment.fileName || 'Tài liệu đính kèm'}</span>
+                ${assignment.fileSize ? `
+                    <span class="text-xs text-gray-500 block">
+                        ${formatFileSize(assignment.fileSize)}
+                    </span>
+                ` : ''}
+            </div>
+        </a>
+    </div>
+` : ''}
                         </div>
                     `;
+                    
                     assignmentsList.appendChild(assignmentItem);
                 });
                 
@@ -636,11 +705,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 assignmentsList.innerHTML = `
                     <div class="text-center py-4">
                         <p class="text-red-500">Có lỗi xảy ra khi tải danh sách bài tập</p>
+                        <button id="btnRetryLoadAssignments" class="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-sync-alt mr-1"></i> Thử lại
+                        </button>
                     </div>
                 `;
+                
+                // Thêm event listener cho nút thử lại
+                const btnRetryLoadAssignments = document.getElementById('btnRetryLoadAssignments');
+                if (btnRetryLoadAssignments) {
+                    btnRetryLoadAssignments.addEventListener('click', () => {
+                        assignmentsList.dataset.loaded = 'false';
+                        loadAssignments();
+                    });
+                }
             });
     }
-    
+    //Hàm mở file pdf bài tập
+    function viewAssignmentPdf(assignmentId) {
+    if (!assignmentId) {
+        showToast('Không tìm thấy assignmentId', 'error');
+        return;
+    }
+    const url = `${API_ENDPOINTS.CREATE_ASSIGNMENT}/${assignmentId}/view-pdf`;
+    window.open(url, '_blank');
+}
+window.viewAssignmentPdf = viewAssignmentPdf;
     // Hàm tải danh sách bài kiểm tra
     function loadTests() {
         if (!testsContent) return;
@@ -1281,27 +1371,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Hàm chỉnh sửa bài học
     function editLesson(lessonId) {
-        if (!lessonId) return;
+        if (!lessonId) {
+            console.error('Không có ID bài học');
+            return;
+        }
+        
+        console.log('Đang chỉnh sửa bài học với ID:', lessonId);
         
         // Lấy mã lớp từ URL
         const urlParams = new URLSearchParams(window.location.search);
         const classCode = urlParams.get('code');
         
-        if (!classCode) return;
+        if (!classCode) {
+            console.error('Không tìm thấy mã lớp trong URL');
+            showToast('Không tìm thấy mã lớp học', 'error');
+            return;
+        }
         
         // Hiển thị loading
         showToast('Đang tải thông tin bài học...', 'info');
         
         // Gọi API để lấy thông tin chi tiết bài học
-        fetch(`${BASE_API_URL}/lessons/${lessonId}`)
+        fetch(`${API_ENDPOINTS.GET_LESSONS}/${lessonId}`)
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.data) {
+                console.log('Dữ liệu bài học nhận được:', data);
+                
+                if (data && data.success && data.data) {
                     const lesson = data.data;
                     
                     // Mở modal chỉnh sửa bài học
                     openEditLessonModal(lesson);
                 } else {
+                    console.error('Không thể tải thông tin bài học:', data);
                     showToast('Không thể tải thông tin bài học', 'error');
                 }
             })
@@ -1416,6 +1518,246 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         }, 3000);
     }
+
+    // Hàm mở modal chỉnh sửa bài học
+    function openEditLessonModal(lesson) {
+        const modal = document.getElementById('editLessonModal');
+        if (!modal) {
+            // Nếu modal chưa tồn tại, tạo mới và thêm vào DOM
+            createEditLessonModal(lesson);
+        } else {
+            // Điền thông tin bài học vào form
+            fillEditLessonForm(lesson);
+            
+            // Hiển thị modal
+            modal.classList.remove('hidden');
+        }
+    }
+
+    // Hàm tạo modal chỉnh sửa bài học
+    function createEditLessonModal(lesson) {
+        // Tạo element cho modal
+        const modal = document.createElement('div');
+        modal.id = 'editLessonModal';
+        modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+        
+        // Lấy mã lớp từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const classCode = urlParams.get('code');
+        const teacherEmail = localStorage.getItem('userEmail');
+        
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                <div class="flex justify-between items-center border-b px-6 py-4">
+                    <h3 class="text-lg font-medium text-gray-900">Chỉnh sửa bài học</h3>
+                </div>
+                
+                <form id="editLessonForm" class="px-6 py-4">
+                    <div class="mb-4">
+                        <label for="editLessonTitle" class="block text-gray-700 font-medium mb-2">Tiêu đề bài học <span class="text-red-500">*</span></label>
+                        <input type="text" id="editLessonTitle" name="title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="editLessonDescription" class="block text-gray-700 font-medium mb-2">Mô tả bài học</label>
+                        <textarea id="editLessonDescription" name="description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="editLessonFile" class="block text-gray-700 font-medium mb-2">Tài liệu đính kèm</label>
+                        <input type="file" id="editLessonFile" name="lessonFile" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <div id="currentFileInfo" class="mt-2 text-sm text-gray-600"></div>
+                    </div>
+                    
+                    <input type="hidden" id="editLessonId" name="lessonId" value="">
+                    <input type="hidden" id="editLessonClassCode" name="classCode" value="${classCode || ''}">
+                    <input type="hidden" id="editLessonTeacherEmail" name="teacherEmail" value="${teacherEmail || ''}">
+                    
+                    <div class="flex justify-end border-t pt-4 mt-4">
+                        <button type="button" id="cancelEditLessonBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2">
+                            Hủy bỏ
+                        </button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-save mr-1"></i> Cập nhật bài học
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        // Thêm modal vào body
+        document.body.appendChild(modal);
+        
+        // Thêm event listener cho nút đóng modal
+        const closeEditLessonModalBtn = document.getElementById('closeEditLessonModal');
+        const cancelEditLessonBtn = document.getElementById('cancelEditLessonBtn');
+        
+        if (closeEditLessonModalBtn) {
+            closeEditLessonModalBtn.addEventListener('click', closeEditLessonModal);
+        }
+        
+        if (cancelEditLessonBtn) {
+            cancelEditLessonBtn.addEventListener('click', closeEditLessonModal);
+        }
+        
+        // Thêm event listener cho form
+        const editLessonForm = document.getElementById('editLessonForm');
+        if (editLessonForm) {
+            editLessonForm.addEventListener('submit', handleEditLessonSubmit);
+        }
+        
+        // Điền thông tin bài học vào form
+        fillEditLessonForm(lesson);
+    }
+
+    // Hàm điền thông tin bài học vào form chỉnh sửa
+    function fillEditLessonForm(lesson) {
+        if (!lesson) return;
+        
+        const editLessonTitleInput = document.getElementById('editLessonTitle');
+        const editLessonDescriptionInput = document.getElementById('editLessonDescription');
+        const editLessonIdInput = document.getElementById('editLessonId');
+        const currentFileInfo = document.getElementById('currentFileInfo');
+        
+        if (editLessonTitleInput) editLessonTitleInput.value = lesson.title || '';
+        if (editLessonDescriptionInput) editLessonDescriptionInput.value = lesson.description || '';
+        if (editLessonIdInput) editLessonIdInput.value = lesson._id || '';
+        
+        // Hiển thị thông tin file hiện tại nếu có
+        if (currentFileInfo && lesson.fileName) {
+            const fileIcon = getFileIconClass(lesson.fileType || lesson.fileName);
+            const fileSize = formatFileSize(lesson.fileSize || 0);
+            
+            currentFileInfo.innerHTML = `
+                <div class="flex items-center p-2 bg-gray-50 rounded border border-gray-200">
+                    <i class="${fileIcon} mr-2 text-lg text-gray-500"></i>
+                    <div>
+                        <span class="font-medium">${lesson.fileName}</span>
+                        <span class="text-xs text-gray-500 block">${fileSize}</span>
+                    </div>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Tải lên file mới để thay thế file hiện tại, hoặc để trống để giữ nguyên.</p>
+            `;
+        } else if (currentFileInfo) {
+            currentFileInfo.innerHTML = '<p class="text-xs text-gray-500">Chưa có file đính kèm</p>';
+        }
+    }
+
+    // Hàm đóng modal chỉnh sửa bài học
+    function closeEditLessonModal() {
+        const modal = document.getElementById('editLessonModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    // Hàm xử lý submit form chỉnh sửa bài học
+    async function handleEditLessonSubmit(event) {
+        event.preventDefault();
+        
+        // Lấy dữ liệu từ form
+        const lessonId = document.getElementById('editLessonId').value.trim();
+        const title = document.getElementById('editLessonTitle').value.trim();
+        const description = document.getElementById('editLessonDescription').value.trim();
+        const teacherEmail = document.getElementById('editLessonTeacherEmail').value.trim();
+        const fileInput = document.getElementById('editLessonFile');
+        
+        // Kiểm tra dữ liệu
+        if (!lessonId) {
+            showToast('Không tìm thấy ID bài học', 'error');
+            return;
+        }
+        
+        if (!title) {
+            showToast('Vui lòng nhập tiêu đề bài học', 'error');
+            return;
+        }
+        
+        if (!teacherEmail) {
+            showToast('Không tìm thấy thông tin giáo viên', 'error');
+            return;
+        }
+        
+        // Hiển thị loading
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Đang cập nhật...`;
+        
+        try {
+            // Tạo FormData để gửi dữ liệu và file
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('teacherEmail', teacherEmail);
+            
+            // Thêm file nếu có
+            if (fileInput.files.length > 0) {
+                formData.append('lessonFile', fileInput.files[0]);
+            }
+            
+            // Gọi API để cập nhật bài học
+            const response = await fetch(`${API_ENDPOINTS.DELETE_LESSON}/${lessonId}`, {
+                method: 'PUT',
+                body: formData
+            });
+            
+            // Xử lý kết quả
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast('Cập nhật bài học thành công!', 'success');
+                closeEditLessonModal();
+                
+                // Tải lại danh sách bài học
+                const lessonsList = document.getElementById('lessonsList');
+                if (lessonsList) {
+                    lessonsList.dataset.loaded = 'false';
+                    loadLessons();
+                }
+            } else {
+                showToast(`Lỗi: ${result.message || 'Không thể cập nhật bài học'}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error updating lesson:', error);
+            showToast('Có lỗi xảy ra khi cập nhật bài học', 'error');
+        } finally {
+            // Khôi phục trạng thái nút submit
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    }
+
+    // Hàm lấy class biểu tượng dựa trên loại file
+    function getFileIconClass(fileType) {
+        if (!fileType) return 'fas fa-file';
+        
+        const fileTypeLower = fileType.toLowerCase();
+        
+        if (fileTypeLower.includes('pdf')) {
+            return 'fas fa-file-pdf';
+        } else if (fileTypeLower.includes('word') || fileTypeLower.includes('doc')) {
+            return 'fas fa-file-word';
+        } else if (fileTypeLower.includes('excel') || fileTypeLower.includes('sheet') || fileTypeLower.includes('xls')) {
+            return 'fas fa-file-excel';
+        } else if (fileTypeLower.includes('powerpoint') || fileTypeLower.includes('presentation') || fileTypeLower.includes('ppt')) {
+            return 'fas fa-file-powerpoint';
+        } else if (fileTypeLower.includes('image') || fileTypeLower.includes('jpg') || fileTypeLower.includes('png') || fileTypeLower.includes('jpeg')) {
+            return 'fas fa-file-image';
+        } else if (fileTypeLower.includes('video')) {
+            return 'fas fa-file-video';
+        } else if (fileTypeLower.includes('audio')) {
+            return 'fas fa-file-audio';
+        } else if (fileTypeLower.includes('zip') || fileTypeLower.includes('rar') || fileTypeLower.includes('archive')) {
+            return 'fas fa-file-archive';
+        } else if (fileTypeLower.includes('code') || fileTypeLower.includes('html') || fileTypeLower.includes('css') || fileTypeLower.includes('js')) {
+            return 'fas fa-file-code';
+        } else if (fileTypeLower.includes('text')) {
+            return 'fas fa-file-alt';
+        } else {
+            return 'fas fa-file';
+        }
+    }
 });
 
 // Đặt hàm deleteLesson vào window object để có thể gọi từ bất kỳ đâu
@@ -1486,7 +1828,7 @@ window.showToast = function(message, type = 'info') {
         toastContainer = document.createElement('div');
         toastContainer.id = 'toastContainer';
         toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col space-y-2';
-        document.body.appendChild(toastContainer);
+                             document.body.appendChild(toastContainer);
     }
     
     // Tạo toast mới
@@ -1538,13 +1880,16 @@ window.formatFileSize = function(bytes) {
 
 // Hàm định dạng ngày tháng
 window.formatDate = function(dateString) {
+    if (!dateString) return 'Không có ngày';
+    
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        second: '2-digit'
     });
 };
 
@@ -1596,7 +1941,12 @@ const API_ENDPOINTS = {
     DELETE_LESSON: `${BASE_API_URL}/lessons`,
     GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`,
     CREATE_NOTIFICATION: `${BASE_API_URL}/notifications`,
-    DELETE_NOTIFICATION: `${BASE_API_URL}/notifications`
+    DELETE_NOTIFICATION: `${BASE_API_URL}/notifications`,
+    CREATE_ASSIGNMENT: `${BASE_API_URL}/assignments`,
+    GET_ASSIGNMENTS: `${BASE_API_URL}/assignments/class`,
+    DELETE_ASSIGNMENT: `${BASE_API_URL}/assignments`,
+    GET_ASSIGNMENT_SUBMISSIONS: `${BASE_API_URL}/submissions/assignment`,
+    GET_VIEW_SUBMISSIONS: `${BASE_API_URL}/submissions`  
 };
 
 // Đặt API_ENDPOINTS vào window để có thể truy cập từ bất kỳ đâu
@@ -1608,7 +1958,96 @@ const btnAddNewNotificationOverview = document.getElementById('btnAddNewNotifica
 if (btnAddNewNotificationOverview) {
     btnAddNewNotificationOverview.addEventListener('click', openNotificationModal);
 }
-
+// Thêm hàm deleteAssignment
+window.deleteAssignment = async function(assignmentId) {
+    if (!assignmentId || !confirm('Bạn có chắc chắn muốn xóa bài tập này?')) return;
+    
+    console.log('Đang xóa bài tập với ID:', assignmentId);
+    
+    // Hiển thị loading
+    const assignmentElement = document.querySelector(`div[data-assignment-id="${assignmentId}"]`) || 
+                             document.querySelector(`.assignment-item-${assignmentId}`);
+    
+    if (assignmentElement) {
+        assignmentElement.classList.add('opacity-50');
+    }
+    
+    try {
+        // Lấy email giáo viên từ localStorage
+        const teacherEmail = localStorage.getItem('userEmail');
+        
+        if (!teacherEmail) {
+            throw new Error('Không tìm thấy thông tin email giáo viên');
+        }
+        
+        // Đảm bảo API_ENDPOINTS được định nghĩa
+        if (!window.API_ENDPOINTS || !window.API_ENDPOINTS.DELETE_ASSIGNMENT) {
+            console.warn('API_ENDPOINTS.DELETE_ASSIGNMENT not defined, using default');
+            const BASE_API_URL = window.BASE_API_URL || 'http://localhost:8080/v1/api';
+            window.API_ENDPOINTS = window.API_ENDPOINTS || {};
+            window.API_ENDPOINTS.DELETE_ASSIGNMENT = `${BASE_API_URL}/assignments`;
+        }
+        
+        // Gọi API để xóa bài tập
+        const response = await fetch(`${API_ENDPOINTS.DELETE_ASSIGNMENT}/${assignmentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                teacherEmail: teacherEmail
+            })
+        });
+        
+        const data = await response.json();
+        console.log('Kết quả xóa bài tập:', data);
+        
+        if (data.success) {
+            // Hiển thị thông báo thành công
+            showToast('Xóa bài tập thành công!', 'success');
+            
+            // Xóa phần tử khỏi DOM
+            if (assignmentElement) {
+                assignmentElement.remove();
+            }
+            
+            // Tải lại danh sách bài tập nếu hàm loadAssignments tồn tại
+            if (typeof window.loadAssignments === 'function') {
+                window.loadAssignments();
+            } 
+            /*
+            else {
+                console.warn('loadAssignments function not found, reloading page instead');
+                // Tải lại trang sau 1 giây
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+            */
+            
+            // Cập nhật số lượng bài tập trong phần tổng quan nếu hàm tồn tại
+            if (typeof updateAssignmentCount === 'function') {
+                updateAssignmentCount();
+            }
+        } else {
+            // Hiển thị thông báo lỗi
+            showToast(`Lỗi: ${data.message || 'Không thể xóa bài tập'}`, 'error');
+            
+            // Khôi phục trạng thái phần tử
+            if (assignmentElement) {
+                assignmentElement.classList.remove('opacity-50');
+            }
+        }
+    } catch (error) {
+        console.error('Error deleting assignment:', error);
+        showToast('Có lỗi xảy ra khi xóa bài tập', 'error');
+        
+        // Khôi phục trạng thái phần tử
+        if (assignmentElement) {
+            assignmentElement.classList.remove('opacity-50');
+        }
+    }
+};
 // Hàm tạo modal thông báo
 function createNotificationModal() {
     // Lấy mã lớp từ URL
@@ -1625,9 +2064,9 @@ function createNotificationModal() {
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
             <div class="flex justify-between items-center border-b px-6 py-4">
                 <h3 class="text-lg font-medium text-gray-900">Tạo thông báo mới</h3>
-                <button id="closeNotificationModal" class="text-gray-400 hover:text-gray-500">
+                <a id="closeNotificationModal" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
-                </button>
+                </a>
             </div>
             
             <form id="notificationForm" class="px-6 py-4">
@@ -1645,9 +2084,6 @@ function createNotificationModal() {
                 <input type="hidden" id="notificationTeacherEmail" name="teacherEmail" value="${teacherEmail || ''}">
                 
                 <div class="flex justify-end border-t pt-4 mt-4">
-                    <button type="button" id="cancelNotificationBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2">
-                        Hủy bỏ
-                    </button>
                     <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
                         <i class="fas fa-paper-plane mr-1"></i> Gửi thông báo
                     </button>
@@ -1885,9 +2321,6 @@ async function loadOverviewNotifications() {
                         </div>
                     </div>
                     <div class="flex space-x-1">
-                        <button class="text-blue-500 hover:text-blue-700 p-1" onclick="editNotification('${notification._id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
                         <button class="text-red-500 hover:text-red-700 p-1" onclick="deleteNotification('${notification._id}')">
                             <i class="fas fa-trash-alt"></i>
                         </button>
@@ -1985,6 +2418,7 @@ window.deleteNotification = deleteNotification;
 // Tải thông báo trong phần Tổng quan khi trang được tải
 loadOverviewNotifications();
 
+<<<<<<< HEAD
 // Thêm xử lý sự kiện cho nút tạo cuộc họp với API
 document.addEventListener('DOMContentLoaded', function() {
     // Các phần khởi tạo hiện có...
@@ -2080,3 +2514,503 @@ function generateMeetingId() {
     return result;
 }
 
+=======
+// Đảm bảo tất cả các hàm được gán vào window object khi trang được tải
+document.addEventListener('DOMContentLoaded', function() {
+    // Gán các hàm vào window object
+    window.editLesson = editLesson;
+    window.openEditLessonModal = openEditLessonModal;
+    window.closeEditLessonModal = closeEditLessonModal;
+    window.handleEditLessonSubmit = handleEditLessonSubmit;
+    window.deleteLesson = deleteLesson;
+
+    // Thêm các hàm khác nếu cần
+    
+    console.log('Đã gán các hàm xử lý bài học vào window object');
+});
+
+// Hàm mở modal tạo bài tập mới
+function openCreateAssignmentModal() {
+    // Lấy mã lớp từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    
+    if (!classCode) {
+        showToast('Không tìm thấy mã lớp học', 'error');
+        return;
+    }
+    
+    // Tạo modal nếu chưa tồn tại
+    let createAssignmentModal = document.getElementById('createAssignmentModal');
+    
+    if (!createAssignmentModal) {
+        createAssignmentModal = document.createElement('div');
+        createAssignmentModal.id = 'createAssignmentModal';
+        createAssignmentModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        
+        createAssignmentModal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-xl font-semibold text-gray-800 text-center">Tạo bài tập mới</h3>
+                    <a type="button" id="closeCreateAssignmentModalBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+                <form id="createAssignmentForm" class="p-6">
+                    <div class="mb-4">
+                        <label for="assignmentTitle" class="block text-gray-700 font-medium mb-2">Tiêu đề bài tập <span class="text-red-500">*</span></label>
+                        <input type="text" id="assignmentTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="assignmentDescription" class="block text-gray-700 font-medium mb-2">Mô tả bài tập <span class="text-red-500">*</span></label>
+                        <textarea id="assignmentDescription" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="assignmentDueDate" class="block text-gray-700 font-medium mb-2">Hạn nộp <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" id="assignmentDueDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="assignmentFile" class="block text-gray-700 font-medium mb-2">Tệp đính kèm (tùy chọn)</label>
+                        <input type="file" id="assignmentFile" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Tải lên tệp đính kèm cho bài tập (PDF)</p>
+                    </div>
+                    
+                    <input type="hidden" id="assignmentClassCode" value="${classCode}">
+                    <input type="hidden" id="assignmentTeacherEmail" value="${localStorage.getItem('userEmail') || ''}">
+                    
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="submit" id="submitCreateAssignmentBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-plus mr-1"></i>Tạo bài tập
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(createAssignmentModal);
+        
+        // Thiết lập giá trị mặc định cho ngày hạn nộp (7 ngày từ hiện tại)
+        const defaultDueDate = new Date();
+        defaultDueDate.setDate(defaultDueDate.getDate() + 7);
+        const formattedDate = defaultDueDate.toISOString().slice(0, 16);
+        const dueDateInput = document.getElementById('assignmentDueDate');
+        if (dueDateInput) {
+            dueDateInput.value = formattedDate;
+        }
+        
+        // Thêm event listener cho nút đóng modal
+        const closeBtn = document.getElementById('closeCreateAssignmentModalBtn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                closeCreateAssignmentModal();
+            });
+        }
+        
+         // Sau khi tạo modal, gán event listener cho form:
+const createAssignmentForm = document.getElementById('createAssignmentForm');
+if (createAssignmentForm) {
+    createAssignmentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleCreateAssignmentSubmit();
+    });
+}
+
+        // Thêm event listener cho nút hủy
+        const cancelBtn = document.getElementById('cancelCreateAssignmentBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                closeCreateAssignmentModal();
+            });
+        }
+        
+        // Thêm event listener cho nút submit
+
+    } else {
+        // Nếu modal đã tồn tại, cập nhật giá trị của các trường ẩn
+        document.getElementById('assignmentClassCode').value = classCode;
+        document.getElementById('assignmentTeacherEmail').value = localStorage.getItem('userEmail') || '';
+        
+        // Hiển thị modal
+        createAssignmentModal.classList.remove('hidden');
+    }
+}
+
+// Hàm đóng modal tạo bài tập
+function closeCreateAssignmentModal() {
+    const modal = document.getElementById('createAssignmentModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Hàm xử lý tạo bài tập mới
+function handleCreateAssignmentSubmit() {
+    // Get form elements
+    const titleInput = document.getElementById('assignmentTitle');
+    const descriptionInput = document.getElementById('assignmentDescription');
+    const dueDateInput = document.getElementById('assignmentDueDate');
+    const fileInput = document.getElementById('assignmentFile');
+    const classCodeInput = document.getElementById('assignmentClassCode');
+    const teacherEmailInput = document.getElementById('assignmentTeacherEmail');
+    
+    // Validate required fields
+    if (!titleInput?.value.trim()) {
+        showToast('Vui lòng nhập tiêu đề bài tập', 'error');
+        return;
+    }
+    
+    if (!descriptionInput?.value.trim()) {
+        showToast('Vui lòng nhập mô tả bài tập', 'error');
+        return;
+    }
+    
+    if (!dueDateInput?.value) {
+        showToast('Vui lòng chọn hạn nộp bài', 'error');
+        return;
+    }
+
+    // Create FormData with fixed maxScore = 10
+    const formData = new FormData();
+    formData.append('title', titleInput.value.trim());
+    formData.append('description', descriptionInput.value.trim());
+    formData.append('dueDate', dueDateInput.value);
+    formData.append('maxScore', '10'); // Fixed maxScore value
+    formData.append('classCode', classCodeInput.value);
+    formData.append('teacherEmail', teacherEmailInput.value);
+
+    // Thêm đoạn này để chỉ thêm file nếu có chọn file
+     if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        formData.append('assignmentFile', fileInput.files[0]);
+     }
+
+    // Show loading state
+    const submitBtn = document.getElementById('submitCreateAssignmentBtn');
+    if (submitBtn) {
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang tạo...';
+
+        // Send request
+        fetch(API_ENDPOINTS.CREATE_ASSIGNMENT, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showToast('Tạo bài tập thành công!', 'success');
+                closeCreateAssignmentModal();
+                loadAssignments(); // Reload assignments list
+            } else {
+                showToast(result.message || 'Không thể tạo bài tập', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error creating assignment:', error);
+            showToast('Có lỗi xảy ra khi tạo bài tập', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    }
+}
+
+// Đảm bảo các hàm được gán vào window object khi trang được tải
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up assignment functions');
+    
+    // Thêm các hàm bài tập vào window object
+    window.openCreateAssignmentModal = openCreateAssignmentModal;
+    window.closeCreateAssignmentModal = closeCreateAssignmentModal;
+    window.handleCreateAssignmentSubmit = handleCreateAssignmentSubmit;
+    
+    // Thêm event listener cho nút thêm bài tập mới
+    const btnAddNewAssignment = document.getElementById('btnAddNewAssignment');
+    if (btnAddNewAssignment) {
+        console.log('Found btnAddNewAssignment, adding click listener');
+        btnAddNewAssignment.addEventListener('click', function(event) {
+            event.preventDefault();
+            console.log('Add new assignment button clicked');
+            openCreateAssignmentModal();
+        });
+    } else {
+        console.warn('btnAddNewAssignment not found in DOM');
+    }
+    
+    console.log('Assignment functions setup complete');
+});
+
+// Add viewSubmissions function
+async function viewSubmissions(assignmentId) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.id = 'submissionsModal';
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold">Danh sách nộp bài</h3>
+                <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('#submissionsModal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+
+    try {
+        const response = await fetch(`${API_ENDPOINTS.GET_ASSIGNMENT_SUBMISSIONS}/${assignmentId}`);
+        const result = await response.json();
+        
+        const contentDiv = modal.querySelector('.p-4');
+        
+        if (result.success && result.data) {
+            const submissions = result.data;
+            
+            if (submissions.length === 0) {
+                contentDiv.innerHTML = `
+    <div class="relative bg-white rounded-lg shadow-lg w-full max-w-md mx-auto p-8 flex flex-col items-center">
+        <a 
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full focus:outline-none"
+            onclick="this.closest('#submissionsModal').remove()"
+            title="Đóng"
+        >
+            <i class="fas fa-times text-2xl"></i>
+        </a>
+        <i class="fas fa-folder-open text-5xl text-gray-300 mb-4"></i>
+        <p class="text-center text-gray-500 text-lg">Chưa có học sinh nào nộp bài</p>
+    </div>
+`;
+                return;
+            }
+            
+            contentDiv.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl mx-4 max-h-[90vh] flex flex-col">
+    <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-500 to-blue-600">
+        <div class="flex items-center">
+            <i class="fas fa-tasks text-white text-2xl mr-3"></i>
+            <h3 class="text-xl font-semibold text-white">Danh sách nộp bài</h3>
+        </div>
+        <a class="text-white hover:text-gray-200 transition-colors" 
+                onclick="this.closest('#submissionsModal').remove()">
+            <i class="fas fa-times text-xl"></i>
+        </a>
+    </div>
+
+    <div class="p-6 overflow-auto">
+        <div class="bg-gray-50 rounded-lg p-4 mb-6 flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-info-circle text-blue-500 text-xl mr-3"></i>
+                <span class="text-gray-600">Tổng số bài nộp: <span class="font-semibold">${submissions.length}</span></span>
+            </div>
+
+        </div>
+
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                            Học sinh
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                            Thông tin nộp bài
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                            Điểm số & Đánh giá
+                        </th>
+                        <th class="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                            Thao tác
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    ${submissions.map(sub => `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                        <i class="fas fa-user text-gray-500"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">${sub.studentName || "Không có tên"}</div>
+                                        <div class="text-sm text-gray-500">${sub.studentEmail || "Không có email"}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">
+                                    <div class="flex items-center mb-1">
+                                        <i class="far fa-clock text-gray-400 mr-2"></i>
+                                        ${new Date(sub.submittedAt).toLocaleString('vi-VN')}
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="far fa-calendar-check text-green-500 mr-2"></i>
+                                        <span class="text-green-500">Đã nộp đúng hạn</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col space-y-2">
+    <div class="flex items-center">
+        <input type="number" 
+            class="w-20 px-3 py-2 border rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value="${sub.grade || ''}" 
+            min="0" 
+            max="10"
+            placeholder="Điểm"
+            id="grade-input-${sub._id}"
+        >
+        <span class="text-gray-500 ml-2">/10</span>
+    </div>
+    <textarea
+        class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        placeholder="Nhập nhận xét, đánh giá..."
+        id="feedback-input-${sub._id}"
+        rows="2"
+    >${sub.feedback || ''}</textarea>
+    <button
+        class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded transition-colors text-sm self-end"
+        onclick="submitGradeAndFeedback('${assignmentId}', '${sub._id}')"
+    >
+        Lưu
+    </button>
+</div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex justify-center space-x-2">
+                                    <button class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg transition-colors" 
+                                            title="Xem chi tiết"
+                                            onclick="viewSubmissionDetail('${assignmentId}', '${sub._id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+            `;
+        } else {
+            contentDiv.innerHTML = '<p class="text-center text-red-500">Có lỗi khi tải danh sách nộp bài</p>';
+        }
+    } catch (error) {
+        console.error('Error loading submissions:', error);
+        const contentDiv = modal.querySelector('.p-4');
+        contentDiv.innerHTML = '<p class="text-center text-red-500">Có lỗi khi tải danh sách nộp bài</p>';
+    }
+}
+
+// Xem chi tiết bài nộp (mở file PDF trong tab mới)
+function viewSubmissionDetail(assignmentId, submissionId) {
+    if (!assignmentId) {
+        showToast('Không tìm thấy assignmentId', 'error');
+        return;
+    }
+    // Mở file PDF bài nộp trong tab mới
+    const url = `${API_ENDPOINTS.GET_VIEW_SUBMISSIONS}/${submissionId}/view-pdf`;
+    window.open(url, '_blank');
+}
+
+// Đăng ký vào window để gọi từ onclick
+window.viewSubmissionDetail = viewSubmissionDetail;
+
+// Add updateSubmissionGrade function
+async function updateSubmissionGrade(assignmentId, submissionId, grade) {
+    try {
+        const response = await fetch(`${API_ENDPOINTS.GET_ASSIGNMENT_SUBMISSIONS}/${assignmentId}/submissions/${submissionId}/grade`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                grade: Number(grade),
+                teacherEmail: localStorage.getItem('userEmail')
+            })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            showToast('Cập nhật điểm thành công', 'success');
+        } else {
+            showToast(result.message || 'Không thể cập nhật điểm', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating grade:', error);
+        showToast('Có lỗi khi cập nhật điểm', 'error');
+    }
+}
+
+async function submitGradeAndFeedback(assignmentId, submissionId) {
+    const gradeInput = document.getElementById(`grade-input-${submissionId}`);
+    const feedbackInput = document.getElementById(`feedback-input-${submissionId}`);
+    const grade = gradeInput ? Number(gradeInput.value) : null;
+    const feedback = feedbackInput ? feedbackInput.value.trim() : '';
+    const teacherEmail = localStorage.getItem('userEmail');
+
+    if (grade === null || grade < 0 || grade > 10) {
+        showToast('Điểm phải từ 0 đến 10', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_ENDPOINTS.GET_VIEW_SUBMISSIONS}/${submissionId}/grade`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                grade,
+                feedback,
+                teacherEmail
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('Đã lưu điểm và đánh giá!', 'success');
+        } else {
+            showToast(result.message || 'Không thể lưu đánh giá', 'error');
+        }
+    } catch (error) {
+        showToast('Có lỗi khi lưu đánh giá', 'error');
+    }
+}
+          
+                //xem file pdf bài học
+               function viewLessonPdf(lessonId) {
+                 if (!lessonId) {
+                 showToast('Không tìm thấy lessonId', 'error');
+                 return;
+               }
+                 const url = `${API_ENDPOINTS.CREATE_LESSON}/${lessonId}/view-pdf`;
+                  window.open(url, '_blank');
+             }
+
+// Add to window object
+window.viewSubmissions = viewSubmissions;
+window.updateSubmissionGrade = updateSubmissionGrade;
+window.submitGradeAndFeedback = submitGradeAndFeedback;
+window.viewLessonPdf = viewLessonPdf;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> 6e7b8751dfa4f02270406f708116599ee23cff58

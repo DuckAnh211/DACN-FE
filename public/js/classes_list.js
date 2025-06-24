@@ -31,22 +31,43 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchClasses();
     
     // Search functionality
-    searchBtn.addEventListener('click', searchClasses);
-    searchInput.addEventListener('keyup', function(event) {
-        if (event.key === 'Enter') {
-            searchClasses();
-        }
-    });
+    if (searchBtn) {
+        searchBtn.addEventListener('click', searchClasses);
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                searchClasses();
+            }
+        });
+    }
     
     // Filter functionality
-    subjectFilter.addEventListener('change', filterClasses);
-    statusFilter.addEventListener('change', filterClasses);
+    if (subjectFilter) {
+        subjectFilter.addEventListener('change', filterClasses);
+    }
+    
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterClasses);
+    }
     
     // Create class modal
-    btnCreateClass.addEventListener('click', openCreateClassModal);
-    closeCreateClassModal.addEventListener('click', closeModal);
-    cancelCreateClass.addEventListener('click', closeModal);
-    createClassForm.addEventListener('submit', createNewClass);
+    if (btnCreateClass) {
+        btnCreateClass.addEventListener('click', openCreateClassModal);
+    }
+    
+    if (closeCreateClassModal) {
+        closeCreateClassModal.addEventListener('click', closeModal);
+    }
+    
+    if (cancelCreateClass) {
+        cancelCreateClass.addEventListener('click', closeModal);
+    }
+    
+    if (createClassForm) {
+        createClassForm.addEventListener('submit', createNewClass);
+    }
     
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
@@ -58,7 +79,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Fetch classes from API
 function fetchClasses() {
-    if (!classContainer) return;
+    if (!classContainer) {
+        console.warn('Class container not found in DOM');
+        return;
+    }
     
     // Hiển thị loading
     classContainer.innerHTML = `
@@ -96,18 +120,80 @@ function fetchClasses() {
         })
         .catch(error => {
             console.error('Error fetching classes:', error);
-            classContainer.innerHTML = `
-                <div class="col-span-3 text-center py-8">
-                    <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
-                    <p class="text-gray-500">Có lỗi xảy ra khi tải danh sách lớp học.</p>
-                </div>
-            `;
+            if (classContainer) {
+                classContainer.innerHTML = `
+                    <div class="col-span-3 text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+                        <p class="text-gray-500">Có lỗi xảy ra khi tải danh sách lớp học.</p>
+                    </div>
+                `;
+            }
         });
+}
+
+// Search classes
+function searchClasses() {
+    if (!searchInput) {
+        console.warn('Search input not found in DOM');
+        return;
+    }
+    
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    
+    if (!searchTerm) {
+        // Nếu không có từ khóa tìm kiếm, hiển thị tất cả lớp học
+        displayClasses(allClasses);
+        return;
+    }
+    
+    // Lọc lớp học theo từ khóa
+    const filteredClasses = allClasses.filter(classItem => {
+        return (
+            (classItem.className && classItem.className.toLowerCase().includes(searchTerm)) ||
+            (classItem.subject && classItem.subject.toLowerCase().includes(searchTerm)) ||
+            (classItem.classCode && classItem.classCode.toLowerCase().includes(searchTerm))
+        );
+    });
+    
+    // Hiển thị kết quả tìm kiếm
+    displayClasses(filteredClasses);
+}
+
+// Filter classes
+function filterClasses() {
+    if (!subjectFilter || !statusFilter) {
+        console.warn('Filter elements not found in DOM');
+        return;
+    }
+    
+    const subjectValue = subjectFilter.value;
+    const statusValue = statusFilter.value;
+    
+    // Lọc lớp học theo môn học và trạng thái
+    let filteredClasses = allClasses;
+    
+    if (subjectValue !== 'all') {
+        filteredClasses = filteredClasses.filter(classItem => {
+            return classItem.subject && classItem.subject.toLowerCase() === subjectValue.toLowerCase();
+        });
+    }
+    
+    if (statusValue !== 'all') {
+        filteredClasses = filteredClasses.filter(classItem => {
+            return classItem.status === statusValue;
+        });
+    }
+    
+    // Hiển thị kết quả lọc
+    displayClasses(filteredClasses);
 }
 
 // Display classes in the container
 function displayClasses(classes) {
-    if (!classContainer) return;
+    if (!classContainer) {
+        console.warn('Class container not found in DOM');
+        return;
+    }
     
     // Xóa nội dung cũ
     classContainer.innerHTML = '';
@@ -123,7 +209,10 @@ function displayClasses(classes) {
             </div>
         `;
         
-        document.getElementById('btnCreateFirstClass').addEventListener('click', openCreateClassModal);
+        const btnCreateFirstClass = document.getElementById('btnCreateFirstClass');
+        if (btnCreateFirstClass) {
+            btnCreateFirstClass.addEventListener('click', openCreateClassModal);
+        }
         return;
     }
     
@@ -182,6 +271,191 @@ function displayClasses(classes) {
         `;
         
         classContainer.appendChild(classCard);
+    });
+}
+
+// Mở modal tạo lớp học mới
+function openCreateClassModal() {
+    if (!createClassModal) {
+        console.warn('Create class modal not found in DOM');
+        return;
+    }
+    
+    // Reset form
+    if (createClassForm) {
+        createClassForm.reset();
+    }
+    
+    // Hiển thị modal
+    createClassModal.classList.remove('hidden');
+}
+
+// Đóng modal
+function closeModal() {
+    if (!createClassModal) {
+        console.warn('Create class modal not found in DOM');
+        return;
+    }
+    
+    createClassModal.classList.add('hidden');
+}
+
+// Tạo lớp học mới
+function createNewClass(event) {
+    event.preventDefault();
+    
+    // Lấy dữ liệu từ form
+    const className = document.getElementById('className')?.value;
+    const classSubject = document.getElementById('classSubject')?.value;
+    const classDescription = document.getElementById('classDescription')?.value;
+    
+    if (!className || !classSubject) {
+        showToast('Vui lòng nhập tên lớp và môn học', 'error');
+        return;
+    }
+    
+    // Tạo đối tượng dữ liệu
+    const classData = {
+        className: className,
+        subject: classSubject,
+        description: classDescription || '',
+        teacher: teacherEmail
+    };
+    
+    // Gửi request tạo lớp học mới
+    fetch(API_ENDPOINTS.CREATE_CLASS, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(classData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data._id) {
+            // Hiển thị thông báo thành công
+            showToast('Tạo lớp học mới thành công!');
+            
+            // Đóng modal
+            closeModal();
+            
+            // Tải lại danh sách lớp học
+            fetchClasses();
+        } else {
+            throw new Error(data.message || 'Có lỗi xảy ra');
+        }
+    })
+    .catch(error => {
+        console.error('Error creating class:', error);
+        showToast('Có lỗi xảy ra khi tạo lớp học.', 'error');
+    });
+}
+
+// Hiển thị thông báo
+function showToast(message, type = 'success') {
+    if (!toast || !toastMessage) {
+        // Nếu không tìm thấy phần tử toast, tạo mới
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'fixed top-4 right-4 z-50';
+            document.body.appendChild(toastContainer);
+        }
+        
+        const newToast = document.createElement('div');
+        newToast.className = `flex items-center p-4 mb-4 rounded-lg shadow ${
+            type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`;
+        
+        newToast.innerHTML = `
+            <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg ${
+                type === 'success' ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'
+            }">
+                <i class="${type === 'success' ? 'fas fa-check' : 'fas fa-exclamation'}"></i>
+            </div>
+            <div class="ml-3 text-sm font-normal">${message}</div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 ${
+                type === 'success' ? 'bg-green-100 text-green-500 hover:bg-green-200' : 'bg-red-100 text-red-500 hover:bg-red-200'
+            }" data-dismiss-target="#toast" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        toastContainer.appendChild(newToast);
+        
+        // Tự động đóng toast sau 3 giây
+        setTimeout(() => {
+            newToast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+            setTimeout(() => {
+                newToast.remove();
+            }, 300);
+        }, 3000);
+        
+        // Thêm event listener cho nút đóng
+        const closeBtn = newToast.querySelector('button');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                newToast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => {
+                    newToast.remove();
+                }, 300);
+            });
+        }
+        
+        return;
+    }
+    
+    // Nếu đã có phần tử toast, cập nhật nội dung
+    toastMessage.textContent = message;
+    
+    // Cập nhật màu sắc dựa trên loại thông báo
+    if (type === 'success') {
+        toast.classList.remove('bg-red-100', 'text-red-800');
+        toast.classList.add('bg-green-100', 'text-green-800');
+    } else {
+        toast.classList.remove('bg-green-100', 'text-green-800');
+        toast.classList.add('bg-red-100', 'text-red-800');
+    }
+    
+    // Hiển thị toast
+    toast.classList.remove('hidden');
+    
+    // Tự động ẩn toast sau 3 giây
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
+}
+
+// Hiển thị lớp học trong container được chỉ định
+function displayClassesInContainer(classes, container) {
+    if (!container) return;
+    
+    classes.forEach(classItem => {
+        // Xác định gradient và icon dựa trên môn học
+        let gradientClass = 'from-blue-500 to-indigo-600';
+        let iconClass = 'fas fa-book';
+        
+        // Tạo thẻ lớp học
+        const classCard = document.createElement('div');
+        classCard.className = 'bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300';
+        classCard.innerHTML = `
+            <div class="bg-gradient-to-r ${gradientClass} h-16 flex items-center justify-center">
+                <i class="${iconClass} text-white text-2xl"></i>
+            </div>
+            <div class="p-3">
+                <h3 class="text-md font-bold text-gray-800 mb-1">${classItem.className || 'Không có tên'}</h3>
+                <div class="text-xs text-gray-600 mb-2">
+                    <i class="fas fa-fingerprint mr-1"></i> ${classItem.classCode}
+                </div>
+                <a href="teacher_class.html?code=${classItem.classCode}" 
+                   class="block text-center bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors">
+                    <i class="fas fa-door-open mr-1"></i> Vào lớp
+                </a>
+            </div>
+        `;
+        
+        container.appendChild(classCard);
     });
 }
 
@@ -364,6 +638,7 @@ function showToast(message, type = 'success') {
         toast.classList.add('translate-y-20', 'opacity-0');
     }, 3000);
 }
+
 
 
 
