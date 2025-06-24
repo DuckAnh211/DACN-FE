@@ -1985,3 +1985,98 @@ window.deleteNotification = deleteNotification;
 // Tải thông báo trong phần Tổng quan khi trang được tải
 loadOverviewNotifications();
 
+// Thêm xử lý sự kiện cho nút tạo cuộc họp với API
+document.addEventListener('DOMContentLoaded', function() {
+    // Các phần khởi tạo hiện có...
+    
+    // Lấy tham chiếu đến nút tạo cuộc họp
+    const meetingTab = document.getElementById('meeting-tab');
+    
+    if (meetingTab) {
+        meetingTab.addEventListener('click', async function() {
+            // Lấy mã lớp từ URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const classCode = urlParams.get('code');
+            
+            if (!classCode) {
+                alert('Không tìm thấy mã lớp học');
+                return;
+            }
+            
+            try {
+                // Hiển thị thông báo đang tạo cuộc họp
+                showToast('Đang tạo cuộc họp...', 'info');
+                
+                // Lấy thông tin lớp học
+                const classInfo = await fetchClassInfo();
+                
+                if (!classInfo) {
+                    showToast('Không thể lấy thông tin lớp học', 'error');
+                    return;
+                }
+                
+                // Tạo dữ liệu cuộc họp
+                const meetingData = {
+                    classId: classInfo._id,
+                    classCode: classInfo.classCode || classCode,
+                    className: classInfo.className,
+                    teacherName: classInfo.teacherName || localStorage.getItem('userName') || 'Giáo viên',
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Gọi API tạo cuộc họp (nếu có)
+                let meetingId;
+                
+                try {
+                    const response = await fetch(`${BASE_API_URL}/meetings/create`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(meetingData)
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        meetingId = result.meetingId || generateMeetingId();
+                    } else {
+                        throw new Error('API error');
+                    }
+                } catch (error) {
+                    console.warn('Không thể gọi API tạo cuộc họp, sử dụng ID ngẫu nhiên:', error);
+                    meetingId = generateMeetingId();
+                }
+                
+                // Tạo URL cuộc họp
+                const meetingUrl = `/videomeeting.html?id=${meetingId}&class=${encodeURIComponent(classInfo.className)}&teacher=${encodeURIComponent(meetingData.teacherName)}`;
+                
+                // Chuyển hướng đến trang cuộc họp
+                window.location.href = meetingUrl;
+                
+            } catch (error) {
+                console.error('Lỗi khi tạo cuộc họp:', error);
+                showToast('Đã xảy ra lỗi khi tạo cuộc họp', 'error');
+            }
+        });
+    }
+});
+
+// Hàm tạo ID cuộc họp ngẫu nhiên
+function generateMeetingId() {
+    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    
+    // Tạo 3 nhóm, mỗi nhóm 3 ký tự
+    for (let group = 0; group < 3; group++) {
+        for (let i = 0; i < 3; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        
+        if (group < 2) {
+            result += '-';
+        }
+    }
+    
+    return result;
+}
+

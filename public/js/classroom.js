@@ -7,7 +7,8 @@ const API_ENDPOINTS = {
     GET_CLASSES: `${BASE_API_URL}/classrooms`,
     GET_LESSONS: `${BASE_API_URL}/lessons/classroom`,
     DELETE_LESSON: `${BASE_API_URL}/lessons`,
-    GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`
+    GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`,
+    CREATE_MEETING: `${BASE_API_URL}/meetings/create`
 };
 
 // Hàm lấy danh sách lớp học
@@ -1104,4 +1105,241 @@ function updateUnreadBadge(notifications) {
 // Đặt các hàm vào window để có thể gọi từ bất kỳ đâu
 window.loadNotifications = loadNotifications;
 window.markAsRead = markAsRead;
+window.checkUnreadNotifications = checkUnreadNotifications;
+
+// Thêm hàm tạo cuộc họp video
+function addVideoMeetingFeature() {
+    // Đợi DOM được tải hoàn toàn
+    setTimeout(() => {
+        // Tìm các phần tử có thể chứa nút
+        const possibleContainers = [
+            document.querySelector('.tabs-container'),
+            document.querySelector('nav'),
+            document.querySelector('.header'),
+            document.querySelector('header'),
+            document.querySelector('.nav-tabs'),
+            document.querySelector('.navigation')
+        ];
+        
+        // Lọc ra container hợp lệ đầu tiên
+        const container = possibleContainers.find(el => el !== null);
+        
+        if (!container) {
+            console.error('Không tìm thấy container phù hợp để thêm nút tạo cuộc họp');
+            // Tạo container mới nếu không tìm thấy
+            const mainElement = document.querySelector('main') || document.body;
+            const newContainer = document.createElement('div');
+            newContainer.className = 'meeting-button-container';
+            newContainer.style.cssText = 'display: flex; justify-content: flex-end; padding: 10px 20px;';
+            mainElement.prepend(newContainer);
+            addButtonToContainer(newContainer);
+            return;
+        }
+        
+        addButtonToContainer(container);
+    }, 1000);
+    
+    function addButtonToContainer(container) {
+        // Tạo nút tạo cuộc họp
+        const createMeetingBtn = document.createElement('button');
+        createMeetingBtn.id = 'createMeetingBtn';
+        createMeetingBtn.className = 'btn-create-meeting';
+        createMeetingBtn.innerHTML = '<i class="fas fa-video"></i> Tạo cuộc họp';
+        
+        // Thêm nút vào container
+        container.appendChild(createMeetingBtn);
+        
+        // Thêm sự kiện click cho nút
+        createMeetingBtn.addEventListener('click', createVideoMeeting);
+        
+        // Thêm CSS cho nút
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-create-meeting {
+                background-color: #1a73e8;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-left: auto;
+                transition: background-color 0.2s;
+                z-index: 100;
+            }
+            
+            .btn-create-meeting:hover {
+                background-color: #1765cc;
+            }
+            
+            .btn-create-meeting i {
+                font-size: 16px;
+            }
+        `;
+        
+        document.head.appendChild(style);
+        
+        console.log('Đã thêm nút tạo cuộc họp vào container:', container);
+    }
+}
+
+// Đảm bảo hàm được gọi khi trang đã tải xong
+window.addEventListener('load', function() {
+    // Thêm tính năng tạo cuộc họp video
+    addVideoMeetingFeature();
+});
+
+// Hàm tạo cuộc họp video
+async function createVideoMeeting() {
+    // Lấy thông tin lớp học hiện tại
+    const classCode = getClassCodeFromUrl();
+    const classData = await getClassInfo(classCode);
+    
+    if (!classData) {
+        alert('Không thể tạo cuộc họp: Không tìm thấy thông tin lớp học');
+        return;
+    }
+    
+    // Tạo dialog xác nhận
+    const dialog = document.createElement('div');
+    dialog.className = 'meeting-dialog';
+    dialog.innerHTML = `
+        <div class="meeting-dialog-content">
+            <div class="meeting-dialog-header">
+                <h3>Tạo cuộc họp video</h3>
+                <button class="meeting-dialog-close">&times;</button>
+            </div>
+            <div class="meeting-dialog-body">
+                <p>Bạn đang tạo cuộc họp video cho lớp <strong>${classData.className}</strong>.</p>
+                <p>Sau khi tạo, bạn có thể mời học sinh tham gia bằng cách chia sẻ liên kết.</p>
+            </div>
+            <div class="meeting-dialog-footer">
+                <button class="meeting-dialog-btn meeting-dialog-btn-secondary" id="cancelMeetingBtn">Hủy</button>
+                <button class="meeting-dialog-btn meeting-dialog-btn-primary" id="startMeetingBtn">Tạo cuộc họp</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // Xử lý sự kiện đóng dialog
+    const closeBtn = dialog.querySelector('.meeting-dialog-close');
+    closeBtn.addEventListener('click', () => {
+        document.body.removeChild(dialog);
+    });
+    
+    // Xử lý sự kiện hủy
+    const cancelBtn = document.getElementById('cancelMeetingBtn');
+    cancelBtn.addEventListener('click', () => {
+        document.body.removeChild(dialog);
+    });
+    
+    // Xử lý sự kiện tạo cuộc họp
+    const startBtn = document.getElementById('startMeetingBtn');
+    startBtn.addEventListener('click', async () => {
+        // Hiển thị trạng thái đang tải
+        const dialogBody = dialog.querySelector('.meeting-dialog-body');
+        dialogBody.innerHTML = `
+            <div class="meeting-loading">
+                <div class="meeting-loading-spinner"></div>
+                <p>Đang tạo cuộc họp...</p>
+            </div>
+        `;
+        
+        // Vô hiệu hóa các nút
+        startBtn.disabled = true;
+        cancelBtn.disabled = true;
+        
+        try {
+            // Tạo dữ liệu cuộc họp
+            const meetingData = {
+                classId: classData._id,
+                classCode: classData.classCode || classCode,
+                className: classData.className,
+                teacherName: classData.teacherName || 'Giáo viên',
+                createdAt: new Date().toISOString()
+            };
+            
+            // Gọi API tạo cuộc họp (nếu có)
+            let meetingId;
+            
+            try {
+                const response = await fetch(API_ENDPOINTS.CREATE_MEETING, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(meetingData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    meetingId = result.meetingId || generateMeetingId();
+                } else {
+                    throw new Error('API error');
+                }
+            } catch (error) {
+                console.warn('Không thể gọi API tạo cuộc họp, sử dụng ID ngẫu nhiên:', error);
+                meetingId = generateMeetingId();
+            }
+            
+            // Tạo URL cuộc họp
+            const meetingUrl = `/videomeeting.html?id=${meetingId}&class=${encodeURIComponent(classData.className)}&teacher=${encodeURIComponent(classData.teacherName || 'Giáo viên')}`;
+            
+            // Chuyển hướng đến trang cuộc họp
+            window.location.href = meetingUrl;
+            
+        } catch (error) {
+            console.error('Lỗi khi tạo cuộc họp:', error);
+            
+            // Hiển thị thông báo lỗi
+            dialogBody.innerHTML = `
+                <div class="meeting-error">
+                    <p>Đã xảy ra lỗi khi tạo cuộc họp. Vui lòng thử lại sau.</p>
+                    <p class="error-details">${error.message}</p>
+                </div>
+            `;
+            
+            // Kích hoạt lại các nút
+            startBtn.disabled = false;
+            cancelBtn.disabled = false;
+        }
+    });
+}
+
+// Hàm tạo ID cuộc họp ngẫu nhiên
+function generateMeetingId() {
+    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    
+    // Tạo 3 nhóm, mỗi nhóm 3 ký tự
+    for (let group = 0; group < 3; group++) {
+        for (let i = 0; i < 3; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        
+        if (group < 2) {
+            result += '-';
+        }
+    }
+    
+    return result;
+}
+
+// Hàm lấy mã lớp từ URL
+function getClassCodeFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('code') || '';
+}
+
+// Thêm vào phần khởi tạo (trong sự kiện DOMContentLoaded)
+document.addEventListener('DOMContentLoaded', function() {
+    // Các phần khởi tạo hiện có...
+    
+    // Thêm tính năng tạo cuộc họp video
+    setTimeout(addVideoMeetingFeature, 500); // Thêm timeout để đảm bảo DOM đã được tạo đầy đủ
 window.checkUnreadNotifications = checkUnreadNotifications;

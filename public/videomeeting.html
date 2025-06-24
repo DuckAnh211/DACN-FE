@@ -1,108 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Video Meeting</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 16px;
-    }
-    .video-container {
-      position: relative;
-      padding-top: 56.25%; /* 16:9 Aspect Ratio */
-    }
-    .video-container video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    .controls {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 16px;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-    }
-    .control-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  </style>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style/videomeeting.css">
 </head>
-<body class="bg-gray-900 text-white">
-  <div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Video Meeting</h1>
-      <div class="flex items-center">
-        <span id="roomCode" class="bg-gray-700 px-3 py-1 rounded mr-2"></span>
-        <button id="copyBtn" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded">
-          <i class="fas fa-copy"></i>
-        </button>
+<body>
+  <div class="meeting-container">
+    <div class="header">
+      <h1>Video Meeting</h1>
+      <div class="meeting-info">
+        <span id="meetingId">Meeting ID: <span id="meetingIdValue">123-456-789</span></span>
+        <button id="copyMeetingIdBtn" class="icon-btn"><i class="fas fa-copy"></i></button>
       </div>
     </div>
-
-    <div class="video-grid" id="videoGrid">
-      <div class="video-container">
-        <video id="localVideo" autoplay muted playsinline class="border-2 border-blue-500"></video>
-        <div class="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">You</div>
+    
+    <!-- Layout mặc định -->
+    <div id="defaultLayout" class="layout-container">
+      <div class="main-video-container">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <div class="participant-name">Người tham gia khác</div>
       </div>
+      <div class="pip-video-container">
+        <video id="localVideo" autoplay playsinline muted></video>
+        <div class="participant-name">Bạn</div>
+      </div>
+    </div>
+    
+    <!-- Layout chia sẻ màn hình -->
+    <div id="screenSharingLayout" class="layout-container screen-sharing-layout hidden">
+      <div class="screen-share-container">
+        <video id="screenShareVideo" autoplay playsinline></video>
+      </div>
+      <div class="sidebar-videos">
+        <div class="sidebar-video-container">
+          <video id="sidebarRemoteVideo" autoplay playsinline></video>
+          <div class="participant-name">Người tham gia khác</div>
+        </div>
+        <div class="sidebar-video-container">
+          <video id="sidebarLocalVideo" autoplay playsinline muted></video>
+          <div class="participant-name">Bạn</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Thanh điều khiển -->
+    <div class="controls-bar">
+      <button id="micBtn" class="control-btn"><i class="fas fa-microphone"></i></button>
+      <button id="cameraBtn" class="control-btn"><i class="fas fa-video"></i></button>
+      <button id="screenShareBtn" class="control-btn"><i class="fas fa-desktop"></i></button>
+      <button id="chatBtn" class="control-btn"><i class="fas fa-comment-alt"></i></button>
+      <button id="participantsBtn" class="control-btn"><i class="fas fa-users"></i></button>
+      <button id="layoutToggleBtn" class="control-btn"><i class="fas fa-th-large"></i></button>
+      <button id="fullscreenBtn" class="control-btn"><i class="fas fa-expand"></i></button>
+      <button id="checkServerBtn" class="control-btn"><i class="fas fa-server"></i></button>
+      <button id="leaveBtn" class="control-btn danger"><i class="fas fa-phone-slash"></i></button>
+    </div>
+    
+    <!-- Thông báo lỗi server -->
+    <div id="serverErrorMessage" class="error-message hidden">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span>Không thể kết nối đến máy chủ. Đang thử kết nối lại...</span>
     </div>
   </div>
 
-  <div class="controls">
-    <button id="micBtn" class="control-btn bg-gray-700 hover:bg-gray-600">
-      <i class="fas fa-microphone"></i>
-    </button>
-    <button id="videoBtn" class="control-btn bg-gray-700 hover:bg-gray-600">
-      <i class="fas fa-video"></i>
-    </button>
-    <button id="screenShareBtn" class="control-btn bg-gray-700 hover:bg-gray-600">
-      <i class="fas fa-desktop"></i>
-    </button>
-    <button id="chatBtn" class="control-btn bg-gray-700 hover:bg-gray-600">
-      <i class="fas fa-comment"></i>
-    </button>
-    <button id="leaveBtn" class="control-btn bg-red-600 hover:bg-red-700">
-      <i class="fas fa-phone-slash"></i>
-    </button>
-  </div>
-
-  <div id="chatPanel" class="fixed right-0 top-0 bottom-0 w-80 bg-gray-800 transform translate-x-full transition-transform duration-300 ease-in-out">
-    <div class="flex justify-between items-center p-4 border-b border-gray-700">
-      <h2 class="text-lg font-semibold">Chat</h2>
-      <button id="closeChatBtn" class="text-gray-400 hover:text-white">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div id="messages" class="p-4 h-[calc(100%-120px)] overflow-y-auto"></div>
-    <div class="p-4 border-t border-gray-700">
-      <div class="flex">
-        <input type="text" id="messageInput" class="flex-grow bg-gray-700 text-white px-3 py-2 rounded-l outline-none" placeholder="Type a message...">
-        <button id="sendMessageBtn" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-r">
-          <i class="fas fa-paper-plane"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Dùng ES Modules thay vì script thường -->
-  <script type="module" src="js/videomeeting.js"></script>
+  <!-- Socket.io -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <!-- Mediasoup client -->
+  <script src="https://cdn.jsdelivr.net/npm/mediasoup-client@3/dist/mediasoup-client.min.js"></script>
+  <!-- Custom JS -->
+  <script src="js/videomeeting.js"></script>
 </body>
-</html> 
+</html>

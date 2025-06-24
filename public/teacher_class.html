@@ -61,6 +61,9 @@
                 <button id="tests-tab" class="px-4 py-2 text-gray-500 hover:text-blue-500">
                     <i class="fas fa-clipboard-check mr-2"></i>Kiểm tra
                 </button>
+                <button id="meeting-tab" class="px-4 py-2 text-gray-500 hover:text-blue-500 ml-auto" onclick="createMeeting()">
+                    <i class="fas fa-video mr-2"></i>Tạo cuộc họp
+                </button>
             </div>
 
             <!-- Overview Content -->
@@ -225,3 +228,24 @@
 
 
 
+<script>
+    function createMeeting() {
+        // Lấy mã lớp từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const classCode = urlParams.get('code');
+        
+        if (!classCode) {
+            alert('Không tìm thấy mã lớp học');
+            return;
+        }
+        
+        // Tạo ID cuộc họp ngẫu nhiên
+        const meetingId = Math.random().toString(36).substring(2, 11);
+        
+        // Tạo URL cho trang videomeeting
+        const meetingUrl = `/videomeeting.html?id=${meetingId}&class=Lớp học&teacher=Giáo viên`;
+        
+        // Chuyển hướng đến trang cuộc họp
+        window.location.href = meetingUrl;
+    }
+</script>

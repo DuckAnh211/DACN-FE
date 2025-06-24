@@ -1,0 +1,383 @@
+/* Reset CSS */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  background-color: #202124;
+  color: white;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.meeting-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #2c2c2c;
+  border-bottom: 1px solid #3c4043;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.meeting-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #8ab4f8;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Layout containers */
+.layout-container {
+  flex: 1;
+  display: flex;
+  position: relative;
+  background-color: #202124;
+  overflow: hidden;
+}
+
+/* Default layout */
+.main-video-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.main-video-container video {
+  width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.pip-video-container {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 240px;
+  height: 135px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.pip-video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pip-video-container.large {
+  width: 320px;
+  height: 180px;
+}
+
+/* Screen sharing layout */
+.screen-sharing-layout {
+  display: flex;
+}
+
+.screen-share-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.screen-share-container video {
+  width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.sidebar-videos {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  background-color: #2c2c2c;
+  border-left: 1px solid #3c4043;
+}
+
+.sidebar-video-container {
+  height: 135px;
+  margin: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar-video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Participant name */
+.participant-name {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Controls bar */
+.controls-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  background-color: #2c2c2c;
+  border-top: 1px solid #3c4043;
+}
+
+.control-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #3c4043;
+  border: none;
+  color: white;
+  font-size: 18px;
+  margin: 0 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+  background-color: #4d5156;
+}
+
+.control-btn.active {
+  background-color: #8ab4f8;
+  color: #202124;
+}
+
+.control-btn.danger {
+  background-color: #ea4335;
+}
+
+.control-btn.danger:hover {
+  background-color: #d93025;
+}
+
+/* Error message */
+.error-message {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 12px;
+  background-color: #ea4335;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.hidden {
+  display: none;
+}
+
+/* Tooltip */
+.tooltip {
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.tooltip:not(.hidden) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hiệu ứng hover cho các nút điều khiển */
+.control-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.control-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.control-btn:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(100, 100);
+    opacity: 0;
+  }
+}
+
+/* Hiệu ứng cho video container */
+.video-container {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.video-container:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Hiệu ứng cho PIP video */
+.pip-video-container {
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.pip-video-container:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Hiệu ứng cho thanh điều khiển */
+.controls-bar {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Hiệu ứng cho tên người tham gia */
+.participant-name {
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.main-video-container:hover .participant-name,
+.pip-video-container:hover .participant-name,
+.sidebar-video-container:hover .participant-name {
+  opacity: 1;
+}
+
+/* Hiệu ứng loading cho video */
+@keyframes pulse {
+  0% {
+    background-color: #3c4043;
+  }
+  50% {
+    background-color: #4d5256;
+  }
+  100% {
+    background-color: #3c4043;
+  }
+}
+
+video:not([srcObject]) {
+  animation: pulse 1.5s infinite;
+}
+
+/* Hiệu ứng cho nút danger khi hover */
+.control-btn.danger:hover {
+  background-color: #d93025;
+  transform: scale(1.1);
+}
+
+/* Hiệu ứng cho screen sharing layout */
+.screen-sharing-layout {
+  transition: all 0.5s ease;
+}
+
+/* Hiệu ứng cho sidebar video */
+.sidebar-video-container {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.sidebar-video-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Hiệu ứng cho modal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.invite-modal {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .pip-video-container {
+    width: 120px;
+    height: 80px;
+    bottom: 80px;
+    right: 10px;
+  }
+  
+  .controls-bar {
+    padding: 10px 5px;
+    gap: 5px;
+  }
+  
+  .control-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  
+  #screenSharingLayout {
+    flex-direction: column;
+  }
+  
+  .sidebar-videos {
+    flex-direction: row;
+    max-width: 100%;
+    max-height: 120px;
+  }
+}
+
+
+
