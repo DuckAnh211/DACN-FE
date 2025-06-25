@@ -15,7 +15,7 @@ const toast = document.getElementById('toast');
 const toastMessage = document.getElementById('toastMessage');
 
 // API Endpoints
-const BASE_API_URL = 'http://localhost:8080/v1/api';
+const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
 const API_ENDPOINTS = {
     GET_CLASSES: `${BASE_API_URL}/classrooms`,
     CREATE_CLASS: `${BASE_API_URL}/classrooms`,

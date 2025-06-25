@@ -1,5 +1,5 @@
 // Định nghĩa BASE_API_URL
-const BASE_API_URL = 'http://localhost:8080/v1/api';
+const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
 
 // Cấu hình API
 const API_ENDPOINTS = {
@@ -11,7 +11,8 @@ const API_ENDPOINTS = {
     GET_ASSIGNMENTS: `${BASE_API_URL}/assignments/class`,
     SUBMIT_ASSIGNMENT: `${BASE_API_URL}/submissions`,
     VIEW_ASSIGNMENT: `${BASE_API_URL}/assignments`,
-    GET_SUBMISSION_STATUS: `${BASE_API_URL}/submissions/status`
+    GET_SUBMISSION_STATUS: `${BASE_API_URL}/submissions/status`,
+    GET_QUIZZES: `http://localhost:8080/v1/api/quizzes/class` //`${BASE_API_URL}/quizzes/class`
 };
 
 // Hàm lấy danh sách lớp học
@@ -196,6 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         lessonsContent.classList.add('hidden');
         assignmentsContent.classList.add('hidden');
         testsContent.classList.remove('hidden');
+        if (classCode) loadQuizzes(classCode);
         
         // Cập nhật trạng thái active của các tab
         lessonsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
@@ -1317,9 +1319,14 @@ function displayAssignments(assignments, container) {
             <div class="mt-3 p-2 bg-gray-50 rounded-md">
                 <div class="flex items-center text-gray-700">
                     <i class="fas fa-info-circle mr-2 text-blue-500"></i>
-                    <span>Trạng thái: ${getSubmissionStatusText(submissionStatus.status)}</span>
-                    ${submissionStatus.isGraded ? `<span class="ml-2 font-medium">Điểm: ${submissionStatus.grade || 'Chưa có'}</span>` : ''}
+                    <span>Trạng thái: ${getSubmissionStatusText(submissionStatus.status)}</span>                    
                 </div>
+                ${submissionStatus.feedback && submissionStatus.feedback.trim() !== '' ? `
+            <div class="mt-2 flex items-start text-gray-600">
+                <i class="fas fa-comment-dots mr-2 text-green-500"></i>
+                <span>Nhận xét: ${submissionStatus.feedback}</span>
+            </div>
+        ` : ''}
             </div>
         ` : ''}
     `;
@@ -1746,3 +1753,87 @@ function getSubmissionStatusText(status) {
             return 'Đã nộp';
     }
 }
+
+async function loadQuizzes(classCode) {
+    const testsContent = document.getElementById('tests-content');
+    if (!testsContent) return;
+
+    // Hiển thị trạng thái đang tải
+    testsContent.innerHTML = `
+        <div class="text-center py-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+            <p class="text-gray-500">Đang tải danh sách bài kiểm tra...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`${API_ENDPOINTS.GET_QUIZZES}/${classCode}`);
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.quizzes) || data.quizzes.length === 0) {
+            testsContent.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="text-gray-500 mb-4">
+                        <i class="fas fa-clipboard-list text-5xl mb-3"></i>
+                        <p class="text-lg">Chưa có bài kiểm tra nào</p>
+                    </div>
+                    <p class="text-sm text-gray-400">Giáo viên sẽ cập nhật bài kiểm tra trong thời gian tới</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Hiển thị danh sách bài kiểm tra
+        const quizzesContainer = document.createElement('div');
+        quizzesContainer.className = 'space-y-4';
+
+        data.quizzes.forEach(quiz => {
+            const quizDiv = document.createElement('div');
+            quizDiv.className = 'bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow';
+
+            quizDiv.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="font-medium text-gray-800">${quiz.title || 'Bài kiểm tra không có tiêu đề'}</h3>
+                        <p class="text-sm text-gray-600 mt-1">${quiz.description || ''}</p>
+                        <div class="flex flex-wrap items-center mt-2 text-xs text-gray-500">
+                            <span class="mr-3"><i class="far fa-clock mr-1"></i>Thời gian: ${quiz.timeLimit || 0} phút</span>
+                            <span class="mr-3"><i class="fas fa-question mr-1"></i>Số câu hỏi: ${quiz.questions ? quiz.questions.length : 0}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="text-blue-500 hover:text-blue-700" onclick="viewQuizDetail('${quiz._id}')">
+                            <i class="fas fa-eye"></i> Làm bài
+                        </button>
+                    </div>
+                </div>
+            `;
+            quizzesContainer.appendChild(quizDiv);
+        });
+
+        testsContent.innerHTML = '';
+        testsContent.appendChild(quizzesContainer);
+
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách bài kiểm tra:', error);
+        testsContent.innerHTML = `
+            <div class="text-center py-4">
+                <p class="text-red-500">Có lỗi xảy ra khi tải danh sách bài kiểm tra</p>
+                <button class="mt-2 text-blue-500 hover:text-blue-700" onclick="loadQuizzes('${classCode}')">
+                    <i class="fas fa-sync-alt mr-1"></i> Thử lại
+                </button>
+            </div>
+        `;
+    }
+}
+window.loadQuizzes = loadQuizzes;
+
+function viewQuizDetail(quizId) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    const userEmail = localStorage.getItem('userEmail'); // Lấy userEmail từ localStorage
+    // Thêm userEmail vào URL nếu có
+    const url = `quiz.html?id=${quizId}&code=${classCode}${userEmail ? `&userEmail=${encodeURIComponent(userEmail)}` : ''}`;
+    window.open(url, '_blank');
+}
+window.viewQuizDetail = viewQuizDetail;

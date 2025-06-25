@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
             activateTab(testsTab);
             showContent(testsContent);
             // Tải danh sách bài kiểm tra nếu cần
-            loadTests();
+             loadQuizzes();
         });
     }
     
@@ -731,86 +731,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.open(url, '_blank');
 }
 window.viewAssignmentPdf = viewAssignmentPdf;
-    // Hàm tải danh sách bài kiểm tra
-    function loadTests() {
-        if (!testsContent) return;
-        
-        const testsList = document.getElementById('testsList');
-        if (!testsList) return;
-        
-        // Kiểm tra xem đã tải danh sách bài kiểm tra chưa
-        if (testsList.dataset.loaded === 'true') return;
-        
-        // Lấy mã lớp từ URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const classCode = urlParams.get('code');
-        
-        if (!classCode) return;
-        
-        // Hiển thị loading
-        testsList.innerHTML = `
-            <div class="text-center py-4">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                <p class="text-gray-500">Đang tải danh sách bài kiểm tra...</p>
-            </div>
-        `;
-        
-        // Gọi API để lấy danh sách bài kiểm tra
-        fetch(`${BASE_API_URL}/tests/class/${classCode}`)
-            .then(response => response.json())
-            .then(data => {
-                const tests = data.data || [];
-                
-                if (tests.length === 0) {
-                    testsList.innerHTML = `
-                        <div class="text-center py-4">
-                            <p class="text-gray-500">Chưa có bài kiểm tra nào</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                // Hiển thị danh sách bài kiểm tra
-                testsList.innerHTML = '';
-                tests.forEach(test => {
-                    const testItem = document.createElement('div');
-                    testItem.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow';
-                    testItem.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-                                    <i class="fas fa-clipboard-check text-purple-500"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-medium">${test.title || 'Bài kiểm tra không có tiêu đề'}</h4>
-                                    <p class="text-sm text-gray-600">Thời gian: ${test.duration || 45} phút</p>
-                                </div>
-                            </div>
-                            <div class="flex space-x-2">
-                                <button class="text-blue-500 hover:text-blue-700" onclick="editTest('${test.id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="text-red-500 hover:text-red-700" onclick="deleteTest('${test.id}')">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    testsList.appendChild(testItem);
-                });
-                
-                // Đánh dấu đã tải
-                testsList.dataset.loaded = 'true';
-            })
-            .catch(error => {
-                console.error('Error loading tests:', error);
-                testsList.innerHTML = `
-                    <div class="text-center py-4">
-                        <p class="text-red-500">Có lỗi xảy ra khi tải danh sách bài kiểm tra</p>
-                    </div>
-                `;
-            });
-    }
     
     // Lấy mã lớp từ URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -1932,7 +1852,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Cấu hình API 
-const BASE_API_URL = 'http://localhost:8080/v1/api';
+const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
 const API_ENDPOINTS = {
     GET_CLASS: `${BASE_API_URL}/classrooms`,
     GET_STUDENTS: `${BASE_API_URL}/classroom-students`,
@@ -1946,7 +1866,8 @@ const API_ENDPOINTS = {
     GET_ASSIGNMENTS: `${BASE_API_URL}/assignments/class`,
     DELETE_ASSIGNMENT: `${BASE_API_URL}/assignments`,
     GET_ASSIGNMENT_SUBMISSIONS: `${BASE_API_URL}/submissions/assignment`,
-    GET_VIEW_SUBMISSIONS: `${BASE_API_URL}/submissions`  
+    GET_VIEW_SUBMISSIONS: `${BASE_API_URL}/submissions`,
+    GET_QUIZZES: `${BASE_API_URL}/quizzes/class`
 };
 
 // Đặt API_ENDPOINTS vào window để có thể truy cập từ bất kỳ đâu
@@ -2897,11 +2818,245 @@ async function submitGradeAndFeedback(assignmentId, submissionId) {
                   window.open(url, '_blank');
              }
 
+
+        function loadQuizzes() {
+    const testsList = document.getElementById('testsList');
+    if (!testsList) return;
+
+    // Lấy mã lớp từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    if (!classCode) return;
+
+    // Hiển thị loading
+    testsList.innerHTML = `
+        <div class="text-center py-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+            <p class="text-gray-500">Đang tải danh sách bài kiểm tra...</p>
+        </div>
+    `;
+
+    fetch(`${API_ENDPOINTS.GET_QUIZZES}/class/${classCode}`)
+        .then(res => res.json())
+        .then(data => {
+            const quizzes = data.quizzes || [];
+            if (!quizzes.length) {
+                testsList.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-gray-500">Chưa có bài kiểm tra nào</p>
+                    </div>
+                `;
+                return;
+            }
+            testsList.innerHTML = '';
+            quizzes.forEach(quiz => {
+                const quizDiv = document.createElement('div');
+                quizDiv.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow mb-4';
+                quizDiv.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h4 class="font-medium text-lg">${quiz.title || 'Bài kiểm tra không có tiêu đề'}</h4>
+                            <p class="text-sm text-gray-600 mt-1">${quiz.description || ''}</p>
+                            <p class="text-xs text-gray-500 mt-1">Thời gian: ${quiz.timeLimit || 0} phút</p>
+                            <p class="text-xs text-gray-500 mt-1">Số câu hỏi: ${quiz.questions ? quiz.questions.length : 0}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="text-blue-500 hover:text-blue-700" title="Xem chi tiết" onclick="viewQuizDetail('${quiz._id}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <!-- Có thể thêm nút sửa/xóa nếu cần -->
+                        </div>
+                    </div>
+                `;
+                testsList.appendChild(quizDiv);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading quizzes:', error);
+            testsList.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-red-500">Có lỗi xảy ra khi tải danh sách bài kiểm tra</p>
+                </div>
+            `;
+        });
+}
+
+function openAddQuizModal() {
+    // Nếu modal đã tồn tại thì chỉ hiển thị lại
+    let modal = document.getElementById('addQuizModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        return;
+    }
+    // Lấy mã lớp từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    const teacherEmail = localStorage.getItem('userEmail') || '';
+
+    // Tạo modal mới
+    modal = document.createElement('div');
+    modal.id = 'addQuizModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold">Tạo bài kiểm tra mới</h3>
+                <a class="text-gray-500 hover:text-gray-700 cursor-pointer" onclick="closeAddQuizModal()">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+            <form id="addQuizForm" class="p-6">
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Tên bài kiểm tra <span class="text-red-500">*</span></label>
+                    <input type="text" id="quizTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Mô tả</label>
+                    <textarea id="quizDescription" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Thời gian làm bài (phút) <span class="text-red-500">*</span></label>
+                    <input type="number" id="quizTimeLimit" class="w-full px-3 py-2 border border-gray-300 rounded-md" required min="1" value="15">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Câu hỏi</label>
+                    <div id="questionsContainer"></div>
+                    <button type="button" id="btnAddQuestion" class="mt-2 bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200">
+                        <i class="fas fa-plus mr-1"></i>Thêm câu hỏi
+                    </button>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-plus mr-1"></i>Tạo bài kiểm tra
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Thêm event cho form
+    document.getElementById('addQuizForm').addEventListener('submit', handleAddQuizSubmit);
+
+    // Thêm event cho nút thêm câu hỏi
+    document.getElementById('btnAddQuestion').addEventListener('click', addQuestionField);
+
+    // Khởi tạo 1 câu hỏi mặc định
+    addQuestionField();
+}
+window.openAddQuizModal = openAddQuizModal;
+
+function closeAddQuizModal() {
+    const modal = document.getElementById('addQuizModal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeAddQuizModal = closeAddQuizModal;
+
+function addQuestionField() {
+    const questionsContainer = document.getElementById('questionsContainer');
+    const index = questionsContainer.children.length;
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'border rounded p-3 mb-3 bg-gray-50';
+    questionDiv.innerHTML = `
+        <div class="mb-2">
+            <label class="block text-gray-600 mb-1">Nội dung câu hỏi</label>
+            <input type="text" class="question-text w-full px-2 py-1 border rounded" required>
+        </div>
+        <div class="mb-2">
+            <label class="block text-gray-600 mb-1">Các lựa chọn</label>
+            <div class="flex flex-col gap-1">
+                <input type="text" class="option-input w-full px-2 py-1 border rounded" placeholder="Đáp án 1" required>
+                <input type="text" class="option-input w-full px-2 py-1 border rounded" placeholder="Đáp án 2" required>
+                <input type="text" class="option-input w-full px-2 py-1 border rounded" placeholder="Đáp án 3" required>
+                <input type="text" class="option-input w-full px-2 py-1 border rounded" placeholder="Đáp án 4" required>
+            </div>
+        </div>
+        <div class="mb-2">
+            <label class="block text-gray-600 mb-1">Đáp án đúng (1-4)</label>
+            <input type="number" class="correct-answer-input w-20 px-2 py-1 border rounded" min="1" max="4" required>
+        </div>
+        <button type="button" class="remove-question-btn text-red-500 hover:underline text-sm">Xóa câu hỏi</button>
+    `;
+    questionsContainer.appendChild(questionDiv);
+
+    // Xóa câu hỏi
+    questionDiv.querySelector('.remove-question-btn').onclick = () => questionDiv.remove();
+}
+
+async function handleAddQuizSubmit(event) {
+    event.preventDefault();
+    const title = document.getElementById('quizTitle').value.trim();
+    const description = document.getElementById('quizDescription').value.trim();
+    const timeLimit = Number(document.getElementById('quizTimeLimit').value);
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    const teacherEmail = localStorage.getItem('userEmail') || '';
+
+    // Lấy danh sách câu hỏi
+    const questions = [];
+    document.querySelectorAll('#questionsContainer > div').forEach(qDiv => {
+        const questionText = qDiv.querySelector('.question-text').value.trim();
+        const optionInputs = qDiv.querySelectorAll('.option-input');
+        const options = Array.from(optionInputs).map(opt => opt.value.trim());
+        const correctAnswer = Number(qDiv.querySelector('.correct-answer-input').value) - 1; // 0-based index
+
+        if (!questionText || options.some(opt => !opt) || correctAnswer < 0 || correctAnswer > 3) return;
+
+        questions.push({ questionText, options, correctAnswer });
+    });
+
+    if (!title || !classCode || !teacherEmail || !timeLimit || questions.length === 0) {
+        showToast('Vui lòng nhập đầy đủ thông tin và ít nhất 1 câu hỏi hợp lệ!', 'error');
+        return;
+    }
+
+    // Gửi dữ liệu lên API
+    try {
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang tạo...';
+
+        const response = await fetch(`${API_ENDPOINTS.GET_QUIZZES}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title,
+                description,
+                classCode,
+                teacherEmail,
+                timeLimit,
+                questions
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('Tạo bài kiểm tra thành công!', 'success');
+            closeAddQuizModal();
+            loadQuizzes();
+        } else {
+            showToast(result.message || 'Không thể tạo bài kiểm tra', 'error');
+        }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    } catch (error) {
+        showToast('Có lỗi khi tạo bài kiểm tra', 'error');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const btnAddNewExam = document.getElementById('btnAddNewExam');
+    if (btnAddNewExam) {
+        btnAddNewExam.addEventListener('click', openAddQuizModal);
+    }
+});
+
 // Add to window object
 window.viewSubmissions = viewSubmissions;
 window.updateSubmissionGrade = updateSubmissionGrade;
 window.submitGradeAndFeedback = submitGradeAndFeedback;
 window.viewLessonPdf = viewLessonPdf;
+window.loadQuizzes = loadQuizzes;
 
 
 

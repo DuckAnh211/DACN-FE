@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="./style/style.css">
+    <style>
+        body {
+            background: url("../images/background.jpg") center/cover no-repeat fixed;
+            min-height: 100vh;
+        }
+        .quiz-glass {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
+            padding: 2.5rem 2rem;
+            max-width: 650px;
+            margin: 48px auto;
+        }
+        @media (max-width: 700px) {
+            .quiz-glass { padding: 1.2rem 0.5rem; }
+        }
+        .quiz-title {
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: #e30808;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .quiz-desc {
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        .quiz-question {
+            font-weight: 600;
+            margin-bottom: 0.7rem;
+            color: #1e293b;
+        }
+        .quiz-options {
+            display: flex;
+            gap: 1.2rem;
+            margin-bottom: 1.2rem;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+        .quiz-options label {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            min-width: 120px;
+            justify-content: center;
+            border: 2px solid transparent;
+            font-size: 1rem;
+        }
+        .quiz-options input[type="radio"] {
+            accent-color: #2563eb;
+            margin-right: 8px;
+        }
+        .quiz-options input[type="radio"]:checked + span {
+            color: #2563eb;
+            font-weight: 700;
+        }
+        .quiz-options input[type="radio"]:focus-visible + span {
+            outline: 2px solid #2563eb;
+        }
+        .quiz-options label:hover, .quiz-options input[type="radio"]:focus-visible + span {
+            background: #e0e7ef;
+            box-shadow: 0 2px 8px 0 rgba(37,99,235,0.08);
+        }
+        .quiz-submit-btn {
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 0.85rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+            color: #fff;
+            border: none;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px 0 rgba(37,99,235,0.08);
+        }
+        .quiz-submit-btn:hover {
+            background: linear-gradient(90deg, #1d4ed8 60%, #38bdf8 100%);
+        }
+        .quiz-result {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+    </style>
+    <script src="./js/quiz.js" defer></script>
+</head>
+<body>
+    <div class="quiz-glass">
+        <div id="quizContainer"></div>
+    </div>
+</body>
+</html>

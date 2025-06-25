@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080/v1/api/questions';
+const API_URL = 'http://localhost:8080/v1/api/questions'; //'https://dacn-be-hh2q.onrender.com/v1/api/questions';
 
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("questionModal");
