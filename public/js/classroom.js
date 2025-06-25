@@ -12,7 +12,7 @@ const API_ENDPOINTS = {
     SUBMIT_ASSIGNMENT: `${BASE_API_URL}/submissions`,
     VIEW_ASSIGNMENT: `${BASE_API_URL}/assignments`,
     GET_SUBMISSION_STATUS: `${BASE_API_URL}/submissions/status`,
-    GET_QUIZZES: `http://localhost:8080/v1/api/quizzes/class` //`${BASE_API_URL}/quizzes/class`
+    GET_QUIZZES: `${BASE_API_URL}/quizzes/class`
 };
 
 // Hàm lấy danh sách lớp học

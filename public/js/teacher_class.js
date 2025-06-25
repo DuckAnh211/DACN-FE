@@ -1867,7 +1867,8 @@ const API_ENDPOINTS = {
     DELETE_ASSIGNMENT: `${BASE_API_URL}/assignments`,
     GET_ASSIGNMENT_SUBMISSIONS: `${BASE_API_URL}/submissions/assignment`,
     GET_VIEW_SUBMISSIONS: `${BASE_API_URL}/submissions`,
-    GET_QUIZZES: `${BASE_API_URL}/quizzes/class`
+    GET_QUIZZES: `${BASE_API_URL}/quizzes`,
+    QUIZ_RESULT: `${BASE_API_URL}/quiz-results`
 };
 
 // Đặt API_ENDPOINTS vào window để có thể truy cập từ bất kỳ đâu
@@ -2840,6 +2841,11 @@ async function submitGradeAndFeedback(assignmentId, submissionId) {
         .then(res => res.json())
         .then(data => {
             const quizzes = data.quizzes || [];
+             // Cập nhật số lượng bài kiểm tra
+            const totalQuizzesElement = document.getElementById('totalQuizzes');
+            if (totalQuizzesElement) {
+                totalQuizzesElement.textContent = quizzes.length;
+            }
             if (!quizzes.length) {
                 testsList.innerHTML = `
                     <div class="text-center py-4">
@@ -2861,10 +2867,12 @@ async function submitGradeAndFeedback(assignmentId, submissionId) {
                             <p class="text-xs text-gray-500 mt-1">Số câu hỏi: ${quiz.questions ? quiz.questions.length : 0}</p>
                         </div>
                         <div class="flex space-x-2">
-                            <button class="text-blue-500 hover:text-blue-700" title="Xem chi tiết" onclick="viewQuizDetail('${quiz._id}')">
+                            <button class="text-blue-500 hover:text-blue-700" title="Xem chi tiết" onclick="viewQuizResult('${quiz._id}')">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <!-- Có thể thêm nút sửa/xóa nếu cần -->
+                            <button class="text-red-500 hover:text-red-700" title="Xóa bài kiểm tra" onclick="deleteQuiz('${quiz._id}')">
+                                     <i class="fas fa-trash-alt"></i>
+                            </button>
                         </div>
                     </div>
                 `;
@@ -3051,14 +3059,103 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Hàm xóa quiz
+function deleteQuiz(quizId) {
+    if (!quizId || !confirm('Bạn có chắc chắn muốn xóa bài kiểm tra này?')) return;
+    fetch(`${API_ENDPOINTS.GET_QUIZZES}/${quizId}`, {
+        method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            showToast('Xóa bài kiểm tra thành công!', 'success');
+            loadQuizzes();
+        } else {
+            showToast(result.message || 'Không thể xóa bài kiểm tra', 'error');
+        }
+    })
+    .catch(() => showToast('Có lỗi khi xóa bài kiểm tra', 'error'));
+}
+
+function viewQuizResult(quizId) {
+    if (!quizId) {
+        showToast('Không tìm thấy quizId', 'error');
+        return;
+    }
+
+    // Tạo modal nếu chưa có
+    let modal = document.getElementById('quizResultModal');
+    if (modal) {
+        modal.remove(); // Xóa modal cũ nếu có để tránh trùng lặp
+    }
+    modal = document.createElement('div');
+    modal.id = 'quizResultModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold">Kết quả bài kiểm tra</h3>
+                <a class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('quizResultModal').remove()">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+            <div id="quizResultContent" class="flex-1 overflow-auto p-4">
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                    <p class="text-gray-500">Đang tải kết quả...</p>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Gọi API lấy kết quả
+    fetch(`${API_ENDPOINTS.QUIZ_RESULT}/${quizId}`)
+        .then(res => res.json())
+        .then(data => {
+            const content = document.getElementById('quizResultContent');
+            if (!data.success || !Array.isArray(data.results) || data.results.length === 0) {
+                content.innerHTML = `<div class="text-center py-8 text-gray-500">Chưa có học sinh nào làm bài kiểm tra này.</div>`;
+                return;
+            }
+            content.innerHTML = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Học sinh</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Điểm</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thời gian nộp</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${data.results.map(res => `
+                            <tr>
+                                <td class="px-6 py-4">${res.studentId?.name || 'Không rõ'}</td>
+                                <td class="px-6 py-4">${res.studentId?.email || res.studentEmail || ''}</td>
+                                <td class="px-6 py-4 text-center font-semibold">${typeof res.score === 'number' ? res.score : 'Chưa chấm'}</td>
+                                <td class="px-6 py-4">${res.submittedAt ? new Date(res.submittedAt).toLocaleString('vi-VN') : ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        })
+        .catch(() => {
+            const content = document.getElementById('quizResultContent');
+            content.innerHTML = `<div class="text-center py-8 text-red-500">Có lỗi xảy ra khi tải kết quả bài kiểm tra.</div>`;
+        });
+}
+
 // Add to window object
 window.viewSubmissions = viewSubmissions;
 window.updateSubmissionGrade = updateSubmissionGrade;
 window.submitGradeAndFeedback = submitGradeAndFeedback;
 window.viewLessonPdf = viewLessonPdf;
 window.loadQuizzes = loadQuizzes;
-
-
+window.deleteQuiz = deleteQuiz;
+window.viewQuizResult = viewQuizResult;
 
 
 
