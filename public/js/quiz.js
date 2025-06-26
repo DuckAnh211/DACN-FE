@@ -1,4 +1,6 @@
 const BASE_API_URL = 'http://localhost:8080/v1/api';  //'https://dacn-be-hh2q.onrender.com/v1/api';
+    let timerInterval; // Biến toàn cục để quản lý timer
+
 // Cấu hình API
 const API_ENDPOINTS = {
     GET_QUIZ: `${BASE_API_URL}/quizzes`, 
@@ -15,6 +17,31 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     if (!quizId || !studentEmail || !classCode) {
         quizContainer.innerHTML = `<div class="text-red-500 text-center py-8">Thiếu thông tin để làm bài kiểm tra.</div>`;
+        return;
+    }
+
+    // Kiểm tra đã làm bài chưa
+    try {
+        const res = await fetch(`${API_ENDPOINTS.SUBMIT_QUIZ}/${quizId}`);
+        const data = await res.json();
+        const results = data.results || [];
+        // So sánh email không phân biệt hoa thường và loại bỏ khoảng trắng
+        const existed = results.find(item => 
+            item.studentEmail && 
+            item.studentEmail.trim().toLowerCase() === studentEmail.trim().toLowerCase()
+        );
+        if (existed) {
+            quizContainer.innerHTML = `
+                <div class="bg-green-100 text-green-700 p-6 rounded-lg text-center font-medium">
+                    <div class="text-2xl mb-2">Bạn đã nộp bài kiểm tra này!</div>
+                    <div>Số điểm: <b>${existed.score}/10</b></div>
+                    <div>Thời gian nộp: <b>${new Date(existed.submittedAt).toLocaleString('vi-VN')}</b></div>
+                </div>
+            `;
+            return;
+        }
+    } catch (err) {
+        quizContainer.innerHTML = `<div class="text-red-500 text-center py-8">Không thể kiểm tra trạng thái nộp bài.</div>`;
         return;
     }
 
@@ -83,13 +110,14 @@ async function getStudentIdByEmail(userEmail) {
     return user ? user._id : null;
 }
 
+
     // Hàm đếm ngược
     function startTimer(minutes) {
         let totalSeconds = minutes * 60;
         const timerDiv = document.getElementById('timer');
         updateTimerDisplay(totalSeconds, timerDiv);
 
-        const timerInterval = setInterval(() => {
+        timerInterval = setInterval(() => {
             totalSeconds--;
             updateTimerDisplay(totalSeconds, timerDiv);
 
@@ -107,8 +135,21 @@ async function getStudentIdByEmail(userEmail) {
         timerDiv.textContent = `Thời gian còn lại: ${min}:${sec.toString().padStart(2, '0')}`;
     }
 
+function showToast(messageHtml) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = messageHtml;
+    document.body.appendChild(toast);
+}
+
 async function submitQuiz(quiz, manual = true) {
+    if (timerInterval) clearInterval(timerInterval); // Dừng timer khi nộp bài
+    
     const form = document.getElementById('quizForm');
+    if (!form) {
+        alert('Không tìm thấy form bài kiểm tra');
+        return;
+    }
     const answers = [];
     for (let i = 0; i < quiz.questions.length; i++) {
         // Nếu học sinh chưa chọn đáp án, mặc định -1
@@ -125,41 +166,68 @@ async function submitQuiz(quiz, manual = true) {
 
 // Ưu tiên lấy studentId từ URL, nếu không có thì lấy từ localStorage
    const urlParams = new URLSearchParams(window.location.search);
+   const classCode = urlParams.get('code');
     const userEmail = urlParams.get('userEmail') || localStorage.getItem('userEmail');
     let studentId = urlParams.get('studentId') || localStorage.getItem('userId');
+
+    // Kiểm tra các thông tin cần thiết
+    if (!studentEmail) {
+        alert('Không tìm thấy email học sinh. Vui lòng đăng nhập lại.');
+        return;
+    }
+    if (!classCode) {
+        alert('Không tìm thấy mã lớp. Vui lòng kiểm tra URL.');
+        return;
+    }
 
     // Nếu chưa có studentId, lấy từ userEmail
     if (!studentId && userEmail) {
         studentId = await getStudentIdByEmail(userEmail);
     }
-
     if (!studentId) {
         alert('Không tìm thấy thông tin học sinh. Vui lòng đăng nhập lại.');
         return;
     }
     // Gửi kết quả lên API
     try {
-        await fetch(`${API_ENDPOINTS.SUBMIT_QUIZ}`, {
+        const response = await fetch(`${API_ENDPOINTS.SUBMIT_QUIZ}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 quizId: quiz._id,
                 studentId: studentId, 
                 studentEmail,
+                classCode: classCode,
                 score: score10
             })
         });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'Lỗi khi nộp bài');
+        }
+
+          // Vô hiệu hóa nút submit
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Đã nộp bài';
+        }
     } catch (err) {
-        // Có thể hiển thị thông báo lỗi nếu muốn
+        console.error('Lỗi khi nộp bài:', err);
+        alert('Có lỗi xảy ra khi nộp bài: ' + err.message);
     }
 
-    document.getElementById('quizResult').innerHTML = `
-        <div class="bg-green-100 text-green-700 p-4 rounded-lg text-center font-medium">
-            Nộp bài thành công!<br>
-            Số câu đúng: <b>${score}/${quiz.questions.length}</b><br>
-            Điểm của bạn: <b>${score10}/10</b>
-        </div>
-    `;
+showToast(`
+    <div>
+        Nộp bài thành công!<br>
+        Số câu đúng: <b>${score}/${quiz.questions.length}</b><br>
+        Điểm của bạn: <b>${score10}/10</b>
+    </div>
+`);
     form.querySelectorAll('button[type="submit"]')[0].disabled = true;
 }
 });
