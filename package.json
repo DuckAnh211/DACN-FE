@@ -5,9 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "react-scripts start index.js",
-    "build": "react-scripts build",
+    "build": "vite build",
     "test": "react-scripts test",
-    "server": "node server.js"
+    "server": "node server.js",
+    "dev": "vite",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -23,7 +25,8 @@
     "sdp-transform": "^2.15.0"
   },
   "devDependencies": {
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "vite": "^7.0.0"
   },
   "keywords": [
     "react",

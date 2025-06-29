@@ -2418,7 +2418,6 @@ window.deleteNotification = deleteNotification;
 // Tải thông báo trong phần Tổng quan khi trang được tải
 loadOverviewNotifications();
 
-<<<<<<< HEAD
 // Thêm xử lý sự kiện cho nút tạo cuộc họp với API
 document.addEventListener('DOMContentLoaded', function() {
     // Các phần khởi tạo hiện có...
@@ -2513,8 +2512,6 @@ function generateMeetingId() {
     
     return result;
 }
-
-=======
 // Đảm bảo tất cả các hàm được gán vào window object khi trang được tải
 document.addEventListener('DOMContentLoaded', function() {
     // Gán các hàm vào window object
@@ -3000,17 +2997,3 @@ window.updateSubmissionGrade = updateSubmissionGrade;
 window.submitGradeAndFeedback = submitGradeAndFeedback;
 window.viewLessonPdf = viewLessonPdf;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> 6e7b8751dfa4f02270406f708116599ee23cff58

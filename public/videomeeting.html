@@ -4,75 +4,82 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Video Meeting</title>
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <!-- Custom CSS -->
   <link rel="stylesheet" href="style/videomeeting.css">
+  
 </head>
 <body>
   <div class="meeting-container">
     <div class="header">
       <h1>Video Meeting</h1>
       <div class="meeting-info">
-        <span id="meetingId">Meeting ID: <span id="meetingIdValue">123-456-789</span></span>
-        <button id="copyMeetingIdBtn" class="icon-btn"><i class="fas fa-copy"></i></button>
+        <span id="roomCode"></span>
+        <button id="copyBtn" class="icon-btn"><i class="fas fa-copy"></i></button>
       </div>
     </div>
-    
-    <!-- Layout mặc định -->
-    <div id="defaultLayout" class="layout-container">
-      <div class="main-video-container">
-        <video id="remoteVideo" autoplay playsinline></video>
-        <div class="participant-name">Người tham gia khác</div>
-      </div>
-      <div class="pip-video-container">
-        <video id="localVideo" autoplay playsinline muted></video>
-        <div class="participant-name">Bạn</div>
-      </div>
-    </div>
-    
-    <!-- Layout chia sẻ màn hình -->
-    <div id="screenSharingLayout" class="layout-container screen-sharing-layout hidden">
-      <div class="screen-share-container">
-        <video id="screenShareVideo" autoplay playsinline></video>
-      </div>
-      <div class="sidebar-videos">
-        <div class="sidebar-video-container">
-          <video id="sidebarRemoteVideo" autoplay playsinline></video>
-          <div class="participant-name">Người tham gia khác</div>
+
+    <!-- Main content area with left and right sections -->
+    <div class="main-content">
+      <!-- Left section: Screen share and main video -->
+      <div class="main-video-section">
+        <!-- Screen share area -->
+        <div id="mainScreenShare">
+          <div class="screen-share-container">
+            <!-- Screen share videos will be added here -->
+          </div>
         </div>
-        <div class="sidebar-video-container">
-          <video id="sidebarLocalVideo" autoplay playsinline muted></video>
-          <div class="participant-name">Bạn</div>
-        </div>
+
+        <!-- Video grid for main content -->
+        <div id="videoGrid" class="video-grid"></div>
+      </div>
+
+      <!-- Right section: Participants webcams -->
+      <div id="participantsVideoArea" class="participants-video-area">
+        <h3 class="participants-title">Người tham gia</h3>
+        <!-- Webcam của người tham gia sẽ hiển thị ở đây -->
       </div>
     </div>
-    
-    <!-- Thanh điều khiển -->
-    <div class="controls-bar">
+
+    <!-- Local video PIP -->
+    <div class="pip-video-container">
+      <video id="localVideo" autoplay playsinline muted></video>
+      <div class="participant-name">Bạn</div>
+    </div>
+
+    <!-- Chat panel -->
+    <div id="chatPanel" class="chat-panel translate-x-full">
+      <button id="closeChatBtn" class="close-chat-btn"><i class="fas fa-times"></i></button>
+      <div id="messages" class="messages"></div>
+      <div class="chat-input-bar">
+        <input id="messageInput" type="text" placeholder="Nhập tin nhắn..." />
+        <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+
+    <!-- Panel danh sách người tham gia -->
+    <div id="participantsPanel" class="participants-panel hidden">
+      <h3>Người tham gia (<span id="participantCount">1</span>)</h3>
+      <ul id="participantsList"></ul>
+    </div>
+
+
+    <!-- Layout container for alternative layout -->
+    <div class="layout-container hidden">
+      <div class="main-video-container" id="mainVideoArea"></div>
+      <div class="sidebar-videos" id="sidebarVideos"></div>
+    </div>
+  </div>
+   <div class="controls-bar">
       <button id="micBtn" class="control-btn"><i class="fas fa-microphone"></i></button>
-      <button id="cameraBtn" class="control-btn"><i class="fas fa-video"></i></button>
+      <button id="videoBtn" class="control-btn"><i class="fas fa-video"></i></button>
       <button id="screenShareBtn" class="control-btn"><i class="fas fa-desktop"></i></button>
       <button id="chatBtn" class="control-btn"><i class="fas fa-comment-alt"></i></button>
       <button id="participantsBtn" class="control-btn"><i class="fas fa-users"></i></button>
-      <button id="layoutToggleBtn" class="control-btn"><i class="fas fa-th-large"></i></button>
-      <button id="fullscreenBtn" class="control-btn"><i class="fas fa-expand"></i></button>
-      <button id="checkServerBtn" class="control-btn"><i class="fas fa-server"></i></button>
       <button id="leaveBtn" class="control-btn danger"><i class="fas fa-phone-slash"></i></button>
     </div>
-    
-    <!-- Thông báo lỗi server -->
-    <div id="serverErrorMessage" class="error-message hidden">
-      <i class="fas fa-exclamation-triangle"></i>
-      <span>Không thể kết nối đến máy chủ. Đang thử kết nối lại...</span>
-    </div>
-  </div>
 
-  <!-- Socket.io -->
+
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-  <!-- Mediasoup client -->
-  <script src="https://cdn.jsdelivr.net/npm/mediasoup-client@3/dist/mediasoup-client.min.js"></script>
-  <!-- Custom JS -->
-  <script src="js/videomeeting.js"></script>
+  <script type="module" src="/src/videomeeting.js"></script>
 </body>
 </html>

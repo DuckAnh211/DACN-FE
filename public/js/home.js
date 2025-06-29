@@ -526,6 +526,27 @@ document.getElementById('joinClassForm').addEventListener('submit', function(eve
         enterClass(classCode);
     }
 });
+document.addEventListener('DOMContentLoaded', () => {
+  const joinBtn = document.getElementById('joinRoomBtn');
+  const roomInput = document.getElementById('roomIdInput');
+  if (joinBtn && roomInput) {
+    joinBtn.addEventListener('click', () => {
+      const roomId = roomInput.value.trim();
+      if (!roomId) {
+        alert('Vui lòng nhập Room ID!');
+        roomInput.focus();
+        return;
+      }
+      // Chuyển sang trang phòng họp, truyền Room ID trên URL
+      window.location.href = `videomeeting.html?id=${encodeURIComponent(roomId)}`;
+    });
+    // Nhấn Enter cũng submit
+    roomInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') joinBtn.click();
+    });
+  }
+});
+
 
 
 
