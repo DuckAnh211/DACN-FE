@@ -5,9 +5,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const switchSlider = document.getElementById("switchSlider");
     
     // Cấu hình API
+    const BASE_API_URL = 'http://localhost:8080/v1/api'; //"https://dacn-be-hh2q.onrender.com/v1/api";
     const API_ENDPOINTS = {
-        STUDENT_LOGIN: "http://localhost:8080/v1/api/login",
-        TEACHER_LOGIN: "http://localhost:8080/v1/api/teacher/login"
+        STUDENT_LOGIN: `${BASE_API_URL}/login`,
+        TEACHER_LOGIN: `${BASE_API_URL}/teacher/login`
     };
     
     // Mặc định là giáo viên

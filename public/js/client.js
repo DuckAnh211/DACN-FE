@@ -1,4 +1,4 @@
-const socket = io("http://localhost:8080"); // hoặc IP BE
+const socket = io("http://localhost:8080/v1/api"); // "https://dacn-be-hh2q.onrender.com";
 
 let device;
 let rtpCapabilities;

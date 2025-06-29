@@ -1,5 +1,5 @@
 // Các biến và hằng số
-const BASE_API_URL = 'http://localhost:8080/v1/api';
+const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
 const API_ENDPOINTS = {
     GET_TEACHERS: `${BASE_API_URL}/teacher`,
     CREATE_TEACHER: `${BASE_API_URL}/teacher/register`,

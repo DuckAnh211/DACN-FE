@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fetch and display user data
     // Các biến và hằng số
-    const BASE_API_URL = 'http://localhost:8080/v1/api';
+    const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
     const API_ENDPOINTS = {
         GET_USER: `${BASE_API_URL}/username`,
         UPDATE_USER: `${BASE_API_URL}/update-user`,

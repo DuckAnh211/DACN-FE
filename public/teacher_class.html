@@ -61,9 +61,6 @@
                 <button id="tests-tab" class="px-4 py-2 text-gray-500 hover:text-blue-500">
                     <i class="fas fa-clipboard-check mr-2"></i>Kiểm tra
                 </button>
-                <button id="meeting-tab" class="px-4 py-2 text-gray-500 hover:text-blue-500 ml-auto" onclick="createMeeting()">
-                    <i class="fas fa-video mr-2"></i>Tạo cuộc họp
-                </button>
             </div>
 
             <!-- Overview Content -->
@@ -110,7 +107,7 @@
                             </div>
                             <div>
                                 <p class="text-gray-500 text-sm">Số bài kiểm tra</p>
-                                <h3 id="totalTests" class="text-2xl font-bold text-gray-800">--</h3>
+                                <h3 id="totalQuizzes" class="text-2xl font-bold text-gray-800">--</h3>
                             </div>
                         </div>
                     </div>
@@ -204,9 +201,9 @@
                 <!-- Tests List Header -->
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-gray-800">Danh sách bài kiểm tra</h3>
-                    <button id="btnAddNewTest" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors">
+                    <a id="btnAddNewExam" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors">
                         <i class="fas fa-plus-circle mr-1"></i> Tạo bài kiểm tra mới
-                    </button>
+                    </a>
                 </div>
 
                 <!-- Tests List -->
@@ -498,24 +495,3 @@
 
 
 
-<script>
-    function createMeeting() {
-        // Lấy mã lớp từ URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const classCode = urlParams.get('code');
-        
-        if (!classCode) {
-            alert('Không tìm thấy mã lớp học');
-            return;
-        }
-        
-        // Tạo ID cuộc họp ngẫu nhiên
-        const meetingId = Math.random().toString(36).substring(2, 11);
-        
-        // Tạo URL cho trang videomeeting
-        const meetingUrl = `/videomeeting.html?id=${meetingId}&class=Lớp học&teacher=Giáo viên`;
-        
-        // Chuyển hướng đến trang cuộc họp
-        window.location.href = meetingUrl;
-    }
-</script>

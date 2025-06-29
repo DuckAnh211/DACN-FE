@@ -220,7 +220,7 @@
     const tbody = document.getElementById('questionsTableBody');
     tbody.innerHTML = '<tr><td colspan="3">Đang tải dữ liệu...</td></tr>';
 
-    fetch('http://localhost:8080/v1/api/questions')
+    fetch('https://dacn-be-hh2q.onrender.com/v1/api/questions')
       .then(res => res.json())
       .then(data => {
         tbody.innerHTML = '';

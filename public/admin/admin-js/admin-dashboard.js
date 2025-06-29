@@ -1,5 +1,5 @@
 // Cấu hình API
-const BASE_API_URL = 'http://localhost:8080/v1/api';
+const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
 const API_ENDPOINTS = {
     USERS: `${BASE_API_URL}/user`,
     TEACHERS: `${BASE_API_URL}/teacher`,

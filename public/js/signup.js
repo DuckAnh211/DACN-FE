@@ -17,8 +17,8 @@ document.getElementById("signupForm").addEventListener("submit", async function 
     }
   
     try {
-      const response = await fetch("http://localhost:8080/v1/api/register", {
-        method: "POST",
+      const response = await fetch("http://localhost:8080/v1/api/register", { //"https://dacn-be-hh2q.onrender.com/v1/api/register"
+        method: "POST", 
         headers: { 
             "Content-Type": "application/json"
         },

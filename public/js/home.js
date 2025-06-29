@@ -1,7 +1,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     // Cấu hình API
-    const BASE_API_URL = 'http://localhost:8080/v1/api';
+    const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
     const API_ENDPOINTS = {
         GET_CLASSES: `${BASE_API_URL}/classrooms`,
         JOIN_CLASS: `${BASE_API_URL}/join-classroom`

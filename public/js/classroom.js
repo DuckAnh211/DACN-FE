@@ -1,5 +1,5 @@
 // Định nghĩa BASE_API_URL
-const BASE_API_URL = 'http://localhost:8080/v1/api';
+const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
 
 // Cấu hình API
 const API_ENDPOINTS = {
@@ -8,14 +8,11 @@ const API_ENDPOINTS = {
     GET_LESSONS: `${BASE_API_URL}/lessons/classroom`,
     DELETE_LESSON: `${BASE_API_URL}/lessons`,
     GET_NOTIFICATIONS: `${BASE_API_URL}/notifications/classroom`,
-<<<<<<< HEAD
-    CREATE_MEETING: `${BASE_API_URL}/meetings/create`
-=======
     GET_ASSIGNMENTS: `${BASE_API_URL}/assignments/class`,
     SUBMIT_ASSIGNMENT: `${BASE_API_URL}/submissions`,
     VIEW_ASSIGNMENT: `${BASE_API_URL}/assignments`,
-    GET_SUBMISSION_STATUS: `${BASE_API_URL}/submissions/status`
->>>>>>> 6e7b8751dfa4f02270406f708116599ee23cff58
+    GET_SUBMISSION_STATUS: `${BASE_API_URL}/submissions/status`,
+    GET_QUIZZES: `${BASE_API_URL}/quizzes/class`
 };
 
 // Hàm lấy danh sách lớp học
@@ -200,6 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         lessonsContent.classList.add('hidden');
         assignmentsContent.classList.add('hidden');
         testsContent.classList.remove('hidden');
+        if (classCode) loadQuizzes(classCode);
         
         // Cập nhật trạng thái active của các tab
         lessonsTab.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
@@ -1115,244 +1113,6 @@ window.loadNotifications = loadNotifications;
 window.markAsRead = markAsRead;
 window.checkUnreadNotifications = checkUnreadNotifications;
 
-<<<<<<< HEAD
-// Thêm hàm tạo cuộc họp video
-function addVideoMeetingFeature() {
-    // Đợi DOM được tải hoàn toàn
-    setTimeout(() => {
-        // Tìm các phần tử có thể chứa nút
-        const possibleContainers = [
-            document.querySelector('.tabs-container'),
-            document.querySelector('nav'),
-            document.querySelector('.header'),
-            document.querySelector('header'),
-            document.querySelector('.nav-tabs'),
-            document.querySelector('.navigation')
-        ];
-        
-        // Lọc ra container hợp lệ đầu tiên
-        const container = possibleContainers.find(el => el !== null);
-        
-        if (!container) {
-            console.error('Không tìm thấy container phù hợp để thêm nút tạo cuộc họp');
-            // Tạo container mới nếu không tìm thấy
-            const mainElement = document.querySelector('main') || document.body;
-            const newContainer = document.createElement('div');
-            newContainer.className = 'meeting-button-container';
-            newContainer.style.cssText = 'display: flex; justify-content: flex-end; padding: 10px 20px;';
-            mainElement.prepend(newContainer);
-            addButtonToContainer(newContainer);
-            return;
-        }
-        
-        addButtonToContainer(container);
-    }, 1000);
-    
-    function addButtonToContainer(container) {
-        // Tạo nút tạo cuộc họp
-        const createMeetingBtn = document.createElement('button');
-        createMeetingBtn.id = 'createMeetingBtn';
-        createMeetingBtn.className = 'btn-create-meeting';
-        createMeetingBtn.innerHTML = '<i class="fas fa-video"></i> Tạo cuộc họp';
-        
-        // Thêm nút vào container
-        container.appendChild(createMeetingBtn);
-        
-        // Thêm sự kiện click cho nút
-        createMeetingBtn.addEventListener('click', createVideoMeeting);
-        
-        // Thêm CSS cho nút
-        const style = document.createElement('style');
-        style.textContent = `
-            .btn-create-meeting {
-                background-color: #1a73e8;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 8px 16px;
-                font-size: 14px;
-                font-weight: 500;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-left: auto;
-                transition: background-color 0.2s;
-                z-index: 100;
-            }
-            
-            .btn-create-meeting:hover {
-                background-color: #1765cc;
-            }
-            
-            .btn-create-meeting i {
-                font-size: 16px;
-            }
-        `;
-        
-        document.head.appendChild(style);
-        
-        console.log('Đã thêm nút tạo cuộc họp vào container:', container);
-    }
-}
-
-// Đảm bảo hàm được gọi khi trang đã tải xong
-window.addEventListener('load', function() {
-    // Thêm tính năng tạo cuộc họp video
-    addVideoMeetingFeature();
-});
-
-// Hàm tạo cuộc họp video
-async function createVideoMeeting() {
-    // Lấy thông tin lớp học hiện tại
-    const classCode = getClassCodeFromUrl();
-    const classData = await getClassInfo(classCode);
-    
-    if (!classData) {
-        alert('Không thể tạo cuộc họp: Không tìm thấy thông tin lớp học');
-        return;
-    }
-    
-    // Tạo dialog xác nhận
-    const dialog = document.createElement('div');
-    dialog.className = 'meeting-dialog';
-    dialog.innerHTML = `
-        <div class="meeting-dialog-content">
-            <div class="meeting-dialog-header">
-                <h3>Tạo cuộc họp video</h3>
-                <button class="meeting-dialog-close">&times;</button>
-            </div>
-            <div class="meeting-dialog-body">
-                <p>Bạn đang tạo cuộc họp video cho lớp <strong>${classData.className}</strong>.</p>
-                <p>Sau khi tạo, bạn có thể mời học sinh tham gia bằng cách chia sẻ liên kết.</p>
-            </div>
-            <div class="meeting-dialog-footer">
-                <button class="meeting-dialog-btn meeting-dialog-btn-secondary" id="cancelMeetingBtn">Hủy</button>
-                <button class="meeting-dialog-btn meeting-dialog-btn-primary" id="startMeetingBtn">Tạo cuộc họp</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(dialog);
-    
-    // Xử lý sự kiện đóng dialog
-    const closeBtn = dialog.querySelector('.meeting-dialog-close');
-    closeBtn.addEventListener('click', () => {
-        document.body.removeChild(dialog);
-    });
-    
-    // Xử lý sự kiện hủy
-    const cancelBtn = document.getElementById('cancelMeetingBtn');
-    cancelBtn.addEventListener('click', () => {
-        document.body.removeChild(dialog);
-    });
-    
-    // Xử lý sự kiện tạo cuộc họp
-    const startBtn = document.getElementById('startMeetingBtn');
-    startBtn.addEventListener('click', async () => {
-        // Hiển thị trạng thái đang tải
-        const dialogBody = dialog.querySelector('.meeting-dialog-body');
-        dialogBody.innerHTML = `
-            <div class="meeting-loading">
-                <div class="meeting-loading-spinner"></div>
-                <p>Đang tạo cuộc họp...</p>
-            </div>
-        `;
-        
-        // Vô hiệu hóa các nút
-        startBtn.disabled = true;
-        cancelBtn.disabled = true;
-        
-        try {
-            // Tạo dữ liệu cuộc họp
-            const meetingData = {
-                classId: classData._id,
-                classCode: classData.classCode || classCode,
-                className: classData.className,
-                teacherName: classData.teacherName || 'Giáo viên',
-                createdAt: new Date().toISOString()
-            };
-            
-            // Gọi API tạo cuộc họp (nếu có)
-            let meetingId;
-            
-            try {
-                const response = await fetch(API_ENDPOINTS.CREATE_MEETING, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(meetingData)
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    meetingId = result.meetingId || generateMeetingId();
-                } else {
-                    throw new Error('API error');
-                }
-            } catch (error) {
-                console.warn('Không thể gọi API tạo cuộc họp, sử dụng ID ngẫu nhiên:', error);
-                meetingId = generateMeetingId();
-            }
-            
-            // Tạo URL cuộc họp
-            const meetingUrl = `/videomeeting.html?id=${meetingId}&class=${encodeURIComponent(classData.className)}&teacher=${encodeURIComponent(classData.teacherName || 'Giáo viên')}`;
-            
-            // Chuyển hướng đến trang cuộc họp
-            window.location.href = meetingUrl;
-            
-        } catch (error) {
-            console.error('Lỗi khi tạo cuộc họp:', error);
-            
-            // Hiển thị thông báo lỗi
-            dialogBody.innerHTML = `
-                <div class="meeting-error">
-                    <p>Đã xảy ra lỗi khi tạo cuộc họp. Vui lòng thử lại sau.</p>
-                    <p class="error-details">${error.message}</p>
-                </div>
-            `;
-            
-            // Kích hoạt lại các nút
-            startBtn.disabled = false;
-            cancelBtn.disabled = false;
-        }
-    });
-}
-
-// Hàm tạo ID cuộc họp ngẫu nhiên
-function generateMeetingId() {
-    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    
-    // Tạo 3 nhóm, mỗi nhóm 3 ký tự
-    for (let group = 0; group < 3; group++) {
-        for (let i = 0; i < 3; i++) {
-            result += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-        
-        if (group < 2) {
-            result += '-';
-        }
-    }
-    
-    return result;
-}
-
-// Hàm lấy mã lớp từ URL
-function getClassCodeFromUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('code') || '';
-}
-
-// Thêm vào phần khởi tạo (trong sự kiện DOMContentLoaded)
-document.addEventListener('DOMContentLoaded', function() {
-    // Các phần khởi tạo hiện có...
-    
-    // Thêm tính năng tạo cuộc họp video
-    setTimeout(addVideoMeetingFeature, 500); // Thêm timeout để đảm bảo DOM đã được tạo đầy đủ
-window.checkUnreadNotifications = checkUnreadNotifications;
-=======
 // Thêm hàm tải danh sách bài tập
 async function loadAssignments(classCode) {
     try {
@@ -1559,9 +1319,14 @@ function displayAssignments(assignments, container) {
             <div class="mt-3 p-2 bg-gray-50 rounded-md">
                 <div class="flex items-center text-gray-700">
                     <i class="fas fa-info-circle mr-2 text-blue-500"></i>
-                    <span>Trạng thái: ${getSubmissionStatusText(submissionStatus.status)}</span>
-                    ${submissionStatus.isGraded ? `<span class="ml-2 font-medium">Điểm: ${submissionStatus.grade || 'Chưa có'}</span>` : ''}
+                    <span>Trạng thái: ${getSubmissionStatusText(submissionStatus.status)}</span>                    
                 </div>
+                ${submissionStatus.feedback && submissionStatus.feedback.trim() !== '' ? `
+            <div class="mt-2 flex items-start text-gray-600">
+                <i class="fas fa-comment-dots mr-2 text-green-500"></i>
+                <span>Nhận xét: ${submissionStatus.feedback}</span>
+            </div>
+        ` : ''}
             </div>
         ` : ''}
     `;
@@ -1988,4 +1753,87 @@ function getSubmissionStatusText(status) {
             return 'Đã nộp';
     }
 }
->>>>>>> 6e7b8751dfa4f02270406f708116599ee23cff58
+
+async function loadQuizzes(classCode) {
+    const testsContent = document.getElementById('tests-content');
+    if (!testsContent) return;
+
+    // Hiển thị trạng thái đang tải
+    testsContent.innerHTML = `
+        <div class="text-center py-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+            <p class="text-gray-500">Đang tải danh sách bài kiểm tra...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`${API_ENDPOINTS.GET_QUIZZES}/${classCode}`);
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.quizzes) || data.quizzes.length === 0) {
+            testsContent.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="text-gray-500 mb-4">
+                        <i class="fas fa-clipboard-list text-5xl mb-3"></i>
+                        <p class="text-lg">Chưa có bài kiểm tra nào</p>
+                    </div>
+                    <p class="text-sm text-gray-400">Giáo viên sẽ cập nhật bài kiểm tra trong thời gian tới</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Hiển thị danh sách bài kiểm tra
+        const quizzesContainer = document.createElement('div');
+        quizzesContainer.className = 'space-y-4';
+
+        data.quizzes.forEach(quiz => {
+            const quizDiv = document.createElement('div');
+            quizDiv.className = 'bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow';
+
+            quizDiv.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="font-medium text-gray-800">${quiz.title || 'Bài kiểm tra không có tiêu đề'}</h3>
+                        <p class="text-sm text-gray-600 mt-1">${quiz.description || ''}</p>
+                        <div class="flex flex-wrap items-center mt-2 text-xs text-gray-500">
+                            <span class="mr-3"><i class="far fa-clock mr-1"></i>Thời gian: ${quiz.timeLimit || 0} phút</span>
+                            <span class="mr-3"><i class="fas fa-question mr-1"></i>Số câu hỏi: ${quiz.questions ? quiz.questions.length : 0}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="text-blue-500 hover:text-blue-700" onclick="viewQuizDetail('${quiz._id}')">
+                            <i class="fas fa-eye"></i> Làm bài
+                        </button>
+                    </div>
+                </div>
+            `;
+            quizzesContainer.appendChild(quizDiv);
+        });
+
+        testsContent.innerHTML = '';
+        testsContent.appendChild(quizzesContainer);
+
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách bài kiểm tra:', error);
+        testsContent.innerHTML = `
+            <div class="text-center py-4">
+                <p class="text-red-500">Có lỗi xảy ra khi tải danh sách bài kiểm tra</p>
+                <button class="mt-2 text-blue-500 hover:text-blue-700" onclick="loadQuizzes('${classCode}')">
+                    <i class="fas fa-sync-alt mr-1"></i> Thử lại
+                </button>
+            </div>
+        `;
+    }
+}
+window.loadQuizzes = loadQuizzes;
+
+function viewQuizDetail(quizId) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    const userEmail = localStorage.getItem('userEmail'); // Lấy userEmail từ localStorage
+    // Thêm userEmail vào URL nếu có
+    const url = `quiz.html?id=${quizId}&code=${classCode}${userEmail ? `&userEmail=${encodeURIComponent(userEmail)}` : ''}`;
+    window.open(url, '_blank');
+}
+window.viewQuizDetail = viewQuizDetail;
