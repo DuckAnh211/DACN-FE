@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const lessonsTab = document.getElementById('lessons-tab');
     const assignmentsTab = document.getElementById('assignments-tab');
     const testsTab = document.getElementById('tests-tab');
+    const meetingTab = document.getElementById('meeting-tab');
     
     const overviewContent = document.getElementById('overview-content');
     const studentsContent = document.getElementById('students-content');
@@ -168,6 +169,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    if (meetingTab) {
+        meetingTab.addEventListener('click', createMeeting);
+    }
+    
     // Thêm event listener cho nút thêm bài học
     const btnAddNewLesson = document.getElementById('btnAddNewLesson');
     if (btnAddNewLesson) {
@@ -194,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Hàm kích hoạt tab
     function activateTab(tab) {
         // Xóa trạng thái active của tất cả các tab
-        [overviewTab, studentsTab, lessonsTab, assignmentsTab, testsTab].forEach(t => {
+        [overviewTab, studentsTab, lessonsTab, assignmentsTab, testsTab, meetingTab].forEach(t => {
             if (t) {
                 t.classList.remove('border-b-2', 'border-blue-500', 'text-blue-500');
                 t.classList.add('text-gray-500');
@@ -244,8 +249,15 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         // Gọi API để lấy danh sách học sinh
+        console.log('Fetching students from:', `${BASE_API_URL}/classroom-students/${classCode}`);
         fetch(`${BASE_API_URL}/classroom-students/${classCode}`)
-            .then(response => response.json())
+            .then(response => {
+                console.log('Students API response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Dữ liệu học sinh nhận được:', data);
                 
@@ -339,7 +351,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 studentsList.innerHTML = `
                     <tr>
                         <td colspan="5" class="text-center py-4">
-                            <p class="text-red-500">Có lỗi xảy ra khi tải danh sách học sinh</p>
+                            <p class="text-red-500">Có lỗi xảy ra khi tải danh sách học sinh: ${error.message}</p>
+                            <button onclick="location.reload()" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded">Thử lại</button>
                         </td>
                     </tr>
                 `;
@@ -2340,7 +2353,7 @@ window.deleteNotification = deleteNotification;
 // Tải thông báo trong phần Tổng quan khi trang được tải
 loadOverviewNotifications();
 
-<<<<<<< HEAD
+
 // Thêm xử lý sự kiện cho nút tạo cuộc họp với API
 document.addEventListener('DOMContentLoaded', function() {
     // Các phần khởi tạo hiện có...
@@ -2436,8 +2449,7 @@ function generateMeetingId() {
     return result;
 }
 
-=======
-// Đảm bảo tất cả các hàm được gán vào window object khi trang được tải
+
 document.addEventListener('DOMContentLoaded', function() {
     // Gán các hàm vào window object
     window.editLesson = editLesson;
@@ -3245,6 +3257,41 @@ function viewQuizResult(quizId) {
         });
 }
 
+// Hàm tạo cuộc họp
+function createMeeting() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('code');
+    
+    if (!classCode) {
+        showToast('Không tìm thấy mã lớp học', 'error');
+        return;
+    }
+    
+    // Tạo meeting ID ngẫu nhiên
+    const meetingId = generateMeetingId();
+    const teacherName = localStorage.getItem('userName') || 'Giáo viên';
+    
+    // Tạo URL cuộc họp
+    const meetingUrl = `videomeeting.html?room=${meetingId}&teacher=${encodeURIComponent(teacherName)}&class=${encodeURIComponent(classCode)}`;
+    
+    showToast('Đang tạo cuộc họp...', 'info');
+    
+    // Chuyển hướng đến trang cuộc họp
+    setTimeout(() => {
+        window.open(meetingUrl, '_blank');
+    }, 500);
+}
+
+// Hàm tạo meeting ID ngẫu nhiên
+function generateMeetingId() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
 // Add to window object
 window.viewSubmissions = viewSubmissions;
 window.updateSubmissionGrade = updateSubmissionGrade;
@@ -3253,18 +3300,4 @@ window.viewLessonPdf = viewLessonPdf;
 window.loadQuizzes = loadQuizzes;
 window.deleteQuiz = deleteQuiz;
 window.viewQuizResult = viewQuizResult;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> 6e7b8751dfa4f02270406f708116599ee23cff58
+window.createMeeting = createMeeting;
