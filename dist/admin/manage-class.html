@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Lớp Học - E-Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../style/style.css">
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto max-w-6xl p-4">
+        <!-- Header với nút quay lại -->
+        <div class="flex items-center mb-6">
+            <a href="./admin-dashboard.html" class="flex items-center text-gray-600 hover:text-gray-800 w-1/3">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Quay lại
+            </a>
+            <h1 class="text-2xl font-semibold text-yellow-200 w-1/3 text-center">Quản Lý Lớp Học</h1>
+            <div class="w-1/3"></div>
+        </div>
+
+        <!-- Thanh công cụ -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div class="flex flex-wrap gap-4 justify-between items-center">
+                <!-- Tìm kiếm -->
+                <div class="flex-1 min-w-[200px]">
+                    <div class="relative">
+                        <input type="text" 
+                               id="searchInput"
+                               placeholder="Tìm kiếm lớp học theo tên giáo viên " 
+                               class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <!-- Nút thêm lớp học -->
+                <button id="addClass" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-plus mr-2"></i>Thêm Lớp Học
+                </button>
+            </div>
+        </div>
+
+        <!-- Bảng danh sách lớp học -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr class="divide-x divide-gray-200">
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Mã lớp</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Lớp</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Môn Học</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Giáo Viên</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="classTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Dữ liệu sẽ được thêm vào đây bởi JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal thêm/sửa lớp học -->
+        <div id="classModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 id="modalTitle" class="text-lg font-medium leading-6 text-gray-900 mb-4">Thêm lớp học mới</h3>
+                    <form id="classForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tên lớp</label>
+                            <input type="text" id="className" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Môn học</label>
+                            <input type="text" id="subject" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Mã lớp</label>
+                            <input type="text" id="classCode" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="VD: LIT10A">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Giáo viên phụ trách</label>
+                            <select id="teacher" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">-- Chọn giáo viên --</option>
+                                <!-- Danh sách giáo viên sẽ được thêm vào đây bởi JavaScript -->
+                            </select>
+                        </div>
+                        <div class="flex justify-end space-x-3 mt-5">
+                            <button type="button" id="closeModal"
+                                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">Hủy</button>
+                            <button type="submit"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal thay đổi giáo viên -->
+        <div id="changeTeacherModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Thay đổi giáo viên phụ trách</h3>
+                    <form id="changeTeacherForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Lớp học</label>
+                            <input type="text" id="changeTeacherClassName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" readonly>
+                            <input type="hidden" id="changeTeacherClassCode">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Giáo viên hiện tại</label>
+                            <input type="text" id="currentTeacher" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Giáo viên mới</label>
+                            <select id="newTeacher" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">-- Chọn giáo viên --</option>
+                                <!-- Danh sách giáo viên sẽ được thêm vào đây bởi JavaScript -->
+                            </select>
+                        </div>
+                        <div class="flex justify-end space-x-3 mt-5">
+                            <button type="button" id="closeChangeTeacherModal"
+                                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">Hủy</button>
+                            <button type="submit"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script cho quản lý lớp học -->
+    <script src="./admin-js/manage-class.js"></script>
+</body>
+</html>

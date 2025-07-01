@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - FutureClass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .switch-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .switch-option {
+            padding: 8px 16px;
+            cursor: pointer;
+            text-align: center;
+            width: 50%;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+            color: #666;
+        }
+        
+        .switch-option.active {
+            color: #2196F3;
+            font-weight: 500;
+        }
+        
+        .switch-slider {
+            position: absolute;
+            bottom: 0;
+            height: 3px;
+            width: 50%;
+            background-color: #2196F3;
+            transition: all 0.3s ease;
+        }
+        
+        .switch-slider.teacher {
+            left: 0;
+        }
+        
+        .switch-slider.student {
+            left: 50%;
+        }
+    </style>
+  <link rel="stylesheet" crossorigin href="/assets/style-Bddc1tKR.css">
+</head>
+<body>
+    <div class="login-container">
+        <img src="/assets/logo-C11Thzza.jpg" alt="FutureClass Logo" class="logo">
+        <h2>Đăng Nhập</h2>
+        
+        <div class="switch-container">
+            <div id="teacherOption" class="switch-option active">
+                <i class="fas fa-chalkboard-teacher mr-1"></i> Giáo viên
+            </div>
+            <div id="studentOption" class="switch-option">
+                <i class="fas fa-user-graduate mr-1"></i> Học viên
+            </div>
+            <div id="switchSlider" class="switch-slider teacher"></div>
+        </div>
+        
+        <form id="loginForm">
+            <input type="email" id="email" placeholder="Nhập email của bạn" required>
+            <div class="mb-4">
+                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
+                <input type="password" id="password" name="password" 
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                       placeholder="Nhập mật khẩu" required autocomplete="current-password">
+            </div>
+            <button type="submit">ĐĂNG NHẬP</button>
+        </form>
+        
+        <div class="signup-link">
+            Chưa có tài khoản? <a href="signup.html">Tạo tài khoản ngay</a>
+        </div>
+    </div>
+    
+    <script src="./js/login.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Lớp Học - E-Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="./js/classes_list.js" defer></script>
+  <link rel="stylesheet" crossorigin href="/assets/style-Bddc1tKR.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <div class="container mx-auto max-w-4xl p-4">
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <h1 class="text-xl font-semibold text-center mb-2">E-Learning</h1>
+            <img src="../images/logo.jpg" alt="Logo" class="logo">
+            <div class="flex justify-center gap-4">
+                <a href="classes_list.html" class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-chalkboard mr-1"></i> Lớp học
+                </a>
+                <a href="profile-teacher.html" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                    <i class="fas fa-user mr-1"></i> Hồ sơ
+                </a>
+                <a id="logoutBtn" class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Đăng xuất
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Danh Sách Lớp Học</h2>
+                <div class="flex space-x-2">
+
+                </div>
+            </div>
+
+            <!-- Kết quả tìm kiếm lớp học -->
+            <div id="searchResultContainer" class="hidden mb-6">
+                <h3 class="text-lg font-semibold mb-4">Kết quả tìm kiếm</h3>
+                <div id="searchResultContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Thẻ lớp học kết quả tìm kiếm sẽ được thêm vào đây -->
+                </div>
+            </div>
+
+            <!-- Class Cards -->
+            <div id="classContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Hiển thị loading -->
+                <div class="col-span-3 text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Đang tải danh sách lớp học...</p>
+                </div>
+                <!-- Các thẻ lớp học sẽ được thêm vào đây bởi JavaScript -->
+            </div>
+        </div>
+
+        <!-- Create Class Modal -->
+        <div id="createClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Tạo Lớp Học Mới</h3>
+                    <button id="closeCreateClassModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="createClassForm">
+                    <div class="mb-4">
+                        <label for="className" class="block text-gray-700 font-medium mb-2">Tên lớp học</label>
+                        <input type="text" id="className" name="className" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Nhập tên lớp học">
+                    </div>
+                    <div class="mb-4">
+                        <label for="classSubject" class="block text-gray-700 font-medium mb-2">Môn học</label>
+                        <select id="classSubject" name="classSubject" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Chọn môn học</option>
+                            <option value="Toán">Toán học</option>
+                            <option value="Văn">Ngữ văn</option>
+                            <option value="Anh">Tiếng Anh</option>
+                            <option value="Lý">Vật lý</option>
+                            <option value="Hóa">Hóa học</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="classDescription" class="block text-gray-700 font-medium mb-2">Mô tả</label>
+                        <textarea id="classDescription" name="classDescription" rows="3"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Nhập mô tả lớp học"></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="button" id="cancelCreateClass" class="px-4 py-2 text-gray-700 hover:text-gray-900 mr-2">
+                            Hủy bỏ
+                        </button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-plus-circle mr-1"></i> Tạo lớp
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300">
+        <span id="toastMessage">Thông báo</span>
+    </div>
+
+    <script>
+        // Kiểm tra đăng nhập
+        document.addEventListener('DOMContentLoaded', function() {
+            const userEmail = localStorage.getItem('userEmail');
+            const userType = localStorage.getItem('userType'); // Thay đổi từ userRole thành userType
+            
+            if (!userEmail || userType !== 'teacher') {
+                window.location.href = 'login.html';
+            }
+            
+            // Xử lý đăng xuất
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('userType'); // Thay đổi từ userRole thành userType
+                localStorage.removeItem('teacherName');
+                localStorage.removeItem('teacherSubject');
+                window.location.href = 'login.html';
+            });
+        });
+    </script>
+</body>
+</html>

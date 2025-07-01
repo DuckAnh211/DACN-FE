@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Lớp Học - E-Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="./js/teacher_class.js" defer></script>
+  <link rel="stylesheet" crossorigin href="/assets/style-Bddc1tKR.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <div class="container mx-auto max-w-4xl p-4">
+        <!-- Header với nút quay lại và tiêu đề -->
+        <div class="flex items-center justify-between mb-6">
+            <a href="./classes_list.html" class="flex items-center text-gray-600 hover:text-gray-800">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Quay lại
+            </a>
+            <h1 class="text-xl font-bold text-center text-gray-800">Quản lý lớp học</h1>
+            <div class="w-24"></div> <!-- Phần trống để cân bằng layout -->
+        </div>
+        
+        <!-- Main Content -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <!-- Class Header -->
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <div class="flex items-center">
+                    <div class="w-16 h-16 rounded-full flex items-center justify-center mr-4" id="classIconContainer">
+                        <i id="classIconType" class="fas fa-language text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 id="className" class="text-2xl font-bold text-gray-800">Đang tải...</h2>
+                        <div class="text-sm text-gray-600 mb-1">
+                            <i class="fas fa-chalkboard-teacher mr-1"></i> GV: <span id="teacherName">Đang tải...</span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <i class="fas fa-hashtag mr-1"></i> Mã lớp: <span id="classCode">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Class Navigation -->
+            <div class="flex border-b mb-6">
+                <button id="overview-tab" class="px-4 py-2 border-b-2 border-blue-500 text-blue-500 font-medium">
+                    <i class="fas fa-home mr-2"></i>Tổng quan
+                </button>
+                <button id="students-tab" class="px-4 py-2 text-gray-500 hover:text-blue-500">
+                    <i class="fas fa-users mr-2"></i>Học sinh
+                </button>
+                <button id="lessons-tab" class="px-4 py-2 text-gray-500 hover:text-blue-500">
+                    <i class="fas fa-book-open mr-2"></i>Bài học
+                </button>
+                <button id="assignments-tab" class="px-4 py-2 text-gray-500 hover:text-blue-500">
+                    <i class="fas fa-tasks mr-2"></i>Bài tập
+                </button>
+                <button id="tests-tab" class="px-4 py-2 text-gray-500 hover:text-blue-500">
+                    <i class="fas fa-clipboard-check mr-2"></i>Kiểm tra
+                </button>
+                <button id="meeting-tab" class="px-4 py-2 text-gray-500 hover:text-blue-500">
+                    <i class="fas fa-video mr-2"></i>Cuộc họp
+                </button>
+            </div>
+
+            <!-- Overview Content -->
+            <div id="overview-content" class="space-y-6">
+                <!-- Class Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-users text-blue-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Số học sinh</p>
+                                <h3 id="totalStudents" class="text-2xl font-bold text-gray-800">--</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4 border border-green-100">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-book-open text-green-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Số bài học</p>
+                                <h3 id="totalLessons" class="text-2xl font-bold text-gray-800">--</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-tasks text-yellow-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Số bài tập</p>
+                                <h3 id="totalAssignments" class="text-2xl font-bold text-gray-800">--</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4 border border-purple-100">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-clipboard-check text-purple-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Số bài kiểm tra</p>
+                                <h3 id="totalQuizzes" class="text-2xl font-bold text-gray-800">--</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Notifications Section -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Thông báo gần đây</h3>
+                        <a id="btnAddNewNotificationOverview" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors text-sm">
+                            <i class="fas fa-plus-circle mr-1"></i> Tạo thông báo mới
+                        </a>
+                    </div>
+                    
+                    <div id="overviewNotificationsList" class="space-y-3">
+                        <div class="text-center py-4">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                            <p class="text-gray-500">Đang tải thông báo...</p>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- Students Content -->
+            <div id="students-content" class="hidden space-y-6">
+                <!-- Students List Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Danh sách học sinh</h3>
+                    <div class="flex space-x-2">
+                    </div>
+                </div>
+
+                <!-- Students List -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ và tên</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SĐT</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giới tính</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsList" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                                    <p class="text-gray-500">Đang tải danh sách học sinh...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lessons Content -->
+            <div id="lessons-content" class="hidden space-y-6">
+
+
+                <!-- Lessons List -->
+                <div id="lessonsList" class="space-y-4">
+                    <div class="text-center py-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        <p class="text-gray-500">Đang tải danh sách bài học...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignments Content -->
+            <div id="assignments-content" class="hidden space-y-6">
+                <!-- Assignments List Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Danh sách bài tập</h3>
+                    <a id="btnAddNewAssignment" onclick="openCreateAssignmentModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors">
+                        <i class="fas fa-plus-circle mr-1"></i> Thêm bài tập mới
+                    </a>
+                </div>
+
+                <!-- Assignments List -->
+                <div id="assignmentsList" class="space-y-4">
+                    <div class="text-center py-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        <p class="text-gray-500">Đang tải danh sách bài tập...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tests Content -->
+            <div id="tests-content" class="hidden space-y-6">
+                <!-- Tests List Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Danh sách bài kiểm tra</h3>
+                    <a id="btnAddNewExam" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors">
+                        <i class="fas fa-plus-circle mr-1"></i> Tạo bài kiểm tra mới
+                    </a>
+                </div>
+
+                <!-- Tests List -->
+                <div id="testsList" class="space-y-4">
+                    <div class="text-center py-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        <p class="text-gray-500">Đang tải danh sách bài kiểm tra...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<!-- Thêm script trực tiếp vào HTML để đảm bảo hàm editLesson luôn tồn tại -->
+<script>
+    // Định nghĩa hàm editLesson trực tiếp trong HTML
+    function editLesson(lessonId) {
+        console.log('Đang chỉnh sửa bài học với ID:', lessonId);
+        
+        // Lấy email giáo viên từ localStorage
+        const teacherEmail = localStorage.getItem('userEmail');
+        if (!teacherEmail) {
+            alert('Vui lòng đăng nhập lại để thực hiện chức năng này');
+            return;
+        }
+        
+        // Lấy mã lớp từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const classCode = urlParams.get('code');
+        
+        if (!classCode) {
+            alert('Không tìm thấy mã lớp học');
+            return;
+        }
+        
+        // Gọi API để lấy thông tin chi tiết bài học
+        fetch(`${BASE_API_URL}/lessons/${lessonId}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Dữ liệu bài học nhận được:', data);
+                
+                if (data && data.success && data.data) {
+                    const lesson = data.data;
+                    
+                    // Thêm email giáo viên vào dữ liệu bài học
+                    lesson.teacherEmail = teacherEmail;
+                    
+                    // Hiển thị modal chỉnh sửa bài học
+                    openEditLessonModal(lesson);
+                } else {
+                    alert('Không thể tải thông tin bài học');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading lesson details:', error);
+                alert('Có lỗi xảy ra khi tải thông tin bài học');
+            });
+    }
+    
+    // Định nghĩa hàm mở modal chỉnh sửa bài học
+    function openEditLessonModal(lesson) {
+        // Lấy email giáo viên từ localStorage nếu chưa có trong dữ liệu bài học
+        if (!lesson.teacherEmail) {
+            lesson.teacherEmail = localStorage.getItem('userEmail');
+        }
+        
+        // Tạo modal nếu chưa tồn tại
+        let editLessonModal = document.getElementById('editLessonModal');
+        
+        if (!editLessonModal) {
+            editLessonModal = document.createElement('div');
+            editLessonModal.id = 'editLessonModal';
+            editLessonModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            
+            editLessonModal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+                    <div class="flex justify-between items-center p-4 border-b">
+                        <h3 class="text-xl font-semibold text-gray-800 text-center">Chỉnh sửa bài học</h3>
+                    </div>
+                    <form id="editLessonForm" class="p-6">
+                        <input type="hidden" id="editLessonId">
+                        <input type="hidden" id="editLessonTeacherEmail">
+                        
+                        <div class="mb-4">
+                            <label for="editLessonTitle" class="block text-gray-700 font-medium mb-2">Tiêu đề bài học</label>
+                            <input type="text" id="editLessonTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="editLessonDescription" class="block text-gray-700 font-medium mb-2">Nội dung bài học</label>
+                            <textarea id="editLessonDescription" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="6"></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="editLessonFile" class="block text-gray-700 font-medium mb-2">Tài liệu đính kèm (không chọn nếu muốn giữ nguyên)</label>
+                            <input type="file" id="editLessonFile" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <div id="currentFileInfo" class="mt-2 text-sm text-gray-600"></div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button type="button" id="cancelEditLessonBtn" class="px-4 py-2 text-gray-600 hover:text-gray-800">Hủy</button>
+                            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-save mr-1"></i>Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(editLessonModal);
+            
+            // Thêm event listener cho nút đóng và nút hủy
+            const closeBtn = document.getElementById('closeEditLessonModalBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeEditLessonModal);
+            }
+            
+            const cancelBtn = document.getElementById('cancelEditLessonBtn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', closeEditLessonModal);
+            }
+            
+            // Thêm event listener cho form
+            const form = document.getElementById('editLessonForm');
+            if (form) {
+                form.addEventListener('submit', handleEditLessonSubmit);
+            }
+        } else {
+            // Modal đã tồn tại, hiển thị nó
+            editLessonModal.classList.remove('hidden');
+        }
+        
+        // Điền thông tin bài học vào form
+        const idInput = document.getElementById('editLessonId');
+        const titleInput = document.getElementById('editLessonTitle');
+        const descInput = document.getElementById('editLessonDescription');
+        const teacherInput = document.getElementById('editLessonTeacherEmail');
+        const currentFileInfo = document.getElementById('currentFileInfo');
+        
+        if (idInput) idInput.value = lesson._id || '';
+        if (titleInput) titleInput.value = lesson.title || '';
+        if (descInput) descInput.value = lesson.description || '';
+        
+        // Đảm bảo có email giáo viên
+        if (teacherInput) {
+            const email = lesson.teacherEmail || localStorage.getItem('userEmail');
+            teacherInput.value = email;
+            console.log('Email giáo viên đã được đặt:', email);
+        }
+        
+        // Hiển thị thông tin file hiện tại nếu có
+        if (currentFileInfo) {
+            if (lesson.fileName) {
+                currentFileInfo.innerHTML = `
+                    <p>File hiện tại: <strong>${lesson.fileName}</strong></p>
+                    <p class="text-xs text-gray-500">Để trống nếu muốn giữ nguyên file này</p>
+                `;
+            } else {
+                currentFileInfo.innerHTML = '<p>Chưa có file đính kèm</p>';
+            }
+        }
+        
+        // Hiển thị modal
+        editLessonModal.classList.remove('hidden');
+    }
+    
+    // Định nghĩa hàm đóng modal chỉnh sửa bài học
+    function closeEditLessonModal() {
+        const editLessonModal = document.getElementById('editLessonModal');
+        if (editLessonModal) {
+            // Thêm class hidden hoặc xóa modal khỏi DOM
+            editLessonModal.classList.add('hidden');
+            // Hoặc có thể xóa modal khỏi DOM
+            // document.body.removeChild(editLessonModal);
+        }
+    }
+    
+    // Định nghĩa hàm xử lý submit form chỉnh sửa bài học
+    async function handleEditLessonSubmit(event) {
+        event.preventDefault();
+        
+        // Lấy dữ liệu từ form
+        const lessonId = document.getElementById('editLessonId')?.value?.trim() || '';
+        const title = document.getElementById('editLessonTitle')?.value?.trim() || '';
+        const description = document.getElementById('editLessonDescription')?.value?.trim() || '';
+        
+        // Lấy email giáo viên từ form hoặc từ localStorage
+        let teacherEmail = document.getElementById('editLessonTeacherEmail')?.value?.trim();
+        if (!teacherEmail) {
+            teacherEmail = localStorage.getItem('userEmail');
+        }
+        
+        if (!teacherEmail) {
+            alert('Vui lòng cung cấp email giáo viên để xác thực quyền chỉnh sửa');
+            return;
+        }
+        
+        const fileInput = document.getElementById('editLessonFile');
+        
+        // Kiểm tra dữ liệu
+        if (!lessonId) {
+            alert('Không tìm thấy ID bài học');
+            return;
+        }
+        
+        if (!title) {
+            alert('Vui lòng nhập tiêu đề bài học');
+            return;
+        }
+        
+        // Hiển thị loading
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        if (!submitBtn) {
+            alert('Không tìm thấy nút submit');
+            return;
+        }
+        
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Đang cập nhật...`;
+        
+        try {
+            // Tạo FormData để gửi dữ liệu và file
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('teacherEmail', teacherEmail);
+            
+            console.log('Email giáo viên được gửi đi:', teacherEmail);
+            
+            // Thêm file nếu có
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                formData.append('lessonFile', fileInput.files[0]);
+            }
+            
+            // Gọi API để cập nhật bài học
+            const response = await fetch(`${BASE_API_URL}/lessons/${lessonId}`, {
+                method: 'PUT',
+                body: formData
+            });
+            
+            // Xử lý kết quả
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Cập nhật bài học thành công!');
+                closeEditLessonModal();
+                
+                // Tải lại danh sách bài học
+                if (typeof loadLessons === 'function') {
+                    loadLessons();
+                } else {
+                    // Nếu không có hàm loadLessons, tải lại trang
+                    window.location.reload();
+                }
+            } else {
+                alert(`Lỗi: ${result.message || 'Không thể cập nhật bài học'}`);
+            }
+        } catch (error) {
+            console.error('Error updating lesson:', error);
+            alert('Có lỗi xảy ra khi cập nhật bài học');
+        } finally {
+            // Khôi phục trạng thái nút submit
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        }
+    }
+    
+    // Kiểm tra xem đã đăng nhập chưa khi trang tải xong
+    document.addEventListener('DOMContentLoaded', function() {
+        const userEmail = localStorage.getItem('userEmail');
+        console.log('Email người dùng từ localStorage:', userEmail);
+        
+        if (!userEmail) {
+            console.warn('Chưa đăng nhập! Vui lòng đăng nhập để sử dụng đầy đủ chức năng.');
+        }
+    });
+</script>
+
+
+
+
+
+
+
+
+

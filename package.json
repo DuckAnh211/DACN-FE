@@ -4,11 +4,11 @@
   "description": "Frontend đăng nhập, đăng ký với React và kết nối API backend",
   "main": "index.js",
   "scripts": {
-    "start": "react-scripts start index.js",
+    "start": "vite --port 5173",
     "build": "vite build",
     "test": "react-scripts test",
     "server": "node server.js",
-    "dev": "vite",
+    "dev": "vite --port 5173",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.6.0",
     "dotenv": "^16.0.3",
     "vite": "^7.0.0"
   },

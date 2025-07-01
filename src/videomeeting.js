@@ -91,7 +91,7 @@ function setupSocketListeners() {
   participantCount.textContent = participants.length;
   participants.forEach(p => {
     const li = document.createElement('li');
-    li.textContent = p.name ? p.name : User ${p.id.substring(0, 4)};
+    li.textContent = p.name ? p.name : `User ${p.id.substring(0, 4)}`;
     participantsList.appendChild(li);
   });
 });
@@ -104,7 +104,7 @@ function setupSocketListeners() {
       
       // Xóa video element dựa trên mediaType
       if (producerToClose.mediaType === 'screen') {
-        const screenEl = document.getElementById(video-${producerToClose.socketId}-screen);
+        const screenEl = document.getElementById(`video-${producerToClose.socketId}-screen`);
         if (screenEl) {
           screenEl.remove();
           // Remove label cũng
@@ -122,7 +122,7 @@ function setupSocketListeners() {
         }
       } else {
         // Xóa camera video từ participants video area
-        const container = document.getElementById(container-${producerToClose.socketId});
+        const container = document.getElementById(`container-${producerToClose.socketId}`);
         if (container) {
           container.remove();
         }
@@ -156,7 +156,7 @@ function updateParticipantsList(participants) {
   participantCount.textContent = participants.length;
   participants.forEach(p => {
     const li = document.createElement('li');
-    li.textContent = p.name ? p.name : User ${p.id.substring(0, 4)};
+    li.textContent = p.name ? p.name : `User ${p.id.substring(0, 4)}`;
     participantsList.appendChild(li);
   });
 }
@@ -187,7 +187,7 @@ function handleChatMessage(data) {
     return;
   }
   
-  console.log([DEBUG] Processing message from: ${sender});
+  console.log(`[DEBUG] Processing message from: ${sender}`);
   
   // Luôn hiển thị message để test
   addMessageToChat(sender, message);
@@ -386,8 +386,8 @@ async function consumeTrack(producerId, producerSocketId, kind, mediaType) {
 
       const { track } = consumer;
       
-      console.log([DEBUG] Consuming ${kind} track from ${producerSocketId}, mediaType: ${mediaType});
-      console.log([DEBUG] Track state:, {
+      console.log(`[DEBUG] Consuming ${kind} track from ${producerSocketId}, mediaType: ${mediaType}`);
+      console.log("[DEBUG] Track state:", {
         enabled: track.enabled,
         readyState: track.readyState,
         muted: track.muted
@@ -403,7 +403,7 @@ async function consumeTrack(producerId, producerSocketId, kind, mediaType) {
           createRemoteVideo(track, producerSocketId, mediaType);
         } else {
           // For audio tracks, add them to existing video elements
-          const videoEl = document.getElementById(video-${producerSocketId});
+          const videoEl = document.getElementById(`video-${producerSocketId}`);
           if (videoEl) {
             const stream = videoEl.srcObject || new MediaStream();
             stream.addTrack(track);
@@ -420,16 +420,16 @@ async function consumeTrack(producerId, producerSocketId, kind, mediaType) {
 
 // Create a remote video element
 function createRemoteVideo(track, socketId, mediaType) {
-  console.log([DEBUG] Creating remote video for ${socketId}, mediaType: ${mediaType});
+  console.log(`[DEBUG] Creating remote video for ${socketId}, mediaType: ${mediaType}`);
   const stream = new MediaStream([track]);
   
   if (mediaType === 'screen') {
     // Xử lý screen share - hiển thị ở khu vực chính
-    let videoEl = document.getElementById(video-${socketId}-screen);
+    let videoEl = document.getElementById(`video-${socketId}-screen`);
     
     if (!videoEl) {
       videoEl = document.createElement('video');
-      videoEl.id = video-${socketId}-screen;
+      videoEl.id = `video-${socketId}-screen`;
       videoEl.autoplay = true;
       videoEl.playsInline = true;
       videoEl.muted = true;
@@ -439,7 +439,7 @@ function createRemoteVideo(track, socketId, mediaType) {
 
       const label = document.createElement('div');
       label.className = 'participant-name';
-      label.textContent = Screen Share - User ${socketId.substring(0, 4)};
+      label.textContent = `Screen Share - User ${socketId.substring(0, 4)}`;
 
       const screenShareContainer = document.querySelector('.screen-share-container');
       if (screenShareContainer) {
@@ -455,53 +455,48 @@ function createRemoteVideo(track, socketId, mediaType) {
     
     videoEl.srcObject = stream;
     videoEl.play().catch(err => {
-      console.error([ERROR] Cannot play screen share video:, err);
+      console.error("[ERROR] Cannot play screen share video:", err);
     });
     
   } else {
     // Xử lý camera video - hiển thị ở khu vực bên phải
-    let videoEl = document.getElementById(video-${socketId});
-    let container = document.getElementById(container-${socketId});
+    let videoEl = document.getElementById(`video-${socketId}`);
+    let container = document.getElementById(`container-${socketId}`);
 
     if (!container) {
       container = document.createElement('div');
-      container.id = container-${socketId};
+      container.id = `container-${socketId}`;
       container.className = 'participant-video-item';
       container.style.cssText = 
-        position: relative;
-        width: 100%;
-        aspect-ratio: 16/9;
-        background: #1f2937;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-bottom: 12px;
-      ;
+        "position: relative;" +
+        "width: 100%;" +
+        "aspect-ratio: 16/9;" +
+        "background: #1f2937;" +
+        "border-radius: 8px;" +
+        "overflow: hidden;" +
+        "margin-bottom: 12px;";
 
       videoEl = document.createElement('video');
-      videoEl.id = video-${socketId};
+      videoEl.id = `video-${socketId}`;
       videoEl.autoplay = true;
       videoEl.playsInline = true;
       videoEl.muted = true;
       videoEl.style.cssText = 
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      ;
+        "width: 100%; height: 100%; object-fit: cover;";
 
       const label = document.createElement('div');
       label.className = 'participant-name';
       label.style.cssText = 
-        position: absolute;
-        bottom: 8px;
-        left: 8px;
-        background: rgba(0,0,0,0.7);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 500;
-      ;
-      label.textContent = User ${socketId.substring(0, 4)};
+        "position: absolute;" +
+        "bottom: 8px;" +
+        "left: 8px;" +
+        "background: rgba(0,0,0,0.7);" +
+        "color: white;" +
+        "padding: 4px 8px;" +
+        "border-radius: 4px;" +
+        "font-size: 12px;" +
+        "font-weight: 500;";
+      label.textContent = `User ${socketId.substring(0, 4)}`;
 
       container.appendChild(videoEl);
       container.appendChild(label);
@@ -516,7 +511,7 @@ function createRemoteVideo(track, socketId, mediaType) {
     if (videoEl) {
       videoEl.srcObject = stream;
       videoEl.play().catch(err => {
-        console.error([ERROR] Cannot play camera video:, err);
+        console.error("[ERROR] Cannot play camera video:", err);
       });
     }
   }
@@ -697,7 +692,7 @@ function sendMessage() {
 
 // Add a message to the chat panel
 function addMessageToChat(sender, message) {
-  console.log([DEBUG] Adding message to chat: ${sender}: ${message});
+  console.log(`[DEBUG] Adding message to chat: ${sender}: ${message}`);
   
   const messagesContainer = document.getElementById('messages');
   if (!messagesContainer) {
@@ -720,7 +715,7 @@ function addMessageToChat(sender, message) {
   messageEl.appendChild(contentEl);
   messagesContainer.appendChild(messageEl);
   
-  console.log([DEBUG] Message added to DOM, total messages: ${messagesContainer.children.length});
+  console.log(`[DEBUG] Message added to DOM, total messages: ${messagesContainer.children.length}`);
   
   // Scroll to bottom
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -736,9 +731,8 @@ function leaveRoom() {
 
 // Copy room code to clipboard
 function copyRoomCode() {
-  // Giữ nguyên các parameter khác nếu có
   const urlParams = new URLSearchParams(window.location.search);
-  const meetingUrl = ${window.location.origin}${window.location.pathname}?${urlParams.toString()};
+  const meetingUrl = `${window.location.origin}${window.location.pathname}?${urlParams.toString()}`;
   navigator.clipboard.writeText(meetingUrl)
     .then(() => {
       alert('Meeting link copied to clipboard!');

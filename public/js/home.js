@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
     const API_ENDPOINTS = {
         GET_CLASSES: `${BASE_API_URL}/classrooms`,
-        JOIN_CLASS: `${BASE_API_URL}/join-classroom`
+        JOIN_CLASS: `${BASE_API_URL}/join-classroom`,
+        LEAVE_CLASS: `${BASE_API_URL}/leave-classroom`
     };
 
     // Lấy tham chiếu đến các phần tử DOM
@@ -177,12 +178,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="text-sm text-gray-600 mb-4">
                         <i class="fas fa-fingerprint mr-1"></i> Mã lớp: ${classItem.classCode}
                     </div>
-                    <a href="./classroom.html?code=${classItem.classCode}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors block text-center">
-                        <i class="fas fa-door-open mr-1"></i> Vào lớp
-                    </a>
+                    <div class="flex gap-2">
+                        <a href="./classroom.html?code=${classItem.classCode}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors flex-1 text-center">
+                            <i class="fas fa-door-open mr-1"></i> Vào lớp
+                        </a>
+                        <a class="leave-class-btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
+                                data-class-code="${classItem.classCode}"
+                                data-class-name="${classItem.className || 'Không có tên'}"
+                                title="Rời lớp">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </div>
                 </div>
             `;
             
+                  // Thêm sự kiện cho nút rời lớp
+            const leaveButton = classCard.querySelector('.leave-class-btn');
+            leaveButton.addEventListener('click', function() {
+                const classCode = this.getAttribute('data-class-code');
+                const className = this.getAttribute('data-class-name');
+                
+                if (confirm(`Bạn có chắc chắn muốn rời khỏi lớp "${className}" (${classCode}) không?`)) {
+                    leaveClass(classCode);
+                }
+            });
+
             classContainer.appendChild(classCard);
         });
     }
@@ -260,7 +280,88 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
     }
-    
+
+      // Hàm xử lý khi người dùng nhấn vào nút "Rời lớp"
+    async function leaveClass(classCode) {
+        try {
+            // Lấy email người dùng từ localStorage
+            const userEmail = localStorage.getItem('userEmail');
+            if (!userEmail) {
+                alert('Bạn cần đăng nhập để thực hiện thao tác này');
+                window.location.href = './login.html';
+                return;
+            }
+            
+            console.log('Đang rời lớp học với mã:', classCode);
+            
+            // Hiển thị thông báo đang xử lý
+            const leaveButton = document.querySelector(`.leave-class-btn[data-class-code="${classCode}"]`);
+            if (leaveButton) {
+                leaveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                leaveButton.disabled = true;
+            }
+            
+            // Gửi request rời lớp học
+            const response = await fetch(API_ENDPOINTS.LEAVE_CLASS, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    classCode: classCode,
+                    studentEmail: userEmail
+                })
+            });
+            
+            console.log('Response status:', response.status);
+            
+            // Lấy response text để debug
+            const responseText = await response.text();
+            console.log('Response text:', responseText);
+            
+            // Parse JSON nếu có thể
+            let result;
+            try {
+                result = responseText ? JSON.parse(responseText) : {};
+                console.log('Parsed result:', result);
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+                result = { success: false, message: 'Invalid JSON response' };
+            }
+            
+            if (response.ok) {
+                console.log('Rời lớp học thành công:', result);
+                
+                // Xóa lớp học khỏi danh sách đã tham gia
+                allClasses = allClasses.filter(c => c.classCode !== classCode);
+                
+                // Cập nhật localStorage
+                const joinedClasses = JSON.parse(localStorage.getItem('joinedClasses') || '[]');
+                const updatedJoinedClasses = joinedClasses.filter(code => code !== classCode);
+                localStorage.setItem('joinedClasses', JSON.stringify(updatedJoinedClasses));
+                
+                // Xóa thông tin chi tiết lớp học
+                localStorage.removeItem(`class_${classCode}`);
+                
+                // Hiển thị thông báo thành công
+                alert(`Rời lớp học ${classCode} thành công!`);
+                
+                // Cập nhật lại danh sách lớp học hiển thị
+                displayJoinedClasses();
+            } 
+        } catch (error) {
+            console.error('Lỗi khi rời lớp học:', error);
+            alert('Có lỗi xảy ra khi rời lớp học');
+            
+            // Khôi phục nút rời lớp
+            const leaveButton = document.querySelector(`.leave-class-btn[data-class-code="${classCode}"]`);
+            if (leaveButton) {
+                leaveButton.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+                leaveButton.disabled = false;
+            }
+        }
+    }
+
     // Hiển thị kết quả tìm kiếm
     function displaySearchResult(classData) {
         console.log('Hiển thị kết quả tìm kiếm:', classData);

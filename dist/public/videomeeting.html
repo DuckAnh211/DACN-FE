@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Video Meeting</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" crossorigin href="/assets/videomeeting-CueA5pu5.css">
+</head>
+<body>
+  <div class="meeting-container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Video Meeting</h1>
+      <div class="meeting-info">
+        <span id="roomCode">Room: <span id="meetingIdValue">123-456-789</span></span>
+        <button id="copyBtn" class="icon-btn" title="Sao chép link phòng">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Screen Share Area -->
+      <div id="screenShareArea" class="screen-share-area hidden">
+        <video id="screenShareVideo" autoplay playsinline muted></video>
+        <div class="participant-name">Chia sẻ màn hình</div>
+      </div>
+      
+      <!-- Main Video Area -->
+      <div id="mainVideoArea" class="main-video-area">
+        <video id="localVideo" autoplay playsinline muted></video>
+        <div class="participant-name">Bạn</div>
+      </div>
+      
+      <!-- Participants Video Area -->
+      <div class="participants-video-area">
+        <h3 class="participants-title">
+          <i class="fas fa-users"></i>
+          Người tham gia (<span id="participantCount">1</span>)
+        </h3>
+        <div id="participantsVideoArea">
+          <!-- Remote videos sẽ được thêm vào đây -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+      <button id="micBtn" class="control-btn" title="Bật/Tắt mic">
+        <i class="fas fa-microphone"></i>
+      </button>
+      <button id="videoBtn" class="control-btn" title="Bật/Tắt camera">
+        <i class="fas fa-video"></i>
+      </button>
+      <button id="screenShareBtn" class="control-btn" title="Chia sẻ màn hình">
+        <i class="fas fa-desktop"></i>
+      </button>
+      <button id="chatBtn" class="control-btn" title="Chat">
+        <i class="fas fa-comment-alt"></i>
+      </button>
+      <button id="participantsBtn" class="control-btn" title="Danh sách người tham gia">
+        <i class="fas fa-users"></i>
+      </button>
+      <button id="leaveBtn" class="control-btn danger" title="Rời khỏi phòng">
+        <i class="fas fa-phone-slash"></i>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Chat Panel -->
+  <div id="chatPanel" class="chat-panel translate-x-full">
+    <button id="closeChatBtn" class="close-chat-btn">
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="chat-header">
+      <h3><i class="fas fa-comment-alt"></i> Chat</h3>
+    </div>
+    <div id="messages" class="messages">
+      <!-- Messages sẽ được thêm vào đây -->
+    </div>
+    <div class="chat-input-bar">
+      <input type="text" id="messageInput" placeholder="Nhập tin nhắn..." />
+      <button id="sendMessageBtn" class="send-btn">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Participants Panel -->
+  <div id="participantsPanel" class="participants-panel hidden">
+    <div class="panel-header">
+      <h3><i class="fas fa-users"></i> Người tham gia</h3>
+      <button class="close-panel-btn" onclick="document.getElementById('participantsPanel').classList.add('hidden')">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <ul id="participantsList">
+      <!-- Danh sách người tham gia sẽ được thêm vào đây -->
+    </ul>
+  </div>
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="js/mediasoup-client.min.js"></script>
+  <script src="js/videomeeting.js"></script>
+</body>
+</html> 
