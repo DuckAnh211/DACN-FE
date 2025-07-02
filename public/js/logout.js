@@ -50,13 +50,13 @@ function clearAllUserData() {
  */
 function logout() {
     clearAllUserData();
-    window.location.href = './index.html';
+    window.location.href = './welcome.html';
 }
 
 // Gắn sự kiện cho tất cả các nút đăng xuất
 document.addEventListener('DOMContentLoaded', function() {
     // Tìm tất cả các liên kết đăng xuất
-    const logoutLinks = document.querySelectorAll('a[href="./index.html"].bg-green-400');
+    const logoutLinks = document.querySelectorAll('a[href="./welcome.html"].bg-green-400');
     
     logoutLinks.forEach(link => {
         link.addEventListener('click', function(event) {
