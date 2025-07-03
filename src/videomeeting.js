@@ -12,6 +12,7 @@ let screenShareProducer;
 let consumers = [];
 let consumerTransports = []; 
 let isProducing = false;
+let participantNames = new Map(); // Map socketId -> name
 
 // DOM elements
 const localVideo = document.getElementById('localVideo');
@@ -41,8 +42,16 @@ const participantCount = document.getElementById('participantCount');
 // Get room ID và thông tin người dùng từ URL
 const urlParams = new URLSearchParams(window.location.search);
 const roomId = urlParams.get('room') || urlParams.get('id') || generateRandomString(6);
-const userName = urlParams.get('teacher') || urlParams.get('student') || urlParams.get('name') || 'Ẩn danh';
 roomCode.textContent = roomId;
+
+// Lấy tên giáo viên từ DOM nếu có
+const teacherNameEl = document.getElementById('teacherName');
+let userName;
+if (teacherNameEl && teacherNameEl.textContent.trim()) {
+  userName = teacherNameEl.textContent.trim();
+} else {
+  userName = prompt('Vui lòng nhập tên của bạn:') || 'Ẩn danh';
+}
 
 // Initialize the application
 async function init() {
@@ -52,7 +61,7 @@ async function init() {
   });
 
   // Gửi tên lên server
-  socket.emit('joinRoom', { name: userName });
+  socket.emit('joinRoom', { name: userName, roomId: roomId });
 
   // Set up socket event listeners
   setupSocketListeners();
@@ -138,6 +147,10 @@ function setupSocketListeners() {
   participantsList.innerHTML = '';
   participantCount.textContent = participants.length;
   participants.forEach(p => {
+    // Lưu tên participant
+    if (p.id && p.name) {
+      participantNames.set(p.id, p.name);
+    }
     const li = document.createElement('li');
     li.textContent = p.name ? p.name : `User ${p.id.substring(0, 4)}`;
     participantsList.appendChild(li);
@@ -481,7 +494,7 @@ function createRemoteVideo(track, socketId, mediaType) {
     video.style.objectFit = 'cover';
     const nameEl = document.createElement('div');
     nameEl.className = 'participant-name';
-    nameEl.textContent = `User ${socketId.substring(0, 4)}`;
+    nameEl.textContent = participantNames.get(socketId) || `User ${socketId.substring(0, 4)}`;
     videoEl.appendChild(video);
     videoEl.appendChild(nameEl);
     participantsVideoArea.appendChild(videoEl);
@@ -686,7 +699,7 @@ async function toggleScreenShare() {
     const nameDiv = document.createElement('div');
     nameDiv.className = 'participant-name';
     nameDiv.id = 'localScreenShareLabel';
-    nameDiv.textContent = 'Bạn (Chia sẻ màn hình)';
+    nameDiv.textContent = `${userName} (Chia sẻ màn hình)`;
 
     // Thêm vào screen-share-container
     const screenShareContainer = document.querySelector('.screen-share-container');
@@ -745,7 +758,7 @@ function moveLocalCameraToParticipants() {
     setTimeout(() => video.play().catch(() => {}), 100);
     const nameEl = document.createElement('div');
     nameEl.className = 'participant-name';
-    nameEl.textContent = 'Bạn';
+    nameEl.textContent = userName;
     localCamContainer.appendChild(video);
     localCamContainer.appendChild(nameEl);
     participantsVideoArea.appendChild(localCamContainer);
@@ -780,7 +793,7 @@ function sendMessage() {
   console.log('[DEBUG] Sending chat message:', { roomId, message });
   
   // Hiển thị message ngay lập tức cho người gửi
-  addMessageToChat('Bạn', message);
+  addMessageToChat(userName, message);
   
   // Gửi lên server
   socket.emit('chat-message', {
@@ -833,11 +846,9 @@ function leaveRoom() {
 
 // Copy room code to clipboard
 function copyRoomCode() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const meetingUrl = `${window.location.origin}${window.location.pathname}?${urlParams.toString()}`;
-  navigator.clipboard.writeText(meetingUrl)
+  navigator.clipboard.writeText(roomId)
     .then(() => {
-      alert('Meeting link copied to clipboard!');
+      alert('Room code copied to clipboard!');
     })
     .catch(err => {
       console.error('Failed to copy:', err);
@@ -852,6 +863,14 @@ function generateRandomString(length) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return result;
+}
+
+// Function to set teacher name in DOM
+function setTeacherName(name) {
+  const teacherNameEl = document.getElementById('teacherName');
+  if (teacherNameEl) {
+    teacherNameEl.textContent = name;
+  }
 }
 
 // Start the application when the page loads
