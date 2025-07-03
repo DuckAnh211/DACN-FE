@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const profileView = document.getElementById('profileView');
     const profileEdit = document.getElementById('profileEdit');
     const teachingClassesContainer = document.getElementById('teachingClasses');
-    const changePasswordBtn = document.getElementById('changePasswordBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    
 
     // Display elements
     const userNameElement = document.getElementById('userName');
@@ -45,14 +45,81 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalExams = document.getElementById('totalExams');
     const totalQuestions = document.getElementById('totalQuestions');
 
+    // Modal đổi mật khẩu
+const changePasswordBtn = document.getElementById('changePasswordBtn');
+const changePasswordModal = document.getElementById('changePasswordModal');
+const closeChangePasswordModal = document.getElementById('closeChangePasswordModal');
+const changePasswordForm = document.getElementById('changePasswordForm');
+const changePasswordMessage = document.getElementById('changePasswordMessage');
+
+if (changePasswordBtn && changePasswordModal) {
+    changePasswordBtn.addEventListener('click', () => {
+        changePasswordModal.classList.remove('hidden');
+        changePasswordMessage.textContent = '';
+        changePasswordForm.reset();
+    });
+}
+if (closeChangePasswordModal) {
+    closeChangePasswordModal.addEventListener('click', () => {
+        changePasswordModal.classList.add('hidden');
+    });
+}
+if (changePasswordModal) {
+    changePasswordModal.addEventListener('click', (e) => {
+        if (e.target === changePasswordModal) {
+            changePasswordModal.classList.add('hidden');
+        }
+    });
+}
+if (changePasswordForm) {
+    changePasswordForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const oldPassword = document.getElementById('oldPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+        if (newPassword !== confirmNewPassword) {
+            changePasswordMessage.textContent = 'Mật khẩu mới không khớp!';
+            changePasswordMessage.className = 'mt-3 text-center text-sm text-red-500';
+            return;
+        }
+
+        fetch('http://localhost:8080/v1/api/teacher/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: localStorage.getItem('userEmail'),
+                oldPassword,
+                newPassword
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message && data.message.includes('thành công')) {
+                changePasswordMessage.textContent = 'Đổi mật khẩu thành công!';
+                changePasswordMessage.className = 'mt-3 text-center text-sm text-green-600';
+                setTimeout(() => {
+                    changePasswordModal.classList.add('hidden');
+                }, 1500);
+            } else {
+                changePasswordMessage.textContent = data.message || 'Có lỗi xảy ra!';
+                changePasswordMessage.className = 'mt-3 text-center text-sm text-red-500';
+            }
+        })
+        .catch(() => {
+            changePasswordMessage.textContent = 'Có lỗi xảy ra!';
+            changePasswordMessage.className = 'mt-3 text-center text-sm text-red-500';
+        });
+    });
+}
+
     // API Endpoints
     const BASE_API_URL = 'http://localhost:8080/v1/api'; //'https://dacn-be-hh2q.onrender.com/v1/api';
     const API_ENDPOINTS = {
         GET_TEACHER_INFO: `${BASE_API_URL}/teacherinfo`,
         UPDATE_TEACHER: `${BASE_API_URL}/update-teacher`,
         GET_TEACHING_CLASSES: `${BASE_API_URL}/classrooms`, // Thay đổi endpoint
-        CHANGE_PASSWORD: `${BASE_API_URL}/change-password`,
-        GET_TEACHER_STATS: `${BASE_API_URL}/teacher-stats`
+        CHANGE_PASSWORD: `${BASE_API_URL}/change-password`
     };
     
     // Hàm chuyển đổi giới tính từ mã sang chữ

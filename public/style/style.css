@@ -23,6 +23,24 @@ body {
   text-align: center; 
 }
 
+/* Hiệu ứng thông báo */
+.alert-success {
+    background: #e6f7ff;
+    color: #2196F3;
+    border: 1px solid #2196F3;
+    padding: 10px 16px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+.alert-error {
+    background: #fff1f0;
+    color: #f44336;
+    border: 1px solid #f44336;
+    padding: 10px 16px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
 .toast {
     position: fixed;
     top: 50%;

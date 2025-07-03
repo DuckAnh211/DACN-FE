@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quên mật khẩu - FutureClass</title>
+    <link rel="stylesheet" href="./style/style.css">
+    <style>
+        .switch-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .switch-option {
+            padding: 8px 16px;
+            cursor: pointer;
+            text-align: center;
+            width: 50%;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+        .switch-option.active {
+            color: #2196F3;
+            font-weight: 500;
+        }
+        .switch-slider {
+            position: absolute;
+            bottom: 0;
+            height: 3px;
+            width: 50%;
+            background-color: #2196F3;
+            transition: all 0.3s ease;
+        }
+        .switch-slider.teacher { left: 0; }
+        .switch-slider.student { left: 50%; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="./images/logo.jpg" alt="FutureClass Logo" class="logo">
+        <h2>Quên mật khẩu</h2>
+        <div class="switch-container">
+            <div id="teacherOption" class="switch-option active">
+                Giáo viên
+            </div>
+            <div id="studentOption" class="switch-option">
+                Học viên
+            </div>
+            <div id="switchSlider" class="switch-slider teacher"></div>
+        </div>
+        <form id="forgotPassForm">
+            <input type="email" id="email" placeholder="Nhập email của bạn" required>
+            <button type="submit">Gửi email đặt lại mật khẩu</button>
+        </form>
+        <div class="signup-link">
+            <a href="login.html">Quay lại đăng nhập</a>
+        </div>
+        <div id="message" style="margin-top: 16px; text-align: center;"></div>
+    </div>
+    <script src="./js/forgot_pass.js"></script>
+</body>
+</html>
