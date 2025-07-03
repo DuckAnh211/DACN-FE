@@ -23,6 +23,12 @@
     <!-- Main Content -->
     <div class="main-content">
       <!-- Screen Share Area -->
+      <div id="mainScreenShare" class="screen-share-area hidden" style="display: none;">
+        <div class="screen-share-container">
+          <!-- Screen share videos will be added here -->
+        </div>
+      </div>
+      
       <div id="screenShareArea" class="screen-share-area hidden">
         <video id="screenShareVideo" autoplay playsinline muted></video>
         <div class="participant-name">Chia sẻ màn hình</div>
@@ -102,7 +108,6 @@
   </div>
 
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-  <script src="js/mediasoup-client.min.js"></script>
-  <script src="js/videomeeting.js"></script>
+  <script type="module" src="/src/videomeeting.js"></script>
 </body>
-</html> 
+</html>

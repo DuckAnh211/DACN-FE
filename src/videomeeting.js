@@ -15,6 +15,9 @@ let isProducing = false;
 
 // DOM elements
 const localVideo = document.getElementById('localVideo');
+const mainVideoArea = document.getElementById('mainVideoArea');
+const mainScreenShare = document.getElementById('mainScreenShare');
+const screenShareArea = document.getElementById('screenShareArea');
 const videoGrid = document.getElementById('videoGrid');
 const participantsVideoArea = document.getElementById('participantsVideoArea'); // Khu vực hiển thị webcam người tham gia
 const micBtn = document.getElementById('micBtn');
@@ -65,7 +68,52 @@ async function init() {
 }
 
 
-// Set up socket event listeners
+// --- Helper functions (đặt trước khi đăng ký event socket) ---
+function moveRemoteCameraToParticipants(socketId) {
+  // Đảm bảo camera của người chia sẻ nằm ở participants area
+  let videoEl = document.getElementById(`participant-${socketId}`);
+  if (!videoEl) {
+    videoEl = document.createElement('div');
+    videoEl.className = 'participant-video-item';
+    videoEl.id = `participant-${socketId}`;
+    const video = document.createElement('video');
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = true;
+    const nameEl = document.createElement('div');
+    nameEl.className = 'participant-name';
+    nameEl.textContent = `User ${socketId.substring(0, 4)}`;
+    videoEl.appendChild(video);
+    videoEl.appendChild(nameEl);
+    participantsVideoArea.appendChild(videoEl);
+  }
+}
+function removeRemoteCameraFromParticipants(socketId) {
+  const el = document.getElementById(`participant-${socketId}`);
+  if (el) el.remove();
+}
+function showMainScreenShare() {
+  if (mainScreenShare) {
+    mainScreenShare.style.display = 'flex';
+    mainScreenShare.classList.remove('hidden');
+  }
+  if (mainVideoArea) {
+    mainVideoArea.style.display = 'none';
+    mainVideoArea.classList.add('hidden');
+  }
+}
+function hideMainScreenShare() {
+  if (mainScreenShare) {
+    mainScreenShare.style.display = 'none';
+    mainScreenShare.classList.add('hidden');
+  }
+  if (mainVideoArea) {
+    mainVideoArea.style.display = 'flex';
+    mainVideoArea.classList.remove('hidden');
+  }
+}
+
+// --- Đăng ký event socket chỉ 1 lần, sau khi đã có helper ---
 function setupSocketListeners() {
   socket.on('connect', async () => {
     console.log('Connected to server');
@@ -101,31 +149,14 @@ function setupSocketListeners() {
     if (producerToClose) {
       producerToClose.consumer.close();
       consumers = consumers.filter(consumer => consumer.producerId !== remoteProducerId);
-      
-      // Xóa video element dựa trên mediaType
       if (producerToClose.mediaType === 'screen') {
-        const screenEl = document.getElementById(`video-${producerToClose.socketId}-screen`);
-        if (screenEl) {
-          screenEl.remove();
-          // Remove label cũng
-          const label = screenEl.nextElementSibling;
-          if (label && label.className === 'participant-name') {
-            label.remove();
-          }
-          
-          // Ẩn main screen share area nếu không còn screen share nào
-          const screenShareContainer = document.querySelector('.screen-share-container');
-          const mainScreenShare = document.getElementById('mainScreenShare');
-          if (mainScreenShare && screenShareContainer && screenShareContainer.children.length === 0) {
-            mainScreenShare.style.display = 'none';
-          }
-        }
+        // Xóa video screen share khỏi mainScreenShare
+        const screenShareContainer = document.querySelector('.screen-share-container');
+        if (screenShareContainer) screenShareContainer.innerHTML = '';
+        hideMainScreenShare();
       } else {
-        // Xóa camera video từ participants video area
-        const container = document.getElementById(`container-${producerToClose.socketId}`);
-        if (container) {
-          container.remove();
-        }
+        // Xóa camera khỏi participants area
+        removeRemoteCameraFromParticipants(producerToClose.socketId);
       }
     }
   });
@@ -215,13 +246,20 @@ function setupUIListeners() {
 // Get local media stream
 async function getLocalStream() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    console.log('[DEBUG] Requesting local media stream...');
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { width: 640, height: 480 }, 
+      audio: true 
+    });
     localVideo.srcObject = stream;
+    await localVideo.play();
     
     // Store tracks for later use
     window.localStream = stream;
+    console.log('[DEBUG] Local stream obtained successfully');
   } catch (error) {
     console.error('Error getting local stream:', error);
+    alert('Không thể truy cập camera/microphone. Vui lòng kiểm tra quyền truy cập.');
   }
 }
 
@@ -322,8 +360,11 @@ async function produceAudio() {
   if (!audioTrack) return;
 
   audioProducer = await producerTransport.produce({
-    track: audioTrack
+    track: audioTrack,
+    appData: { mediaType: 'audio' }
   });
+
+  console.log('[DEBUG] Audio producer created:', audioProducer.id);
 
   audioProducer.on('trackended', () => {
     console.log('Audio track ended');
@@ -339,8 +380,8 @@ async function produceAudio() {
 async function consumeTrack(producerId, producerSocketId, kind, mediaType) {
   // Create a new transport for consuming
   socket.emit('createWebRtcTransport', { sender: false }, async ({ params }) => {
-    if (params.error) {
-      console.error(params.error);
+    if (!params || params.error) {
+      console.error('[consumeTrack] Transport params error:', params && params.error);
       return;
     }
 
@@ -365,8 +406,8 @@ async function consumeTrack(producerId, producerSocketId, kind, mediaType) {
       producerId,
       rtpCapabilities: device.rtpCapabilities
     }, async ({ params }) => {
-      if (params.error) {
-        console.error(params.error);
+      if (!params || params.error) {
+        console.error('[consumeTrack] Consume params error:', params && params.error);
         return;
       }
 
@@ -376,6 +417,10 @@ async function consumeTrack(producerId, producerSocketId, kind, mediaType) {
         kind: params.kind,
         rtpParameters: params.rtpParameters
       });
+      if (!consumer) {
+        console.error('[consumeTrack] consumer is undefined');
+        return;
+      }
 
       consumers.push({
         consumer,
@@ -385,35 +430,33 @@ async function consumeTrack(producerId, producerSocketId, kind, mediaType) {
       });
 
       const { track } = consumer;
-      
       console.log(`[DEBUG] Consuming ${kind} track from ${producerSocketId}, mediaType: ${mediaType}`);
-      console.log("[DEBUG] Track state:", {
+      console.log('[DEBUG] Track state:', {
         enabled: track.enabled,
         readyState: track.readyState,
         muted: track.muted
       });
-      
+
       // Resume consumer trước khi tạo video element
       socket.emit('consumer-resume', { consumerId: consumer.id });
-      
-      // Đợi một chút rồi tạo video element
-      setTimeout(() => {
-        // Create a new video element for the remote stream
-        if (kind === 'video') {
-          createRemoteVideo(track, producerSocketId, mediaType);
+
+      if (kind === 'video') {
+        if (mediaType === 'screen') {
+          createRemoteScreenShare(track, producerSocketId);
         } else {
-          // For audio tracks, add them to existing video elements
-          const videoEl = document.getElementById(`video-${producerSocketId}`);
-          if (videoEl) {
-            const stream = videoEl.srcObject || new MediaStream();
-            stream.addTrack(track);
-            videoEl.srcObject = stream;
-          } else {
-            // If video element doesn't exist yet, create a placeholder
-            createRemoteVideo(track, producerSocketId, mediaType);
-          }
+          createRemoteVideo(track, producerSocketId, mediaType);
         }
-      }, 100);
+      } else if (kind === 'audio') {
+        // For audio tracks, add them to existing video elements or create audio element
+        const videoEl = document.getElementById(`video-${producerSocketId}`);
+        if (videoEl && videoEl.srcObject) {
+          videoEl.srcObject.addTrack(track);
+          videoEl.muted = false; // Enable audio for remote participants
+        } else {
+          // Create audio-only element if no video exists
+          createRemoteAudio(track, producerSocketId);
+        }
+      }
     });
   });
 }
@@ -421,114 +464,131 @@ async function consumeTrack(producerId, producerSocketId, kind, mediaType) {
 // Create a remote video element
 function createRemoteVideo(track, socketId, mediaType) {
   console.log(`[DEBUG] Creating remote video for ${socketId}, mediaType: ${mediaType}`);
-  const stream = new MediaStream([track]);
   
-  if (mediaType === 'screen') {
-    // Xử lý screen share - hiển thị ở khu vực chính
-    let videoEl = document.getElementById(`video-${socketId}-screen`);
-    
-    if (!videoEl) {
-      videoEl = document.createElement('video');
-      videoEl.id = `video-${socketId}-screen`;
-      videoEl.autoplay = true;
-      videoEl.playsInline = true;
-      videoEl.muted = true;
-      videoEl.style.width = '100%';
-      videoEl.style.height = '100%';
-      videoEl.style.objectFit = 'contain';
-
-      const label = document.createElement('div');
-      label.className = 'participant-name';
-      label.textContent = `Screen Share - User ${socketId.substring(0, 4)}`;
-
-      const screenShareContainer = document.querySelector('.screen-share-container');
-      if (screenShareContainer) {
-        screenShareContainer.appendChild(videoEl);
-        screenShareContainer.appendChild(label);
-
-        const mainScreenShare = document.getElementById('mainScreenShare');
-        if (mainScreenShare) {
-          mainScreenShare.style.display = 'flex';
-        }
-      }
-    }
-    
-    videoEl.srcObject = stream;
-    videoEl.play().catch(err => {
-      console.error("[ERROR] Cannot play screen share video:", err);
-    });
-    
-  } else {
-    // Xử lý camera video - hiển thị ở khu vực bên phải
-    let videoEl = document.getElementById(`video-${socketId}`);
-    let container = document.getElementById(`container-${socketId}`);
-
-    if (!container) {
-      container = document.createElement('div');
-      container.id = `container-${socketId}`;
-      container.className = 'participant-video-item';
-      container.style.cssText = 
-        "position: relative;" +
-        "width: 100%;" +
-        "aspect-ratio: 16/9;" +
-        "background: #1f2937;" +
-        "border-radius: 8px;" +
-        "overflow: hidden;" +
-        "margin-bottom: 12px;";
-
-      videoEl = document.createElement('video');
-      videoEl.id = `video-${socketId}`;
-      videoEl.autoplay = true;
-      videoEl.playsInline = true;
-      videoEl.muted = true;
-      videoEl.style.cssText = 
-        "width: 100%; height: 100%; object-fit: cover;";
-
-      const label = document.createElement('div');
-      label.className = 'participant-name';
-      label.style.cssText = 
-        "position: absolute;" +
-        "bottom: 8px;" +
-        "left: 8px;" +
-        "background: rgba(0,0,0,0.7);" +
-        "color: white;" +
-        "padding: 4px 8px;" +
-        "border-radius: 4px;" +
-        "font-size: 12px;" +
-        "font-weight: 500;";
-      label.textContent = `User ${socketId.substring(0, 4)}`;
-
-      container.appendChild(videoEl);
-      container.appendChild(label);
-
-      // Thêm vào khu vực hiển thị webcam người tham gia
-      const participantsArea = participantsVideoArea || document.getElementById('videoGrid');
-      if (participantsArea) {
-        participantsArea.appendChild(container);
-      }
-    }
-    
-    if (videoEl) {
-      videoEl.srcObject = stream;
-      videoEl.play().catch(err => {
-        console.error("[ERROR] Cannot play camera video:", err);
-      });
-    }
+  // Luôn add camera vào participants area
+  let videoEl = document.getElementById(`participant-${socketId}`);
+  if (!videoEl) {
+    videoEl = document.createElement('div');
+    videoEl.className = 'participant-video-item';
+    videoEl.id = `participant-${socketId}`;
+    const video = document.createElement('video');
+    video.id = `video-${socketId}`;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = true;
+    video.style.width = '100%';
+    video.style.height = '100%';
+    video.style.objectFit = 'cover';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'participant-name';
+    nameEl.textContent = `User ${socketId.substring(0, 4)}`;
+    videoEl.appendChild(video);
+    videoEl.appendChild(nameEl);
+    participantsVideoArea.appendChild(videoEl);
   }
+  
+  const video = videoEl.querySelector('video');
+  let stream = video.srcObject;
+  
+  if (!stream) {
+    stream = new MediaStream();
+    video.srcObject = stream;
+  }
+  
+  // Add track to existing stream
+  stream.addTrack(track);
+  
+  video.play().catch(e => console.error('[ERROR] Cannot play camera video:', e));
+  console.log(`[DEBUG] Video element created and playing for ${socketId}`);
 }
 
+// Create remote audio element for audio-only participants
+function createRemoteAudio(track, socketId) {
+  console.log(`[DEBUG] Creating remote audio for ${socketId}`);
+  
+  let audioEl = document.getElementById(`audio-${socketId}`);
+  if (!audioEl) {
+    audioEl = document.createElement('audio');
+    audioEl.id = `audio-${socketId}`;
+    audioEl.autoplay = true;
+    audioEl.controls = false;
+    audioEl.style.display = 'none';
+    document.body.appendChild(audioEl);
+  }
+  
+  audioEl.srcObject = new MediaStream([track]);
+  audioEl.play().catch(e => console.error('[ERROR] Cannot play audio:', e));
+  
+  console.log(`[DEBUG] Audio element created for ${socketId}`);
+}
 
+function createRemoteScreenShare(track, socketId) {
+  // Xóa các video screen share cũ trong mainScreenShare
+  const screenShareContainer = document.querySelector('.screen-share-container');
+  if (screenShareContainer) {
+    screenShareContainer.innerHTML = '';
+  }
+  // Tạo video màn hình mới
+  const screenVideo = document.createElement('video');
+  screenVideo.autoplay = true;
+  screenVideo.playsInline = true;
+  screenVideo.muted = true;
+  screenVideo.style.width = '100%';
+  screenVideo.style.height = '100%';
+  screenVideo.style.objectFit = 'contain';
+  screenVideo.srcObject = new MediaStream([track]);
+  setTimeout(() => screenVideo.play().catch(e => console.error('[ERROR] Cannot play screen share video:', e)), 100);
+  // Label
+  const nameEl = document.createElement('div');
+  nameEl.className = 'participant-name';
+  nameEl.style.position = 'absolute';
+  nameEl.style.bottom = '10px';
+  nameEl.style.left = '10px';
+  nameEl.style.background = 'rgba(0,0,0,0.7)';
+  nameEl.style.color = 'white';
+  nameEl.style.padding = '5px 10px';
+  nameEl.style.borderRadius = '5px';
+  nameEl.textContent = `User ${socketId.substring(0, 4)} - Screen Share`;
+  // Thêm vào mainScreenShare
+  if (screenShareContainer) {
+    screenShareContainer.appendChild(screenVideo);
+    screenShareContainer.appendChild(nameEl);
+  }
+  // Hiện mainScreenShare, ẩn mainVideoArea
+  showMainScreenShare();
+  // Camera của người chia sẻ phải nằm ở participants area
+  moveRemoteCameraToParticipants(socketId);
+}
 
 // Toggle microphone
 async function toggleMic() {
+  if (!window.localStream) return;
+  
+  const audioTrack = window.localStream.getAudioTracks()[0];
+  if (!audioTrack) return;
+  
   if (audioProducer) {
     if (audioProducer.paused) {
       await audioProducer.resume();
+      audioTrack.enabled = true;
       micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
       micBtn.classList.remove('bg-red-600');
       micBtn.classList.add('bg-gray-700');
     } else {
       await audioProducer.pause();
+      audioTrack.enabled = false;
+      micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+      micBtn.classList.remove('bg-gray-700');
+      micBtn.classList.add('bg-red-600');
+    }
+  } else {
+    // Toggle local audio track if producer not ready
+    audioTrack.enabled = !audioTrack.enabled;
+    if (audioTrack.enabled) {
+      micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+      micBtn.classList.remove('bg-red-600');
+      micBtn.classList.add('bg-gray-700');
+    } else {
       micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
       micBtn.classList.remove('bg-gray-700');
       micBtn.classList.add('bg-red-600');
@@ -578,6 +638,9 @@ async function toggleScreenShare() {
     if (mainScreenShare && screenShareContainer && screenShareContainer.children.length === 0) {
       mainScreenShare.style.display = 'none';
     }
+
+    restoreLocalCameraToMain();
+    hideMainScreenShare();
 
     return;
   }
@@ -638,6 +701,9 @@ async function toggleScreenShare() {
       }
     }
 
+    moveLocalCameraToParticipants();
+    showMainScreenShare();
+
     await screenVideo.play();
 
     // Khi người dùng ngắt chia sẻ màn hình
@@ -664,6 +730,42 @@ async function toggleScreenShare() {
   }
 }
 
+// Helper: Move local camera to participants area
+function moveLocalCameraToParticipants() {
+  let localCamContainer = document.getElementById('participant-local');
+  if (!localCamContainer) {
+    localCamContainer = document.createElement('div');
+    localCamContainer.className = 'participant-video-item';
+    localCamContainer.id = 'participant-local';
+    const video = document.createElement('video');
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = true;
+    video.srcObject = localVideo.srcObject;
+    setTimeout(() => video.play().catch(() => {}), 100);
+    const nameEl = document.createElement('div');
+    nameEl.className = 'participant-name';
+    nameEl.textContent = 'Bạn';
+    localCamContainer.appendChild(video);
+    localCamContainer.appendChild(nameEl);
+    participantsVideoArea.appendChild(localCamContainer);
+  } else {
+    // Nếu đã có, đảm bảo video srcObject đúng
+    const video = localCamContainer.querySelector('video');
+    if (video && video.srcObject !== localVideo.srcObject) {
+      video.srcObject = localVideo.srcObject;
+      setTimeout(() => video.play().catch(() => {}), 100);
+    }
+  }
+  localVideo.style.display = 'none';
+}
+
+// Helper: Restore local camera to main area
+function restoreLocalCameraToMain() {
+  localVideo.style.display = 'block';
+  const localCamContainer = document.getElementById('participant-local');
+  if (localCamContainer) localCamContainer.remove();
+}
 
 // Toggle chat panel
 function toggleChat() {
